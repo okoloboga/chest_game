@@ -11,7 +11,7 @@ from sqlalchemy import text
 from fluentogram import TranslatorHub
 
 from config import get_config, BotConfig, DbConfig, Config, load_config
-from dialogs import (start_dialogs, start_routers, unknown_router)
+from dialogs import dialogs, routers, unknown_router
 from utils import TranslatorHub, create_translator_hub
 from middlewares import TranslatorRunnerMiddleware
 from database import metadata
@@ -35,17 +35,15 @@ async def main():
 
     engine = create_async_engine(
         url=str(db_config.dsn),
-        echo=db_config.is_echo
+        echo=False
     )
-
-    # Connection tes with database
-    async with engine.begin() as conn:
-        await conn.execute(text("SELECT 1"))
-
-    # Create Tables
-    async with engine.begin() as conn:
-        await conn.run_sync(metadata.create_all)
-    config: Config = load_config()
+    
+    # Connection test with database
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.drop_all)
+        await connection.run_sync(Base.metadata.create_all)
+    
+    Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
 
     # Init Bot in Dispatcher
     bot_config = get_config(BotConfig, "bot")
@@ -55,14 +53,16 @@ async def main():
 
     # i18n init
     translator_hub: TranslatorHub = create_translator_hub()
+    
+    # Adding Sessionmaker to Dispatcher
+    dp = Dispatcher(session=Sessionmaker)
 
     # Routers, dialogs, middlewares
-    dp.include_routers(*start_dialogs)
-    dp.include_routers(*start_routers)
+    dp.include_routers(*dialogs)
+    dp.include_routers(*routers)
     dp.include_routers(unknown_router)
     
     dp.update.middleware(TranslatorRunnerMiddleware())
-    dp.workflow_data.update({'admins': await get_admins_list(engine)})
 
     setup_dialogs(dp)
 
