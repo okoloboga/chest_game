@@ -10,7 +10,8 @@ from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
 from states import StartSG
-from services import create_user
+from services import create_user, get_user
+from .services import CHANNEL
 
 
 start_router = Router()
@@ -24,9 +25,13 @@ logging.basicConfig(
 
 
 # Process START CommandStart
+@start_router.message(CommandStart(deep_link_encoded=True))
 async def command_start_getter(message: Message,
                                dialog_manager: DialogManager,
                                command: CommandObject):
+
+    user_id = message.from_user.id
+    session = dialog_manager.middleware_data['session']
 
     # If user start bot by referral link 
     if command.args:
@@ -39,17 +44,23 @@ async def command_start_getter(message: Message,
     user = await get_user(session, user_id)
     logger.info(f'User from database {user}')
 
-    await dialog_manager.start(StartSG.start,
-                               data={'user_id': message.from_user.id})
+    # If user new - give him to subscribe
+    if user is None:
+        await dialog_manager.start(StartSG.start,
+                                   data={'user_id': user_id,
+                                         'payload': payload})
+    else:
+        await dialog_manager.start(MainSG.start,
+                                   data={'user_id': user_id})
 
 
 # Give User channel for subscribe
-async def subscribe(callback: CallbackQuery.
+async def subscribe(callback: CallbackQuery,
                     bot: Bot,
                     dialog_manager: DialogManager):
     i18n: TranslatorRunner = dialog_manager.middleware_data['i18n']
-    
-    await callback.answer(text=i18n.give.subscribe())
+    link = bot.create_chat_invite_link(chat_id=CHANNEL)    
+    await callback.answer(text=i18n.give.subscribe(), url=link)
 
 
 # Checking for channel subscribe
@@ -64,5 +75,13 @@ async def check_subscribe(callback: CallbackQuery,
         await dialog_manager.switch_to(StartSG.welcome)
     else:
         await callback.answer(text=i18n.need.subscribe())
+
+
+# Confirming registration after subscribing to channel
+async def start_confirm(callback: CallbackQuery,
+                        bot: Bot,
+                        dialog_manager: DialogManager):
+    await dialog_manager.start(MainSG.start,
+                               data={'user_id': callback.from_user.id})
 
 

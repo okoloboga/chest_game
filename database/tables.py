@@ -26,13 +26,15 @@ class User(Base):
     wins_ton: Mapped[required_int]
     lose_ton: Mapped[required_int]
     referrals: Mapped[required_int]
+    ton: Mapped[required_int]
+    
     createdat: Mapped[datetime] = mapped_column(
             Datetime(timezone=true),
             nullable=False,
             server_default=func.now()
             )
 
-    __repr__(self) -> str:
+    def __repr__(self) -> str:
         if self.last_name is None:
             name = self.first_name
         else:

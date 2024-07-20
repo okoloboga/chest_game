@@ -27,11 +27,27 @@ async def create_user(sessionmaker: async_sessionmaker,
                 lose = 0,
                 wins_ton = 0,
                 lose_ton = 0,
-                referrals = 0
+                referrals = 0,
+                ton = 0
                 )
     
     async with sessionmaker() as session:
         session.add(user)
         await session.commit()
-        logger.info(f'New User created {user})
+        logger.info(f'New User created {user}')
+        
+
+# Read User data from Database
+async def get_user(sessionmaker: async_sessionmaker,
+                   telegram_id: int
+                   ) -> User | None:
+    async with sessionmaker() as session:
+        result = await session.get(User, telegram_id)
+    
+    logger.info(f'User from database {result}')
+    
+    return result
+        
+
+
 

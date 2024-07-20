@@ -20,7 +20,7 @@ start_dialog = Dialog(
         ),
     Window(
         Format('{welcome_dialog}'),
-        Button(Format('{button_confirm}'), id='b_confirm', on_click=confirm),
+        Button(Format('{button_confirm}'), id='b_confirm', on_click=start_confirm),
         getter=welcome_getter,
         state=StartSG.welcome
         )
