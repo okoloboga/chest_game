@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 
 from environs import Env
 from TonTools import *
@@ -35,7 +36,9 @@ def check_value_and_address(address_and_value: str) -> list:
     wallet = Wallet(provider=client, address=temp_dict[0], version='v4r2')
 
     if wallet is not None and temp_dict[1].isdigit:
-        return result_list
+        if temp_dict[1].isdigit >= 1:
+            return result_list
+        raise ValueError
     raise ValueError
 
 
@@ -58,8 +61,10 @@ async def ton_value(wallet: str) -> int:
 
 
 # Export TON from game
-async def export_ton(amount: float,
-                     destination_address: str):
+async def export_ton(user_id: int,
+                     amount: float,
+                     destination_address: str
+                     ) -> bool:
     
     logger.info(f'Exporting {amount} TON to {destination_address}')
     
@@ -71,17 +76,31 @@ async def export_ton(amount: float,
     central_wallet = Wallet(provider=client, mnemonics=config[3].split(), version='v4r2')
     
     logger.info(f'Central wallet connected')
+    current_time = time.time()
+    comment = f'export {user_id} at {current_time}'
     
     await central_wallet.transfer_ton(destination_address=destination_address,
                                       amount=amount,
-                                      message='export from game')
+                                      message=comment)
     logger.info('TON export complete')
+    
+    # Checking for successful
+    transactions = await central_wallet.get_transactions(limit=10)
+    
+    for transaction in transactions:
+        logger.info(f'{transaction.to_dict_user_friendly()}')
+        if transaction.to_dict_user_friendly()['comment'] == comment:
+            return True
+            break
+    else:
+        return False
     
 
 # Check import transaction
-async def import_ton_check(user_id: int) -> int | str:
+async def import_ton_check(user_id: int) -> dict | str:
     logger.info(f'Importing by {user_id}')
-    
+    result: dict  # Put result of successful transaction here
+
     # Connecting to TonCenterClient TESTNET
     config = _load_config()
     client = TonCenterClient(key=config[1], testnet=True)
@@ -95,10 +114,16 @@ async def import_ton_check(user_id: int) -> int | str:
         logger.info(f'{transaction.to_dict_user_friendly()}')
         
         if transaction.to_dict_user_friendly()['comment'] == user_id:
-            if int(transaction.to_dict_user_friendly()['value']) >= 0.5:
-                return int(transaction.to_dict_user_friendly()['value'])
+            if float(transaction.to_dict_user_friendly()['value']) >= 0.5:
+
+                result['value'] = float(transaction.to_dict_user_friendly()['value'])
+                result['hash'] = int(transaction.to_dict_user_friendly()['hash'])
+                result['comment'] = int(transaction.to_dict_user_friendly()['comment'])
+             
+                return result
+
             else: 
                 return 'not_enough'
         else:
-            return 'no_transaction'    
+            return 'no_transaction'
     

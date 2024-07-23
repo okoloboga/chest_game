@@ -15,3 +15,7 @@ class MainSG(StatesGroup):
     
 class LobbySG(StatesGroup):
     main = State()
+    find = State()
+    create = State()
+    find_deposit = State()
+    create_deposit = State()

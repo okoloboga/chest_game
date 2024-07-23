@@ -1,15 +1,15 @@
 from aiogram.types import ContentType
 
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.text import Format
+from aiogram_dialog.widgets.text import Format, Const
 from aiogram_dialog.widgets.media import StaticMedia
-from aiogram_dialog.widgets.kbd import Button, Row
+from aiogram_dialog.widgets.kbd import Button, Row, Url
 from aiogram_dialog.widgets.input.text import TextInput
 
 from .getter import *
 from .handler import *
 from states import MainSG
-from services import check_value_and_address
+from services import check_value_and_address, TELEGRAPH, CHANNEL
 from dialogs import back
 
 main_dialog = Dialog(
@@ -18,14 +18,14 @@ main_dialog = Dialog(
         Button(Format('{button_play}'), id='b_play', on_click=switch_to_lobby),
         Row(
             Button(Format('{button_balance}'), id='b_balacne', on_click=balance),
-            Button(Format('{button_how_to_play}'), id='b_how_to_play', on_click=how_to_play)
+            Url(Format('{button_how_to_play}'), Const(TELEGRAPH))
         ),
         Row(
             Button(Format('{button_referrals}'), id='b_referrals', on_click=referrals),
-            Button(Format('{button_community}'), id='b_community', on_click=community)
+            Url(Format('{button_community}'), Const(CHANNEL))
         ),
         getter=main_getter,
-        state=MainSG.start
+        state=MainSG.main
     ),
     Window(
         Format('{referrals}'),

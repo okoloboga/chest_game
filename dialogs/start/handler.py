@@ -54,14 +54,6 @@ async def command_start_getter(message: Message,
                                    data={'user_id': user_id})
 
 
-# Give User channel for subscribe
-async def subscribe(callback: CallbackQuery,
-                    bot: Bot,
-                    dialog_manager: DialogManager):
-    i18n: TranslatorRunner = dialog_manager.middleware_data['i18n']
-    link = bot.create_chat_invite_link(chat_id=CHANNEL)    
-    await callback.answer(text=i18n.give.subscribe(), url=link)
-
 
 # Checking for channel subscribe
 async def check_subscribe(callback: CallbackQuery,
