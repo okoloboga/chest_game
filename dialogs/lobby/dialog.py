@@ -21,59 +21,44 @@ lobby_dialog = Dialog(
         state=LobbySG.main
     ),
     Window(
-        Format('{select_type}'),
-        Button(Format('{button_find_1vs1}'), id='b_find_1vs1', on_click=find_1vs1),
-        Button(Format('{button_find_super}'), id='b_find_super', on_click=find_super),
+        Format('{select_mode}'),
+        Button(Format('{button_mode_1vs1}'), id='b_find_1vs1', on_click=mode_1vs1),
+        Button(Format('{button_mode_super}'), id='b_find_super', on_click=mode_super),
         Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=type_getter,
-        state=LobbySG.find
-    ),
-    Window(
-        Format('{select_type}'),
-        Button(Format('{button_create_1vs1}'), id='b_create_1vs1', on_click=create_1vs1),
-        Button(Format('{button_create_super}'), id='b_create_super', on_click=create_super),
-        Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=type_getter,
-        state=LobbySG.create
-    ),
-    Window(
-        Format('{selsct_deposit}'),
-        Button(Const('0.5'), id='b_find_deposit_0_5', on_click=find_deposit_0_5),
-        Row(
-            Button(Const('1'), id='b_find_deposit_1', on_click=find_deposit_1),
-            Button(Const('2'), id='b_find_deposit_2', on_click=find_deposit_2)          
-        ),
-        Row(
-            Button(Const('4'), id='b_find_deposit_4', on_click=find_deposit_4),
-            Button(Const('8'), id='b_find_deposit_8', on_click=find_deposit_8),            
-            Button(Const('25'), id='b_find_deposit_25', on_click=find_deposit_25)            
-        ),
-        Row(
-            Button(Const('50'), id='b_find_deposit_50', on_click=find_deposit_50),
-            Button(Const('100'), id='b_find_deposit_100', on_click=find_deposit_100)            
-        ),
-        Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=deposit_getter,
-        state=LobbySG.find_deposit               
+        getter=mode_getter,
+        state=LobbySG.mode
     ),
     Window(
         Format('{select_deposit}'),
-        Button(Const('0.5'), id='b_create_deposit_0_5', on_click=create_deposit_0_5),
+        Button(Const('0.5'), id='b_deposit_0_5', on_click=deposit_0_5),
         Row(
-            Button(Const('1'), id='b_create_deposit_1', on_click=create_deposit_1),
-            Button(Const('2'), id='b_create_deposit_2', on_click=create_deposit_2)          
+            Button(Const('1'), id='b_deposit_1', on_click=deposit_1),
+            Button(Const('2'), id='b_deposit_2', on_click=deposit_2)          
         ),
         Row(
-            Button(Const('4'), id='b_create_deposit_4', on_click=create_deposit_4),
-            Button(Const('8'), id='b_create_deposit_8', on_click=create_deposit_8),            
-            Button(Const('25'), id='b_create_deposit_25', on_click=create_deposit_25)            
+            Button(Const('4'), id='b_deposit_4', on_click=deposit_4),
+            Button(Const('8'), id='b_deposit_8', on_click=deposit_8),            
+            Button(Const('25'), id='b_deposit_25', on_click=deposit_25)            
         ),
         Row(
-            Button(Const('50'), id='b_create_deposit_50', on_click=create_deposit_50),
-            Button(Const('100'), id='b_create_deposit_100', on_click=create_deposit_100)            
+            Button(Const('50'), id='b_deposit_50', on_click=deposit_50),
+            Button(Const('100'), id='b_deposit_100', on_click=deposit_100)            
         ),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=deposit_getter,
-        state=LobbySG.create_deposit               
+        state=LobbySG.deposit               
+    ),
+    Window(
+        Format('{wait_game}'),
+        Button(Format('{button_back}'), id='b_back', on_click=back),
+        getter=wait_game_getter,
+        state=LobbySG.wait_game
+    ),
+    Window(
+        Format('{not_enough_ton}'),
+        Button(Format('{button_tonimport}'), id='b_import_from_lobby', on_click=import_from_lobby),
+        Button(Format('{button_back}'), id='b_back', on_click=back),
+        getter=not_enough_ton_getter,
+        state=LobbySG.not_enough_ton   
     )
 )

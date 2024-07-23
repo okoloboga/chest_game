@@ -6,7 +6,7 @@ from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager 
 from aiogram_dialog.widgets.kbd import Button
-from sqlalchemy.ext.asyncio.engine import AsyncEngine
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from services import import_ton_check, process_transaction, export_ton
 
@@ -25,6 +25,7 @@ logging.basicConfig(
 async def switch_to_lobby(callback: CallbackQuery,
                           button: Button,
                           dialog_manager: DialogManager):
+    
     logger.info(f'User {callback.from_user.id} go to Lobby')
     await dialog_manager.start(LobbySG.main,
                                data={'user_id': callback.from_user.id})
@@ -34,6 +35,7 @@ async def switch_to_lobby(callback: CallbackQuery,
 async def balance(callback: CallbackQuery,
                   button: Button,
                   dialog_manager: DialogManager):
+    
     logger.info(f'User {callback.from_user.id} go to Balance')
     await dialog_manager.switch_to(MainSG.ton_balance)
 
@@ -42,6 +44,7 @@ async def balance(callback: CallbackQuery,
 async def referrals(callback: CallbackQuery,
                     button: Button,
                     dialog_manager: DialogManager):
+    
     logger.info(f'User {callback.from_user.id} go to Referrals')
     await dialog_manager.switch_to(MainSG.referrals)
 
@@ -50,6 +53,7 @@ async def referrals(callback: CallbackQuery,
 async def ton_import(callback: CallbackQuery,
                      button: Button,
                      dialog_manager: DialogManager):
+    
     logger.info(f'User {callback.from_user.id} go to TON import')
     await dialog_manager.switch_to(MainSG.ton_import)
 
@@ -58,6 +62,7 @@ async def ton_import(callback: CallbackQuery,
 async def ton_export(callback: CallbackQuery,
                      button: Button,
                      dialog_manager: DialogManager):
+    
     logger.info(f'User {callback.from_user.id} go to TON export')
     await dialog_manager.switch_to(MainSG.ton_export)
 
@@ -66,6 +71,7 @@ async def ton_export(callback: CallbackQuery,
 async def import_check(callback: CallbackQuery,
                        button: Button,
                        dialog_manager: DialogManager):
+    
     user_id = callback.from_user.id 
     logger.info(f'User {user_id} checking for import ...')
     i18n: TranslatorRunner = dialog_manager.middleware_data['i18n']
@@ -107,6 +113,7 @@ async def do_export(callback: CallbackQuery,
                     widget: ManagedTextInput,
                     dialog_manager: DialogManager,
                     result_list: list):
+    
     user_id = callback.from_user.id
     logger.info(f'User {user_id} doing export with validated data:')
     logger.info(f'{result_list}')

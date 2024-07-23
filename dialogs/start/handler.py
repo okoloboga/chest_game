@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 
 from fluentogram import TranslatorRunner
-from sqlalchemy.ext.asyncio.engine import AsyncEngine
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from states import StartSG
 from services import create_user, get_user

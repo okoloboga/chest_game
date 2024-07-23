@@ -24,10 +24,8 @@ button-tonexport = Вывести
 button-importcheck = Проверить ввод
 button-find-game = Найти Игру
 button-create-game = Создать Игру
-button-find1vs1 = Найти 1VS1
-button-find-super = Найти SUPER
-button-create1vs1 = Создать 1VS1
-button-create-super = Создать SUPER
+button-mode1vs1 = 1VS1
+button-modesuper = SUPER
 button-back = Назад
 
 
@@ -176,10 +174,16 @@ tonexport-error = Что то пошло не по плану
 lobby-menu = Хочешь найти игру или
              создать новую?
 
-select-type = Выбери тип игры:
+select-mode = Выбери тип игры:
 
-            1VS1: 2 игрока друг против друга
+              1VS1: 2 игрока друг против друга
 
-            SUPER: от 3 до 10 игроков
+              SUPER: от 3 до 10 игроков
 
-select-deposit = 
+select-deposit = Выбери размер депозита
+
+notenough-ton = Недостаточно TON на аккаунте!
+                Предлагаем пополнить счёт 
+                прямо сейчас
+
+wait-game = Ожидание игры

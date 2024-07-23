@@ -4,9 +4,10 @@ from aiogram import Router
 from aiogram.utils.deep_linking import decode_payload
 from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import DialogManager 
-from sqlalchemy.ext.asyncio.engine import AsyncEngine
+from aiogram_dialog import DialogManager, StartMode
 
+from states import LobbySG
+from services import deposit
 
 lobby_router = Router()
 
@@ -25,6 +26,9 @@ async def find_game(callback: CallbackQuery,
 
     user_id = callback.from_user.id
     logger.info(f'User {user_id} Search for Game')
+    dialog_manager.current_context().dialog_data['find_create'] = 'find'
+
+    await dialog_manager.switch_to(LobbySG.type)
 
 
 # Select to Create new Game
@@ -34,43 +38,34 @@ async def create_game(callback: CallbackQuery,
 
     user_id = callback.from_user.id
     logger.info(f'User {user_id} Create new Game')
+    dialog_manager.current_context().dialog_data['find_create'] = 'create'
+
+    await dialog_manager.switch_to(LobbySG.mode)
 
 
-# Seacrh for 1 VS 1 Game
-async def find_1vs1(callback: CallbackQuery,
+# Seacrh or create for 1 VS 1 Game
+async def mode_1vs1(callback: CallbackQuery,
                     button: Button,
                     dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for 1VS1') 
+    logger.info(f'User {user_id} mode is 1VS1') 
+    dialog_manager.current_context().dialog_data['mode'] = '1vs1'
+
+    await dialog_manager.switch_to(LobbySG.deposit)
 
 
-# Search for SUPER Game
-async def find_super(callback: CallbackQuery,
+# Search or create for SUPER Game
+async def mode_super(callback: CallbackQuery,
                      button: Button,
                      dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for SUPER') 
+    logger.info(f'User {user_id} mode is SUPER') 
+    dialog_manager.current_context().dialog_data['mode'] = 'super'
 
-
-# Create new 1 VS 1 Game
-async def create_1vs1(callback: CallbackQuery,
-                      button: Button,
-                      dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create 1VS1 Game') 
-
-
-# Create new SUPER Game
-async def create_super(callback: CallbackQuery,
-                       button: Button,
-                       dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create SUPER Game')
-
+    await dialog_manager.switch_to(LobbySG.deposit)
+    
 
 
 ''' 
@@ -88,130 +83,101 @@ async def create_super(callback: CallbackQuery,
 '''
 
 # FIND 
-async def find_deposit_0_5(callback: CallbackQuery,
-                         button: Button,
-                         dialog_manager: DialogManager):
+async def deposit_0_5(callback: CallbackQuery,
+                      button: Button,
+                      dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for Deposit 0.5')
+    deposit = 0.5
+    await deposit(user_id,
+                  dialog_manager,
+                  deposit)
 
 
-async def find_deposit_1(callback: CallbackQuery,
-                         button: Button,
-                         dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for Deposit 1')
-
-
-async def find_deposit_2(callback: CallbackQuery,
-                         button: Button,
-                         dialog_manager: DialogManager):
+async def deposit_1(callback: CallbackQuery,
+                    button: Button,
+                    dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for Deposit 2')
+    deposit = 1
+    await deposit(user_id,
+                  dialog_manager,
+                  deposit)
 
 
-async def find_deposit_4(callback: CallbackQuery,
-                         button: Button,
-                         dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for Deposit 4')
-
-
-async def find_deposit_8(callback: CallbackQuery,
-                         button: Button,
-                         dialog_manager: DialogManager):
+async def deposit_2(callback: CallbackQuery,
+                    button: Button,
+                    dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for Deposit 8')
-     
+    deposit = 2
+    await deposit(user_id,
+                  dialog_manager,
+                  deposit)
 
-async def find_deposit_25(callback: CallbackQuery,
-                          button: Button,
-                          dialog_manager: DialogManager):
+
+async def deposit_4(callback: CallbackQuery,
+                    button: Button,
+                    dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for Deposit 25')
+    deposit = 4
+    await deposit(user_id,
+                  dialog_manager,
+                  deposit)
+    
+
+async def deposit_8(callback: CallbackQuery,
+                    button: Button,
+                    dialog_manager: DialogManager):
+
+    user_id = callback.from_user.id
+    deposit = 8    
+    await deposit(user_id,
+                  dialog_manager,
+                  deposit)
+    
+
+async def deposit_25(callback: CallbackQuery,
+                     button: Button,
+                     dialog_manager: DialogManager):
+
+    user_id = callback.from_user.id
+    deposit = 25  
+    await deposit(user_id,
+                  dialog_manager,
+                  deposit)   
     
     
-async def find_deposit_50(callback: CallbackQuery,
-                          button: Button,
-                          dialog_manager: DialogManager):
+async def deposit_50(callback: CallbackQuery,
+                     button: Button,
+                     dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for Deposit 50')
+    deposit = 50
+    await deposit(user_id,
+                  dialog_manager,
+                  deposit)
+    
 
-
-async def find_deposit_100(callback: CallbackQuery,
-                           button: Button,
-                           dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for Deposit 100')
-
-
-# CREATE 
-async def create_deposit_0_5(callback: CallbackQuery,
-                           button: Button,
-                           dialog_manager: DialogManager):
+async def deposit_100(callback: CallbackQuery,
+                      button: Button,
+                      dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create Deposit 0.5')
-
-
-async def create_deposit_1(callback: CallbackQuery,
-                           button: Button,
-                           dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create Deposit 1')
-
-
-async def create_deposit_2(callback: CallbackQuery,
-                           button: Button,
-                           dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create Deposit 2')
-
-
-async def create_deposit_4(callback: CallbackQuery,
-                           button: Button,
-                           dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create Deposit 4')
-
-
-async def create_deposit_8(callback: CallbackQuery,
-                           button: Button,
-                           dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create Deposit 8')
-
-
-async def create_deposit_25(callback: CallbackQuery,
+    deposit = 100
+    await deposit(user_id,
+                  dialog_manager,
+                  deposit)
+    
+    
+# If Not Enough TON for Deposit...
+async def import_from_lobby(callback: CallbackQuery,
                             button: Button,
                             dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create Deposit 25')
     
-
-async def create_deposit_50(callback: CallbackQuery,
-                            button: Button,
-                            dialog_manager: DialogManager):
-
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create Deposit 50')
-
-
-async def create_deposit_100(callback: CallbackQuery,
-                             button: Button,
-                             dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create Deposit 100')
+    logger.info(f'User {user_id} Want to import TON')
+    
+    await dialog_manager.start(MainSG.ton_import,
+                               mode=StartMode.RESET_STACK)

@@ -3,7 +3,7 @@ import logging
 from aiogram_dialog import DialogManager
 from aiogram.types import User
 from fluentogram import TranslatorRunner
-from sqlalchemy.ext.asyncio.engine import AsyncEngine
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from database import User
 from services import create_user

@@ -15,7 +15,7 @@ class MainSG(StatesGroup):
     
 class LobbySG(StatesGroup):
     main = State()
-    find = State()
-    create = State()
-    find_deposit = State()
-    create_deposit = State()
+    mode = State()
+    deposit = State()
+    wait_game = State()
+    not_enough_ton = State()
