@@ -110,5 +110,6 @@ async def wait_game_getter(dialog_manager: DialogManager,
     
     r = aioredis.Redis(host='localhost', port=6379)
     
+    
     return {'wait_game': i18n.wait.game(),
             'button_back': i18n.button.back()}
