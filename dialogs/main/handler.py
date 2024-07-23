@@ -5,6 +5,7 @@ from aiogram.utils.deep_linking import decode_payload
 from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager 
+from aiogram_dialog.widgets.kbd import Button
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 
 from services import import_ton_check, process_transaction, export_ton
@@ -22,7 +23,7 @@ logging.basicConfig(
 
 # Go to Lobby 
 async def switch_to_lobby(callback: CallbackQuery,
-                          bot: Bot,
+                          button: Button,
                           dialog_manager: DialogManager):
     logger.info(f'User {callback.from_user.id} go to Lobby')
     await dialog_manager.start(LobbySG.main,
@@ -31,7 +32,7 @@ async def switch_to_lobby(callback: CallbackQuery,
     
 # Go to balance page with import and export TON
 async def balance(callback: CallbackQuery,
-                  bot: Bot,
+                  button: Button,
                   dialog_manager: DialogManager):
     logger.info(f'User {callback.from_user.id} go to Balance')
     await dialog_manager.switch_to(MainSG.ton_balance)
@@ -39,7 +40,7 @@ async def balance(callback: CallbackQuery,
 
 # Go to Referrals page: referral link, comission
 async def referrals(callback: CallbackQuery,
-                    bot: Bot,
+                    button: Button,
                     dialog_manager: DialogManager):
     logger.info(f'User {callback.from_user.id} go to Referrals')
     await dialog_manager.switch_to(MainSG.referrals)
@@ -47,7 +48,7 @@ async def referrals(callback: CallbackQuery,
 
 # Go to TON import page
 async def ton_import(callback: CallbackQuery,
-                     bot: Bot,
+                     button: Button,
                      dialog_manager: DialogManager):
     logger.info(f'User {callback.from_user.id} go to TON import')
     await dialog_manager.switch_to(MainSG.ton_import)
@@ -55,7 +56,7 @@ async def ton_import(callback: CallbackQuery,
 
 # Go to TON export page
 async def ton_export(callback: CallbackQuery,
-                     bot: Bot,
+                     button: Button,
                      dialog_manager: DialogManager):
     logger.info(f'User {callback.from_user.id} go to TON export')
     await dialog_manager.switch_to(MainSG.ton_export)
@@ -63,7 +64,7 @@ async def ton_export(callback: CallbackQuery,
 
 # Checking for succesfull import
 async def import_check(callback: CallbackQuery,
-                       bot: Bot,
+                       button: Button,
                        dialog_manager: DialogManager):
     user_id = callback.from_user.id 
     logger.info(f'User {user_id} checking for import ...')

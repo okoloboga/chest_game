@@ -21,23 +21,23 @@ lobby_dialog = Dialog(
         state=LobbySG.main
     ),
     Window(
-        Format('{find_type}'),
+        Format('{select_type}'),
         Button(Format('{button_find_1vs1}'), id='b_find_1vs1', on_click=find_1vs1),
         Button(Format('{button_find_super}'), id='b_find_super', on_click=find_super),
         Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=find_getter,
+        getter=type_getter,
         state=LobbySG.find
     ),
     Window(
-        Format('{create_type}'),
+        Format('{select_type}'),
         Button(Format('{button_create_1vs1}'), id='b_create_1vs1', on_click=create_1vs1),
         Button(Format('{button_create_super}'), id='b_create_super', on_click=create_super),
         Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=create_getter,
+        getter=type_getter,
         state=LobbySG.create
     ),
     Window(
-        Format('{find_deposit}'),
+        Format('{selsct_deposit}'),
         Button(Const('0.5'), id='b_find_deposit_0_5', on_click=find_deposit_0_5),
         Row(
             Button(Const('1'), id='b_find_deposit_1', on_click=find_deposit_1),
@@ -53,11 +53,11 @@ lobby_dialog = Dialog(
             Button(Const('100'), id='b_find_deposit_100', on_click=find_deposit_100)            
         ),
         Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=find_deposit_getter,
+        getter=deposit_getter,
         state=LobbySG.find_deposit               
     ),
     Window(
-        Format('{create_deposit}'),
+        Format('{select_deposit}'),
         Button(Const('0.5'), id='b_create_deposit_0_5', on_click=create_deposit_0_5),
         Row(
             Button(Const('1'), id='b_create_deposit_1', on_click=create_deposit_1),
@@ -73,7 +73,7 @@ lobby_dialog = Dialog(
             Button(Const('100'), id='b_create_deposit_100', on_click=create_deposit_100)            
         ),
         Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=create_deposit_getter,
+        getter=deposit_getter,
         state=LobbySG.create_deposit               
     )
 )

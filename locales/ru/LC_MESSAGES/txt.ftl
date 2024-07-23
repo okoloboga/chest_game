@@ -12,7 +12,6 @@
 ####################################################################
 
 button-subscribe = Подписаться
-
 button-check-subscribe = Проверить подписку
 button-confirm = Принять
 button-play = Играть
@@ -23,7 +22,12 @@ button-community = Комьюнити
 button-tonimport = Внести
 button-tonexport = Вывести
 button-importcheck = Проверить ввод
-
+button-find-game = Найти Игру
+button-create-game = Создать Игру
+button-find1vs1 = Найти 1VS1
+button-find-super = Найти SUPER
+button-create1vs1 = Создать 1VS1
+button-create-super = Создать SUPER
 button-back = Назад
 
 
@@ -165,3 +169,17 @@ tonexport-notenough = Недостаточно TON
 tonexport-error = Что то пошло не по плану
                   Твоя транзакция не была отправлена
     
+#########
+# LOBBY #
+#########
+
+lobby-menu = Хочешь найти игру или
+             создать новую?
+
+select-type = Выбери тип игры:
+
+            1VS1: 2 игрока друг против друга
+
+            SUPER: от 3 до 10 игроков
+
+select-deposit = 
