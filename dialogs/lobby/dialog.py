@@ -49,10 +49,11 @@ lobby_dialog = Dialog(
         state=LobbySG.deposit               
     ),
     Window(
-        Format('{wait_game}'),
+        Format('{game_confirm}'),
+        Button(Format('{button_game_confirm}'), id='b_game_confirm', on_click=confirm_game),
         Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=wait_game_getter,
-        state=LobbySG.wait_game
+        getter=game_confirm_getter,
+        state=LobbySG.game_confirm  
     ),
     Window(
         Format('{not_enough_ton}'),

@@ -26,6 +26,7 @@ button-find-game = Найти Игру
 button-create-game = Создать Игру
 button-mode1vs1 = 1VS1
 button-modesuper = SUPER
+button-game-confirm = Подтвердить
 button-back = Назад
 
 
@@ -185,5 +186,17 @@ select-deposit = Выбери размер депозита
 notenough-ton = Недостаточно TON на аккаунте!
                 Предлагаем пополнить счёт 
                 прямо сейчас
+
+find-speech = ищешь
+
+create-speech = создаешь
+
+game-confirm = Ты { $find_create_speech } игру
+               в режиме { $mode }
+               С депозитом { $deposit } TON
+
+########
+# GAME #
+########
 
 wait-game = Ожидание игры

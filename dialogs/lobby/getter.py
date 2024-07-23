@@ -74,6 +74,31 @@ async def deposit_getter(dialog_manager: DialogManager,
     return {'select_deposit': i18n.select.deposit(),
             'button_back': i18n.button.back()}
     
+
+# Confirming requirements for game 
+async def game_confirm_getter(dialog_manager: DialogManager,
+    	                      session: async_sessionmaker,
+         	                  i18n: TranslatorRunner,
+              	              bot: Bot,
+                   		      event_from_user: User,
+                     	      **kwargs
+                         	  ) -> dict:
+    
+    find_create = dialog_manager.current_context().dialog_data['find_create']
+    mode = dialog_manager.current_context().dialog_data['mode']
+    deposit = dialog_manager.current_context().dialog_data['deposit']
+    
+    speech_map = {'find': i18n.find.speech(),
+               	  'create': i18n.create.speech()}
+    
+    find_create_speech = speech_map[find_create]
+    
+    return {'game_confirm': i18n.game.confirm(find_create_speech=find_create_speech,
+                                              mode=mode.capitalize(),
+                                              deposit=deposit),
+            'button_game_confirm': i18n.game.confirm(),
+            'button_back': i18n.button.back()}
+ 
     
 # Not enough TON to make Deposit
 async def not_enough_ton_getter(dialog_manager: DialogManager,
@@ -91,25 +116,3 @@ async def not_enough_ton_getter(dialog_manager: DialogManager,
             'button_tonimport': i18n.button.tonimport(),
             'button_back': i18n.button.back()}
     
-    
-# Deposit made - waiting for Game!...
-async def wait_game_getter(dialog_manager: DialogManager,
-                           session: async_sessionmaker,
-                           i18n: TranslatorRunner,
-                           bot: Bot,
-                           event_from_user: User,
-                           **kwargs
-                           ) -> dict:
-    
-    user_id = event_from_user.id
-    find_create = dialog_manager.current_context().dialog_data['find_create']
-    mode = dialog_manager.current_context().dialog_data['mode']
-    deposit = dialog_manager.current_context().dialog_data['deposit']
-    
-    logger.info(f'User {user_id} {find_create} {mode} Game for {deposit} TON')
-    
-    r = aioredis.Redis(host='localhost', port=6379)
-    
-    
-    return {'wait_game': i18n.wait.game(),
-            'button_back': i18n.button.back()}

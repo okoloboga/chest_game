@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager, StartMode
 
 from states import LobbySG
-from services import deposit
+from services import create_room_query 
 
 lobby_router = Router()
 
@@ -88,10 +88,8 @@ async def deposit_0_5(callback: CallbackQuery,
                       dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    deposit = 0.5
-    await deposit(user_id,
-                  dialog_manager,
-                  deposit)
+    dialog_manager.current_context().dialog_data['deposit'] = 0.5
+    await dialog_manager.switch_to(LobbySG.game_confirm)
 
 
 async def deposit_1(callback: CallbackQuery,
@@ -99,10 +97,8 @@ async def deposit_1(callback: CallbackQuery,
                     dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    deposit = 1
-    await deposit(user_id,
-                  dialog_manager,
-                  deposit)
+    dialog_manager.current_context().dialog_data['deposit'] = 1
+    await dialog_manager.switch_to(LobbySG.game_confirm)
 
 
 async def deposit_2(callback: CallbackQuery,
@@ -110,10 +106,8 @@ async def deposit_2(callback: CallbackQuery,
                     dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    deposit = 2
-    await deposit(user_id,
-                  dialog_manager,
-                  deposit)
+    dialog_manager.current_context().dialog_data['deposit'] = 2
+    await dialog_manager.switch_to(LobbySG.game_confirm)
 
 
 async def deposit_4(callback: CallbackQuery,
@@ -121,10 +115,8 @@ async def deposit_4(callback: CallbackQuery,
                     dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    deposit = 4
-    await deposit(user_id,
-                  dialog_manager,
-                  deposit)
+    dialog_manager.current_context().dialog_data['deposit'] = 4
+    await dialog_manager.switch_to(LobbySG.game_confirm)
     
 
 async def deposit_8(callback: CallbackQuery,
@@ -132,10 +124,8 @@ async def deposit_8(callback: CallbackQuery,
                     dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    deposit = 8    
-    await deposit(user_id,
-                  dialog_manager,
-                  deposit)
+    dialog_manager.current_context().dialog_data['deposit'] = 8
+    await dialog_manager.switch_to(LobbySG.game_confirm)
     
 
 async def deposit_25(callback: CallbackQuery,
@@ -143,10 +133,8 @@ async def deposit_25(callback: CallbackQuery,
                      dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    deposit = 25  
-    await deposit(user_id,
-                  dialog_manager,
-                  deposit)   
+    dialog_manager.current_context().dialog_data['deposit'] = 25
+    await dialog_manager.switch_to(LobbySG.game_confirm) 
     
     
 async def deposit_50(callback: CallbackQuery,
@@ -154,10 +142,8 @@ async def deposit_50(callback: CallbackQuery,
                      dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    deposit = 50
-    await deposit(user_id,
-                  dialog_manager,
-                  deposit)
+    dialog_manager.current_context().dialog_data['deposit'] = 50
+    await dialog_manager.switch_to(LobbySG.game_confirm)
     
 
 async def deposit_100(callback: CallbackQuery,
@@ -165,10 +151,8 @@ async def deposit_100(callback: CallbackQuery,
                       dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    deposit = 100
-    await deposit(user_id,
-                  dialog_manager,
-                  deposit)
+    dialog_manager.current_context().dialog_data['deposit'] = 100
+    await dialog_manager.switch_to(LobbySG.game_confirm)
     
     
 # If Not Enough TON for Deposit...
@@ -181,3 +165,14 @@ async def import_from_lobby(callback: CallbackQuery,
     
     await dialog_manager.start(MainSG.ton_import,
                                mode=StartMode.RESET_STACK)
+    
+# CONFIRM GAME FINALLY
+async def confirm_game(callback: CallbackQuery,
+                       button: Button,
+                       dialog_manager: DialogManager):
+    
+    user_id = callback.from_user.id
+    await create_room_query(user_id,
+                            dialog_manager)
+  
+    
