@@ -116,3 +116,82 @@ async def not_enough_ton_getter(dialog_manager: DialogManager,
             'button_tonimport': i18n.button.tonimport(),
             'button_back': i18n.button.back()}
     
+    
+# User is owner of room 1VS1 and waiting for guest
+async def wait_owner_1vs1_getter(dialog_manager: DialogManager,
+                                 session: async_sessionmaker,
+                                 i18n: TranslatorRunner,
+                                 bot: Bot,
+                                 event_from_user: User,
+                                 **kwargs
+                                 ) -> dict:
+    
+    return {'owner_1vs1': i18n.owner1vs1(deposit=deposit),
+            'button_wait_check_o': i18n.wait.check.o(),
+            'button_back': i18n.button.back()}
+
+
+# User is owner of room SUPER and waiting for guests
+async def wait_owner_super_getter(dialog_manager: DialogManager,
+                                  session: async_sessionmaker,
+                                  i18n: TranslatorRunner,
+                                  bot: Bot,
+                                  event_from_user: User,
+                                  **kwargs
+                                  ) -> dict:
+    
+	return {'owner_super': i18n.owner1vs1(deposit=deposit,
+                                       	  players=players,
+                                          players_ready=players_ready),
+            'button_wait_check_s': i18n.wait.check.o(),
+            'button_owner_ready': i18n.owner.ready(),
+            'button_back': i18n.button.back()}
+
+
+# User searching for Game...
+async def search_getter(dialog_manager: DialogManager,
+                        session: async_sessionmaker,
+                        i18n: TranslatorRunner,
+                        bot: Bot,
+                        event_from_user: User,
+                        **kwargs
+                        ) -> dict:
+	
+ 	return {'search_game': i18n.search.game(deposit=deposit,
+                                            mode=mode),
+            'button_wait_check_search': i18n.wait.check.search(),
+            'button_back': i18n.button.back()}
+
+
+# User joined for SUPER game
+async def wait_joinef_super_getter(dialog_manager: DialogManager,
+                                   session: async_sessionmaker,
+                                   i18n: TranslatorRunner,
+                                   bot: Bot,
+                                   event_from_user: User,
+                                   **kwargs
+                                   ) -> dict:
+    
+	return {'joined_super': i18n.joined1vs1(deposit=deposit,
+                                       	    players=players,
+                                            players_ready=players_ready),
+            'button_joined_check_s': i18n.joined.check.o(),
+            'button_joined_ready': i18n.joined.ready(),
+            'button_back': i18n.button.back()}
+
+
+# Game is Ready! Need to Confirm
+async def game_ready_getter(dialog_manager: DialogManager,
+                            session: async_sessionmaker,
+                            i18n: TranslatorRunner,
+                            bot: Bot,
+                            event_from_user: User,
+                            **kwargs
+                            ) -> dict:
+
+	return {'game_ready': i18n.game.ready(deposit=deposit,
+                                       	  mode=mode,
+                                          players=players),
+            'button_game_confirm': i18n.button.game.confirm(),
+            'button_back': i18n.button.back()}
+    

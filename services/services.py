@@ -1,4 +1,5 @@
 import logging
+import pprint
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from aiogram_dialog import DialogManager, StartMode
@@ -52,46 +53,73 @@ async def create_room_query(user_id: int,
 
         if find_create == 'create':   
             
-            # Creating empty room with Users Game for another players    
-            max_players: int  # Count of players for current mode          
+            # Creating empty room with Users Game for another players            
             if mode == '1vs1':        
                 room_1vs1 = {
-                             'room_id': user_id,
+                             'owner': user_id,
+                             'guest': 'wait',
                              'deposit': deposit,
-                             'max_players': 2
                 }          
                 # Put room to Redis. ro: room one (vs one)
                 await r.hmset('ro_' + str(room_id), room_1vs1)
+                
+                # After writing Data to Redis
+                await dialog_manager.start(LobbySG.owner_o)
+                
                 
             elif mode == 'super':
                 room_super = {
                               'room_id': user_id,
                               'deposit': deposit, 
-                              'current_players': 1
                 }
                 # Put room to Redis. rs: room super
                 await r.hmset('rs_' + str(room_id), room_super)
+                
+                # After writing Data to Redis
+                await dialog_manager.start(LobbySG.owner_s)
+                
         elif find_create == 'find':
             
-            # Createing Query for Game by requirements
-            if mode == '1vs1':
-                query_1vs1 = {
-                              'query_id': user_id,
-                              'deposit': deposit,                
-                }
-                # Put query to Redis. qo: query one (vs one)
-                await r.hmset('qo_' + str(room_id), query_1vs1)
-            
-            elif mode == 'super':
-                query_super = {
-                               'query_id': user_id,
-                               'deposit': deposit,                
-                }
-                # Put query to Redis. qs: query super
-                await r.hmset('qs_' + str(room_id), query_1vs1)
-                
-        # After writing dData to Redis
-        await dialog_manager.start(GameSG.waiting,
-                                   mode=StartMode.RESET_STACK)
+            await dialog_manager.start(LobbySG.search,
+                                       data={'mode': mode,
+                                             'deposit': deposit})   
     else:
         await dialog_manager.switch_to(LobbySG.not_enough_ton)
+        
+        
+# Get require Game
+async def get_game(query: dict
+                   ) -> dict | str:
+    
+    r = aioredis.Redis(host='localhost', port=6379)
+    
+    result: dict | str  # Success for suitable request
+
+    logger.info(f'User deposit: {query['deposit']}, Query Mode: {query['mode']}')
+    
+    mode_map = {'1vs1': 'o',
+                'super': 's'}
+    # 'o' or 's'
+    mode = mode_map[query['mode']]
+    
+    # Search for required room
+    for key in await r.keys(f'r{mode}_*'):
+            
+        room = await r.get(key)
+        room_deposit = room[b'deposit']
+            
+        logger.info(f'Founded Room: {pprint.pprint(room)}')
+            
+        if room_deposit == query['deposit']:
+            logger.info(f'Founded!')
+            result = room
+            break
+        else:
+            continue
+    else:
+        result = 'no_rooms' 
+        
+    return result  
+        
+    
+    

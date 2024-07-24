@@ -18,9 +18,13 @@ class LobbySG(StatesGroup):
     mode = State()
     deposit = State()
     not_enough_ton = State()
-   
+    waiting = State()
+    owner_o = State()
+    owner_s = State()
+    search = State()
+    joined_s = State()
+    game_ready = State()
     
 class GameSG(StateGroup):
-    waiting = State()
-    mode_1vs1 = State()
-    mode_super = State()
+    main = State()
+    

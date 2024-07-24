@@ -16,6 +16,7 @@ from redis import asyncio as aioredis
 
 from states import GameSG, LobbySG
 from config import get_config, BotConfig
+from services import get_game
 
 
 waiting_router = Router()
@@ -35,21 +36,7 @@ async def confirm_game(callback: CallbackQuery,
                        dialog_manager: DialogManager
                        ):
     
-    logger.info(f'User {callback.from_user.id} enter the Game')
-
-    await dialog_manager.reset_stack()
-     
-    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-        
-    msg = await callback.message.answer(text=i18n.wait.game())
+    pass
     
-    # Init Bot for delete last message
-    bot_config = get_config(BotConfig, "bot")
-    bot = Bot(token=bot_config.token.get_secret_value(),
-              default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     
-    await bot.delete_message(callback.from_user.id, msg.message_id - 1)
-
-    
-
 

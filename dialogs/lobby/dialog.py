@@ -61,5 +61,42 @@ lobby_dialog = Dialog(
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=not_enough_ton_getter,
         state=LobbySG.not_enough_ton   
+    ),
+    Window(
+        Format('{owner_1vs1}'),
+        Button(Format('{button_wait_check_o}'), id='b_wait_check_o', on_click=wait_check_o),
+        Button(Format('{button_back}'), id='b_back', on_click=back),
+        getter=wait_owner_1vs1_getter,
+        state=LobbySG.owner_o
+    ),
+    Window(
+        Format('{owner_super}'),
+        Button(Format('{button_wait_check_s}'), id='b_wait_check_s', on_click=wait_check_s),
+        Button(Format('{button_joined_ready}'), id='b_owner_ready', on_click=owner_ready),
+        Button(Format('{button_back}'), id='b_back', on_click=back),
+        getter=wait_owner_super_getter,
+        state=LobbySG.owner_s
+    ),
+    Window(
+        Format('{search_game}'),
+        Button(Format('{button_wait_check_search}'), id='b_wait_check_search', on_click=wait_check_search),
+        Button(Format('{button_back}'), id='b_back', on_click=back),
+        getter=search_getter,
+        state=LobbySG.search
+    ),
+    Window(
+        Format('{joined_super}'),
+        Button(Format('{button_joined_check_s}'), id='b_joined_check_s', on_click=joined_check_s),
+        Button(Format('{button_joined_ready}'), id='b_joined_ready', on_click=joined_ready),
+        Button(Format('{button_back}'), id='b_back', on_click=back),
+        getter=wait_owner_super_getter,
+        state=LobbySG.joined_s
+    ),
+    Window(
+        Format('{game_ready}'),
+        Button(Format('{button_game_confirm}'), id='b_game_confirm', on_click=game_confirm),
+        Button(Format('{button_back}'), id='b_back', on_click=back),
+        getter=game_ready_getter,
+        state=LobbySG.game_ready
     )
 )
