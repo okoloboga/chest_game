@@ -72,7 +72,7 @@ lobby_dialog = Dialog(
     Window(
         Format('{owner_super}'),
         Button(Format('{button_wait_check_s}'), id='b_wait_check_s', on_click=wait_check_s),
-        Button(Format('{button_joined_ready}'), id='b_owner_ready', on_click=owner_ready),
+        Button(Format('{button_owner_ready}'), id='b_owner_ready', on_click=owner_ready),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=wait_owner_super_getter,
         state=LobbySG.owner_s
@@ -89,7 +89,7 @@ lobby_dialog = Dialog(
         Button(Format('{button_joined_check_s}'), id='b_joined_check_s', on_click=joined_check_s),
         Button(Format('{button_joined_ready}'), id='b_joined_ready', on_click=joined_ready),
         Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=wait_owner_super_getter,
+        getter=wait_joined_super_getter,
         state=LobbySG.joined_s
     ),
     Window(

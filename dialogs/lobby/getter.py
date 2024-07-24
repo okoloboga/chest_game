@@ -126,6 +126,10 @@ async def wait_owner_1vs1_getter(dialog_manager: DialogManager,
                                  **kwargs
                                  ) -> dict:
     
+    deposit = dialog_manager.current_context().dialog_data['deposit']
+    logger.info(f'User {event_from_user.id} waiting for 1VS1 game as\
+      Owner, deposit: {deposit}')   
+    
     return {'owner_1vs1': i18n.owner1vs1(deposit=deposit),
             'button_wait_check_o': i18n.wait.check.o(),
             'button_back': i18n.button.back()}
@@ -139,10 +143,16 @@ async def wait_owner_super_getter(dialog_manager: DialogManager,
                                   event_from_user: User,
                                   **kwargs
                                   ) -> dict:
-    
-	return {'owner_super': i18n.owner1vs1(deposit=deposit,
-                                       	  players=players,
-                                          players_ready=players_ready),
+
+    deposit = dialog_manager.current_context().dialog_data['deposit']
+    players = deialog_manager.current_context().dialog_data['players']
+    players_ready = deialog_manager.current_context().dialog_data['players_ready']    
+    logger.info(f'User {event_from_user.id} waiting for SUPER game as\
+      Owner, deposit: {deposit}, players joined: {players}, players ready: {players_ready}')
+        
+    return {'owner_super': i18n.ownersuper(deposit=deposit,
+                                       	   players=players,
+                                           players_ready=players_ready),
             'button_wait_check_s': i18n.wait.check.o(),
             'button_owner_ready': i18n.owner.ready(),
             'button_back': i18n.button.back()}
@@ -157,22 +167,34 @@ async def search_getter(dialog_manager: DialogManager,
                         **kwargs
                         ) -> dict:
 	
- 	return {'search_game': i18n.search.game(deposit=deposit,
+    deposit = dialog_manager.current_context().dialog_data['deposit']	
+    mode = dialog_manager.current_context().dialog_data['mode']
+    logger.info(f'User {event_from_user.id} waiting for {mode} game as\
+      Searcher, deposit: {deposit}')  
+          
+    return {'search_game': i18n.search.game(deposit=deposit,
                                             mode=mode),
             'button_wait_check_search': i18n.wait.check.search(),
             'button_back': i18n.button.back()}
 
 
 # User joined for SUPER game
-async def wait_joinef_super_getter(dialog_manager: DialogManager,
+async def wait_joined_super_getter(dialog_manager: DialogManager,
                                    session: async_sessionmaker,
                                    i18n: TranslatorRunner,
                                    bot: Bot,
                                    event_from_user: User,
                                    **kwargs
                                    ) -> dict:
+
+    deposit = dialog_manager.current_context().dialog_data['deposit']
+    players = deialog_manager.current_context().dialog_data['players']
+    players_ready = deialog_manager.current_context().dialog_data['players_ready']    
+    logger.info(f'User {event_from_user.id} waiting for SUPER game as\
+      Joined, deposit: {deposit}, players joined: {players}, players ready: {players_ready}')
+
     
-	return {'joined_super': i18n.joined1vs1(deposit=deposit,
+    return {'joined_super': i18n.joined1vs1(deposit=deposit,
                                        	    players=players,
                                             players_ready=players_ready),
             'button_joined_check_s': i18n.joined.check.o(),
@@ -189,7 +211,13 @@ async def game_ready_getter(dialog_manager: DialogManager,
                             **kwargs
                             ) -> dict:
 
-	return {'game_ready': i18n.game.ready(deposit=deposit,
+    deposit = dialog_manager.current_context().dialog_data['deposit']
+    mode = deialog_manager.current_context().dialog_data['mode']
+    players = deialog_manager.current_context().dialog_data['players']    
+    logger.info(f'User {event_from_user.id}; offer to confirm {mode} game\
+     with deposit {deposti}, total {players} players')
+ 
+    return {'game_ready': i18n.game.ready(deposit=deposit,
                                        	  mode=mode,
                                           players=players),
             'button_game_confirm': i18n.button.game.confirm(),
