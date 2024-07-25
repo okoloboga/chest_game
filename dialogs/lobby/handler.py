@@ -5,9 +5,11 @@ from aiogram.utils.deep_linking import decode_payload
 from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager, StartMode
+from redis import asyncio as aioredis
 
 from states import LobbySG
-from services import create_room_query 
+from services import (create_room_query, get_game, 
+                      write_as_guest, room_to_game)
 
 lobby_router = Router()
 
@@ -175,4 +177,91 @@ async def confirm_game(callback: CallbackQuery,
     await create_room_query(user_id,
                             dialog_manager)
   
+'''
+                         /$$   /$$    
+                        |__/  | $$    
+ /$$  /$$  /$$  /$$$$$$  /$$ /$$$$$$  
+| $$ | $$ | $$ |____  $$| $$|_  $$_/  
+| $$ | $$ | $$  /$$$$$$$| $$  | $$    
+| $$ | $$ | $$ /$$__  $$| $$  | $$ /$$
+|  $$$$$/$$$$/|  $$$$$$$| $$  |  $$$$/
+ \_____/\___/  \_______/|__/   \___/ 
+'''
+
+
+# Checking for founded guest in 1VS1
+async def wait_check_o(callback: CallbackQuery,
+                       button: Button,
+                       dialog_manager: DialogManager):
     
+    r = aioredis.Redis(host='localhost', port=6379)
+    room = await r.hgetall('ro_'+str(callback.from_user.id))
+    logger.info(f'Current room status: {room}')
+    
+    if room[b'guest'] == b'wait':
+        
+        # Nothing new... 
+        await callback.message.answer(text=i18n.still.waiting.opponent())
+    else:
+        await dialog_manager.switch_to(LobbySG.game_ready)
+
+
+# Checking for founded guests in SUPER
+'''
+async def wait_check_s(callback: CallbackQuery,
+                       button: Button,
+                       dialog_manager: DialogManager):
+    pass
+
+
+# Owner of game room is Ready
+async def owner_ready(callback: CallbackQuery,
+                      button: Button,
+                      dialog_manager: DialogManager):
+    pass
+'''
+
+
+# Checking got game while searching
+async def wait_check_search(callback: CallbackQuery,
+                            button: Button,
+                            dialog_manager: DialogManager):
+    
+    mode = dialog_manager.current_context().dialog_data['mode']
+    deposit = dialog_manager.current_context().dialog_data['deposit']
+    
+    query = {'mode': mode,
+             'deposit': deposit}
+    
+    result = await get_game(query)
+    if result == 'no_rooms':
+        await callback.message.answer(text=i18n.still.searching.game())
+    else:
+        await write_as_guest(result, callback.from_user.id)
+        await dialog_manager.switch_to(LobbySG.game_ready(),
+                                       data={'room': result})
+        
+'''
+# Checking for ready of another players in SUPER Mode
+async def joined_check_s(callback: CallbackQuery,
+                         button: Button,
+                         dialog_manager: DialogManager):
+    pass
+
+
+# Ready for SUPER game
+async def joined_ready(callback: CallbackQuery,
+                       button: Button,
+                       dialog_manager: DialogManager):
+    pass
+'''
+
+# Confirming GAME READY
+async def game_ready(callback: CallbackQuery,
+                     button: Button,
+                     dialog_manager: DialogManager):
+    
+    find_create = dialog_manager.current_context().dialog_data['find_create']
+
+    if find_create == 'create':
+        await room_to_game(callback.from_user.id)

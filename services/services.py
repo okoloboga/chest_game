@@ -107,10 +107,11 @@ async def get_game(query: dict
             
         room = await r.get(key)
         room_deposit = room[b'deposit']
+        room_guest = room[b'guest']
             
-        logger.info(f'Founded Room: {pprint.pprint(room)}')
+        logger.info(f'Checking Room: {pprint.pprint(room)}')
             
-        if room_deposit == query['deposit']:
+        if room_deposit == query['deposit'] and room_guest == b'wait':
             logger.info(f'Founded!')
             result = room
             break
@@ -120,6 +121,30 @@ async def get_game(query: dict
         result = 'no_rooms' 
         
     return result  
+
+
+# For Searcher - Write self to Room
+async def write_as_guest(room: dict,
+                         user_id: int):
+    
+    logger.info(f'User {user_id} write himself as Guest to room {room[b'owner']}\
+        with Deposit {room[b'deposit']} in 1VS1 Game')
+    
+    room = await r.hgetall('ro_'+str(room[b'owner'], encoding='utf-8'))
+    room[b'guest'] = str(user_id)
+    await r.hmset('ro_'+str(room[b'owner'], encoding='utf-8'), room)
+    
+    logger.info(f'Should be writed...')
+
+
+# From Room to Game 1VS1
+async def room_to_game(user_id: int):
+    
+    r = aioredis.Redis(host='localhost', port=6379)
+    room = await r.hgetall('ro_'+str(user_id))
+    
+    
+    
         
     
     

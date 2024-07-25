@@ -136,6 +136,7 @@ async def wait_owner_1vs1_getter(dialog_manager: DialogManager,
 
 
 # User is owner of room SUPER and waiting for guests
+'''
 async def wait_owner_super_getter(dialog_manager: DialogManager,
                                   session: async_sessionmaker,
                                   i18n: TranslatorRunner,
@@ -156,6 +157,7 @@ async def wait_owner_super_getter(dialog_manager: DialogManager,
             'button_wait_check_s': i18n.wait.check.o(),
             'button_owner_ready': i18n.owner.ready(),
             'button_back': i18n.button.back()}
+'''
 
 
 # User searching for Game...
@@ -179,6 +181,7 @@ async def search_getter(dialog_manager: DialogManager,
 
 
 # User joined for SUPER game
+'''
 async def wait_joined_super_getter(dialog_manager: DialogManager,
                                    session: async_sessionmaker,
                                    i18n: TranslatorRunner,
@@ -194,12 +197,13 @@ async def wait_joined_super_getter(dialog_manager: DialogManager,
       Joined, deposit: {deposit}, players joined: {players}, players ready: {players_ready}')
 
     
-    return {'joined_super': i18n.joined1vs1(deposit=deposit,
+    return {'joined_super': i18n.joined.super(deposit=deposit,
                                        	    players=players,
                                             players_ready=players_ready),
             'button_joined_check_s': i18n.joined.check.o(),
             'button_joined_ready': i18n.joined.ready(),
             'button_back': i18n.button.back()}
+'''
 
 
 # Game is Ready! Need to Confirm
@@ -213,13 +217,14 @@ async def game_ready_getter(dialog_manager: DialogManager,
 
     deposit = dialog_manager.current_context().dialog_data['deposit']
     mode = deialog_manager.current_context().dialog_data['mode']
-    players = deialog_manager.current_context().dialog_data['players']    
+    players = deialog_manager.current_context().dialog_data['players']
+        
     logger.info(f'User {event_from_user.id}; offer to confirm {mode} game\
-     with deposit {deposti}, total {players} players')
+     with deposit {deposit}, total {players} players')
  
     return {'game_ready': i18n.game.ready(deposit=deposit,
                                        	  mode=mode,
                                           players=players),
-            'button_game_confirm': i18n.button.game.confirm(),
+            'button_game_ready': i18n.button.game.ready(),
             'button_back': i18n.button.back()}
     

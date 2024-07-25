@@ -27,6 +27,13 @@ button-create-game = Создать Игру
 button-mode1vs1 = 1VS1
 button-modesuper = SUPER
 button-game-confirm = Подтвердить
+button-wait-check-o = Проверить...
+button-wait-check-s = Проверить...
+button-owner-ready = Готов!
+button-wait-check-search = Проверить...
+button-joined-check-s = Проверить...
+button-joined-ready = Готов!
+button-game-ready = Играть!
 button-back = Назад
 
 
@@ -168,9 +175,9 @@ tonexport-notenough = Недостаточно TON
 tonexport-error = Что то пошло не по плану
                   Твоя транзакция не была отправлена
     
-#########
-# LOBBY #
-#########
+########################
+# GAME MOD AND DEPOSIT #
+########################
 
 lobby-menu = Хочешь найти игру или
              создать новую?
@@ -195,8 +202,40 @@ game-confirm = Ты { $find_create_speech } игру
                в режиме { $mode }
                С депозитом { $deposit } TON
 
+####################
+# WAITING FOR GAME #
+####################
+
+owner1vs1 = Ожидаем соперника для 1VS1
+            Депозит: { $deposit } TON
+
+ownersuper = Ожидаем игроков для SUPER
+             Депозит: { $deposit } TON
+
+             Найдено { $players } игроков
+             { $players_ready } уже готовы!
+
+search-game = Ищем для тебя игру в режиме { $mode }!
+              Депозит: { $deposit } TON
+
+joined-super = Ты присоединился к игре { $super }
+               с депозитом { $deposit } TON
+
+               Найдено { $players } игроков
+               { $players_ready } уже готовы! 
+
+game-ready = Игра в режиме { $mode } готова
+             для { $players } игроков
+             с депозитом { $deposit } TON
+             
+             Нажми Готов что бы начать!
+
+still-waiting-opponent = Пока ждём соперника!
+
+still-searching-game = Пока ищем подходящую игру!
+
+
+
 ########
 # GAME #
 ########
-
-wait-game = Ожидание игры
