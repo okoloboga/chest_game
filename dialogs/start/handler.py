@@ -9,9 +9,8 @@ from aiogram_dialog import DialogManager
 from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from states import StartSG
-from services import create_user, get_user
-from .services import CHANNEL
+from states import MainSG, StartSG
+from services import create_user, get_user, CHANNEL
 
 
 start_router = Router()
@@ -35,7 +34,7 @@ async def command_start_getter(message: Message,
 
     # If user start bot by referral link 
     if command.args:
-        lgger.info(f'CommandObject is {command}')
+        logger.info(f'CommandObject is {command}')
         args = command.args
         payload = decode_payload(args)
     else:

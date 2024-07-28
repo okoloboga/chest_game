@@ -1,15 +1,15 @@
 import logging
 
 from aiogram import Router
-from aiogram.utils.deep_linking import decode_payload
-from aiogram.filters import CommandStart, CommandObject
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager, StartMode
+from aiogram_dialog.widgets.kbd import Button
+from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
 
-from states import LobbySG
+from states import LobbySG, MainSG
 from services import (create_room_query, get_game, 
-                      write_as_guest, room_to_game)
+                      write_as_guest)
 
 lobby_router = Router()
 
@@ -235,6 +235,7 @@ async def wait_check_search(callback: CallbackQuery,
     
     result = await get_game(query)
     if result == 'no_rooms':
+        i18n: TranslatorRunner = dialog_manager.middleware_data['i18n']
         await callback.message.answer(text=i18n.still.searching.game())
     else:
         await write_as_guest(result, callback.from_user.id)
@@ -256,12 +257,3 @@ async def joined_ready(callback: CallbackQuery,
     pass
 '''
 
-# Confirming GAME READY
-async def game_ready(callback: CallbackQuery,
-                     button: Button,
-                     dialog_manager: DialogManager):
-    
-    find_create = dialog_manager.current_context().dialog_data['find_create']
-
-    if find_create == 'create':
-        await room_to_game(callback.from_user.id)

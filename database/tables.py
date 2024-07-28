@@ -4,7 +4,7 @@ from sqlalchemy import func, Column, BigInteger, String, Integer, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 # Annotating types
-tg_id = Annotated[int, mapped_column(BigInteger, primary_key=true)]
+tg_id = Annotated[int, mapped_column(BigInteger, primary_key=True)]
 required_short_str = Annotated[str, mapped_column(String(15), nullable=False)]
 required_str = Annotated[str, mapped_column(String, nullable=False)]
 optional_str = Annotated[str, mapped_column(String, nullable=True)]
@@ -32,7 +32,7 @@ class User(Base):
     ton: Mapped[required_float]
     
     createdat: Mapped[datetime] = mapped_column(
-            Datetime(timezone=true),
+            Datetime(timezone=True),
             nullable=False,
             server_default=func.now()
             )

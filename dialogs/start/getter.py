@@ -5,7 +5,7 @@ from aiogram.types import User
 from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from database import User
+from database import User as UserDataBase
 from services import create_user
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ async def welcome_getter(dialog_manager: DialogManager,
                       last_name=event_from_user.last_name)
 
     # Add referral to link Parent
-    add_payload = session(User).where(user_id == User.telegram_id)
+    add_payload = session(UserDataBase).where(user_id == User.telegram_id)
     parent_user = await session.execute(add_payload)
     parent = parent_user.scalar()
     parent.referrals = parent.referrals + i18n

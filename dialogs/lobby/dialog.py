@@ -1,10 +1,6 @@
-from aiogram.types import ContentType
-
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Format, Const
-from aiogram_dialog.widgets.media import StaticMedia
 from aiogram_dialog.widgets.kbd import Button, Row
-from aiogram_dialog.widgets.input.text import TextInput
 
 from .getter import *
 from .handler import *
@@ -94,7 +90,7 @@ lobby_dialog = Dialog(
     # ),
     Window(
         Format('{game_ready}'),
-        Button(Format('{button_game_ready}'), id='b_game_ready', on_click=game_ready),
+        Button(Format('{button_game_ready}'), id='b_game_ready', on_click=confirm_game),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=game_ready_getter,
         state=LobbySG.game_ready

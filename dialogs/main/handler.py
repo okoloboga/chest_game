@@ -1,15 +1,15 @@
 import logging
 
 from aiogram import Router
-from aiogram.utils.deep_linking import decode_payload
-from aiogram.filters import CommandStart, CommandObject
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager 
 from aiogram_dialog.widgets.kbd import Button
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from aiogram_dialog.widgets.input.text import ManagedTextInput
+from fluentogram import TranslatorRunner
 
 from services import import_ton_check, process_transaction, export_ton
-
+from states import MainSG, LobbySG
+from database import User
 
 main_router = Router()
 
@@ -117,7 +117,8 @@ async def do_export(callback: CallbackQuery,
     user_id = callback.from_user.id
     logger.info(f'User {user_id} doing export with validated data:')
     logger.info(f'{result_list}')
-    
+    i18n: TranslatorRunner = dialog_manager.middleware_data['i18n']
+
     result = await export_ton(user_id=user_id,
                               amount=float(result_list[1]),
                               destination_address=result_list[0])
@@ -127,12 +128,12 @@ async def do_export(callback: CallbackQuery,
         
         # decrement TON value in database
         user_statement = session(User).where(user_id == User.telegram_id)
+        user = await session.execute(user_statement)
         
         # If users TON is enough...
         if user.ton >= result_list[1]:
-            user_db = await session.execute(user_statement)
-            user = user_db.scalar()
-            user.ton = user.ton - float(result_list[1])
+            user_scalar = user.scalar()
+            user_scalar.ton = user_scalar.ton - float(result_list[1])
 
             await callback.answer(text=i18n.tonexport.success(value=result_list[1],
                                                               address=result_list[0]))
@@ -142,7 +143,7 @@ async def do_export(callback: CallbackQuery,
                                                                 user_ton=user.ton))
     # If no transaction in exports...
     else:
-        await callback.answe(text=i18n.tonexport.error())
+        await callback.answer(text=i18n.tonexport.error())
 
 
 # Wrong export data filled
@@ -153,5 +154,5 @@ async def wrong_export(callback: CallbackQuery,
 
     logger.info(f'User {callback.from_user.id} fills wrong export data {result_list}')
 
-    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    i18n: TranslatorRunner = dialog_manager.middleware_data['i18n']
     await callback.answer(text=i18n.wrong.export())

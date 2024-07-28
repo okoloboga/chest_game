@@ -6,6 +6,8 @@ from aiogram_dialog import DialogManager, StartMode
 from aiogram_dialog.widgets.kbd import Button
 from fluentogram import TranslatorRunner
 
+from states import MainSG
+
 router_buttons = Router()
 
 logger = logging.getLogger(__name__)

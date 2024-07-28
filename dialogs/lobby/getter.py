@@ -1,5 +1,6 @@
 import logging
 
+from aiogram import Bot
 from aiogram_dialog import DialogManager
 from aiogram.types import User
 from aiogram.utils.deep_linking import create_start_link

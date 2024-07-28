@@ -25,7 +25,7 @@ def _load_config(path: str | None = None) -> list:
 def check_value_and_address(address_and_value: str) -> list:
     
     result_list = address_and_value.split()
-    logger.info(f'User want send {temp_dict[1]} TON to {temp_dict[0]}')
+    logger.info(f'User want send {result_list[1]} TON to {result_list[0]}')
     logger.info("Could he do this? Let's se!...")
     
     # Connecting to TonCenterClient TESTNET
@@ -33,10 +33,10 @@ def check_value_and_address(address_and_value: str) -> list:
     client = TonCenterClient(key=config[1], testnet=True)
     logger.info('TonCenterClient started')
     
-    wallet = Wallet(provider=client, address=temp_dict[0], version='v4r2')
+    wallet = Wallet(provider=client, address=result_list[0], version='v4r2')
 
-    if wallet is not None and temp_dict[1].isdigit:
-        if temp_dict[1].isdigit >= 1:
+    if wallet is not None and result_list[1].isdigit:
+        if float(result_list[1]) >= 1:
             return result_list
         raise ValueError
     raise ValueError
@@ -99,7 +99,7 @@ async def export_ton(user_id: int,
 # Check import transaction
 async def import_ton_check(user_id: int) -> dict | str:
     logger.info(f'Importing by {user_id}')
-    result: dict  # Put result of successful transaction here
+    result: dict = {} # Put result of successful transaction here
 
     # Connecting to TonCenterClient TESTNET
     config = _load_config()

@@ -1,15 +1,19 @@
 import logging
 import pprint
 
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from aiogram_dialog import DialogManager, StartMode
+from aiogram_dialog import DialogManager
 from redis import asyncio as aioredis
+from sqlalchemy.ext.asyncio import async_sessionmaker
+
+from services import get_user
+from states import LobbySG
 
 
 # Countig value of comission by referrals count
-def comission_counter(user_id: int) -> dict:
+async def comission_counter(user_id: int,
+                      session: async_sessionmaker) -> dict:
     
-    comission: int  # result comission by referrals
+    comission: int | float  # result comission by referrals
     user_data = await get_user(session, user_id)
     referrals = user_data.referrals
     
@@ -40,18 +44,21 @@ async def create_room_query(user_id: int,
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
             '[%(asctime)s] - %(name)s - %(message)s')
 
-    ton_value = dialog_manager.current_context().dialog_manager['ton']
+    deposit = float(dialog_manager.current_context().dialog_data['deposit'])
+    ton_value = float(dialog_manager.current_context().dialog_data['ton'])
+
     logger.info(f'User {user_id} make Deposit {deposit}, in users account {ton_value} TON')
     
     if ton_value >= deposit:
         
         # Create Room or Query
         find_create = dialog_manager.current_context().dialog_data['find_create']
-        deposit = dialog_manager.current_context().dialog_data['deposit']
         mode = dialog_manager.current_context().dialog_data['mode']
         logger.info(f'User {user_id} {find_create} {mode} Game for {deposit} TON')
 
-        if find_create == 'create':   
+        if find_create == 'create': 
+
+            r = aioredis.Redis(host='localhost', port=6379)
             
             # Creating empty room with Users Game for another players            
             if mode == '1vs1':        
@@ -61,7 +68,7 @@ async def create_room_query(user_id: int,
                              'deposit': deposit,
                 }          
                 # Put room to Redis. ro: room one (vs one)
-                await r.hmset('ro_' + str(room_id), room_1vs1)
+                await r.hmset('ro_' + str(user_id), room_1vs1)
                 
                 # After writing Data to Redis
                 await dialog_manager.start(LobbySG.owner_o)
@@ -73,7 +80,7 @@ async def create_room_query(user_id: int,
                               'deposit': deposit, 
                 }
                 # Put room to Redis. rs: room super
-                await r.hmset('rs_' + str(room_id), room_super)
+                await r.hmset('rs_' + str(user_id), room_super)
                 
                 # After writing Data to Redis
                 await dialog_manager.start(LobbySG.owner_s)
@@ -91,6 +98,14 @@ async def create_room_query(user_id: int,
 async def get_game(query: dict
                    ) -> dict | str:
     
+    logger = logging.getLogger(__name__)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(filename)s:%(lineno)d #%(levelname)-8s '
+            '[%(asctime)s] - %(name)s - %(message)s')
+
+
     r = aioredis.Redis(host='localhost', port=6379)
     
     result: dict | str  # Success for suitable request
@@ -126,7 +141,16 @@ async def get_game(query: dict
 # For Searcher - Write self to Room
 async def write_as_guest(room: dict,
                          user_id: int):
-    
+ 
+    logger = logging.getLogger(__name__)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(filename)s:%(lineno)d #%(levelname)-8s '
+            '[%(asctime)s] - %(name)s - %(message)s')
+
+    r = aioredis.Redis(host='localhost', port=6379)
+   
     logger.info(f'User {user_id} write himself as Guest to room {room[b'owner']}\
         with Deposit {room[b'deposit']} in 1VS1 Game')
     
@@ -142,6 +166,19 @@ async def room_to_game(user_id: int):
     
     r = aioredis.Redis(host='localhost', port=6379)
     room = await r.hgetall('ro_'+str(user_id))
+
+    # Game Dictionary - all process save here
+    game = {
+            'owner': str(room[b'owner'], encoding='utf-8'),
+            'guest': str(room[b'guest'], encoding='utf-8'),
+            'deposit': str(room[b'deposit'], encoding='utf-8'),
+            'hidder': None,  # Player, witch hide prize. Select randomly
+            'target': None,  # Chest with prize, chosen by Hidder
+            }
+    
+    # Write Game to Redis Database, and delete Room
+    await r.hmset('go_'+str(user_id), game)
+    await r.delete('ro_'+str(user_id))
     
     
     

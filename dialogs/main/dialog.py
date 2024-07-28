@@ -1,8 +1,5 @@
-from aiogram.types import ContentType
-
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Format, Const
-from aiogram_dialog.widgets.media import StaticMedia
 from aiogram_dialog.widgets.kbd import Button, Row, Url
 from aiogram_dialog.widgets.input.text import TextInput
 

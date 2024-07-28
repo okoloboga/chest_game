@@ -1,12 +1,13 @@
 import logging
 
+from aiogram import Bot
 from aiogram_dialog import DialogManager
 from aiogram.types import User
 from aiogram.utils.deep_linking import create_start_link
 from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from services import (db_services, comission_counter, ton_value, 
+from services import (comission_counter,
                       get_user, CENTRAL_WALLET)
 
 
@@ -39,17 +40,18 @@ async def main_getter(dialog_manager: DialogManager,
 
 # Referral menu information
 async def referrals_getter(dialog_manager: DialogManager,
-                           session: async_sessionmaker,
                            i18n: TranslatorRunner,
+                           bot: Bot,
                            event_from_user: User,
                            **kwargs
                            ) -> dict:
     
     user_id = event_from_user.id
     logger.info(f'User {user_id} in Referral Menu')
+    session: async_sessionmaker = dialog_manager.middleware_data['session']
     
     # getting user data from database for referrals count and comission
-    referrals_comission = comission_counter(user_id)
+    referrals_comission = await comission_counter(user_id, session)
     referrals = referrals_comission['referrals']
     comission = referrals_comission['comission']
     link = await create_start_link(bot, str(user_id), encode=True)
