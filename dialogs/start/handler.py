@@ -30,7 +30,7 @@ async def command_start_getter(message: Message,
                                command: CommandObject):
 
     user_id = message.from_user.id
-    session = dialog_manager.middleware_data['session']
+    session = dialog_manager.middleware_data.get('session')
 
     # If user start bot by referral link 
     if command.args:
@@ -58,7 +58,7 @@ async def command_start_getter(message: Message,
 async def check_subscribe(callback: CallbackQuery,
                           bot: Bot,
                           dialog_manager: DialogManager):
-    i18n: TranslatorRunner = dialog_manager.middleware_data['i18n']
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
 
     user_channel_status = await bot.get_chat_member(chat_id=CHANNEL, user_id=callback.from_user.id)
 

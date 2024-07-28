@@ -48,7 +48,7 @@ async def referrals_getter(dialog_manager: DialogManager,
     
     user_id = event_from_user.id
     logger.info(f'User {user_id} in Referral Menu')
-    session: async_sessionmaker = dialog_manager.middleware_data['session']
+    session = dialog_manager.middleware_data.get('session')
     
     # getting user data from database for referrals count and comission
     referrals_comission = await comission_counter(user_id, session)

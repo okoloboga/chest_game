@@ -74,7 +74,7 @@ async def import_check(callback: CallbackQuery,
     
     user_id = callback.from_user.id 
     logger.info(f'User {user_id} checking for import ...')
-    i18n: TranslatorRunner = dialog_manager.middleware_data['i18n']
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
 
     result = await import_ton_check(user_id)
      
@@ -89,7 +89,7 @@ async def import_check(callback: CallbackQuery,
         if transaction_check:
             # Transaction is new
             # Add TON amount to user account
-            session = dialog_manager.middleware_data['session']
+            session = dialog_manager.middleware_data.get('session')
             user_statement = session(User).where(user_id == User.telegram_id)
             user_db = await session.execute(user_statement)
             user = user_db.scalar()
@@ -117,7 +117,7 @@ async def do_export(callback: CallbackQuery,
     user_id = callback.from_user.id
     logger.info(f'User {user_id} doing export with validated data:')
     logger.info(f'{result_list}')
-    i18n: TranslatorRunner = dialog_manager.middleware_data['i18n']
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
 
     result = await export_ton(user_id=user_id,
                               amount=float(result_list[1]),
@@ -154,5 +154,5 @@ async def wrong_export(callback: CallbackQuery,
 
     logger.info(f'User {callback.from_user.id} fills wrong export data {result_list}')
 
-    i18n: TranslatorRunner = dialog_manager.middleware_data['i18n']
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     await callback.answer(text=i18n.wrong.export())

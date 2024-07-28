@@ -1,5 +1,6 @@
 import logging
 import pprint
+import random
 
 from aiogram_dialog import DialogManager
 from redis import asyncio as aioredis
@@ -161,25 +162,41 @@ async def write_as_guest(room: dict,
     logger.info(f'Should be writed...')
 
 
-# From Room to Game 1VS1
-async def room_to_game(user_id: int):
+# From Room to Game 1VS1 and get random Hidder
+async def room_to_game(user_id: int
+                       ) -> str:
     
     r = aioredis.Redis(host='localhost', port=6379)
-    room = await r.hgetall('ro_'+str(user_id))
 
-    # Game Dictionary - all process save here
-    game = {
-            'owner': str(room[b'owner'], encoding='utf-8'),
-            'guest': str(room[b'guest'], encoding='utf-8'),
-            'deposit': str(room[b'deposit'], encoding='utf-8'),
-            'hidder': None,  # Player, witch hide prize. Select randomly
-            'target': None,  # Chest with prize, chosen by Hidder
-            }
+    room = await r.hgetall('ro_'+str(user_id))
     
-    # Write Game to Redis Database, and delete Room
-    await r.hmset('go_'+str(user_id), game)
-    await r.delete('ro_'+str(user_id))
+    if room is not None:
+        
+        # Chosing hidder for first turn
+        chose_hidder = random.choice([room[b'owner'], room[b'guest']])
+        
+        # Game Dictionary - all process save here
+        game = {
+                'owner': str(room[b'owner'], encoding='utf-8'),
+                'guest': str(room[b'guest'], encoding='utf-8'),
+                'deposit': str(room[b'deposit'], encoding='utf-8'),
+                'hidder': str(chose_hidder, encoding='utf-8'),  # Player, witch hide prize. Select randomly
+                'target': None,  # Chest with prize, chosen by Hidder
+                }
     
+        # Write Game to Redis Database, and delete Room
+        await r.hmset('go_'+str(user_id), game)
+        await r.delete('ro_'+str(user_id))
+        
+        await r.set(user_id, 'go_'+str(room[b'owner'], encoding='utf-8'))       
+        return 'owner'
+
+    else:
+
+        # Write flag for Guest for easy find
+        await r.set(user_id, 'go_'+str(room[b'owner'], encoding='utf-8'))
+        return 'guest'
+
     
     
         
