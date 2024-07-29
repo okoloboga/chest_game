@@ -98,7 +98,7 @@ async def main_game_process(callback: CallbackQuery,
     guest = str(user_game[b'guest'], encoding='utf-8')
     enemy = owner if guest == user_id else guest
     hidder = str(user_game[b'hidder'], encoding='utf-8') 
-    searcher = guset if hidder == owner else owner
+    searcher = guest if hidder == owner else owner
     
     # If it Not Exit from Game
     if callback.data != 'game_exit':
