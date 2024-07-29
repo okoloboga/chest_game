@@ -181,7 +181,7 @@ async def room_to_game(user_id: int
                 'guest': str(room[b'guest'], encoding='utf-8'),
                 'deposit': str(room[b'deposit'], encoding='utf-8'),
                 'hidder': str(chose_hidder, encoding='utf-8'),  # Player, witch hide prize. Select randomly
-                'target': None,  # Chest with prize, chosen by Hidder
+                'target': None  # Chest with prize, chosen by Hidder
                 }
     
         # Write Game to Redis Database, and delete Room
