@@ -1,8 +1,10 @@
 import asyncio
 import logging
 
+from aiogram import session
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from database import User, TransactionHashes
+from .services import comission_counter
 
 
 logger = logging.getLogger(__name__)
@@ -72,7 +74,35 @@ async def process_transaction(sessionmaker: async_sessionmaker,
         # Transaction is old
         logger.info(f'Transaction is old for {transaction_value} TON')
         return False
-        
 
+
+# Changing data of Users after game results
+async def game_result_writer(session: async_sessionmaker,
+                             deposit: float,
+                             winner_id: int,
+                             loser_id: int):
+    
+    # Get Entities from database
+    winner_statement = session(User).where(winner_id == User.telegram_id)
+    loser_statement = session(User).where(loser_id == User.telegram_id)
+    
+    winner = (await session.execute(winner_statement)).scalar()
+    loser = (await session.execute(loser_statement)).scalar()
+
+    # Writing winner data
+    winner_comission = ((await comission_counter(winner_id, session)) / 100) * deposit
+    winner.games = winner.games + 1
+    winner.wins = winner.wins + 1
+    winner.wins_ton = winner.wins_ton + deposit + winner_comission
+    winner.ton = winner.ton + deposit + winner_comission
+
+    # Writing loser data
+    loser_comission = ((await comission_counter(loser_id, session)) / 100) * deposit
+    loser.games = loser.games + 1
+    loser.lose = loser.lose + 1
+    loser.lose_ton = loser.lose_ton + deposit + loser_comission
+    loser.ton = loser.ton - deposit - loser_comission
+    
+    await session.commit()
 
 

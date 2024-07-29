@@ -6,8 +6,9 @@ from aiogram.types import User
 from aiogram.utils.deep_linking import create_start_link
 from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.orm import sessionmaker
 
-from services import (comission_counter,
+from services import (comission_counter, game_result_writer()
                       get_user, CENTRAL_WALLET)
 
 
@@ -21,12 +22,22 @@ logging.basicConfig(
 
 # Main menu getter
 async def main_getter(dialog_manager: DialogManager,
-                      session: async_sessionmaker,
                       i18n: TranslatorRunner,
                       bot: Bot,
                       event_from_user: User,
                       **kwargs
                       ) -> dict:
+    # Is it after game?
+    result = dialog_manager.start_data if dialog_manager.start_data is not None else None
+    
+    # If yes - write this to Database
+    if result is not None:
+        session: async_sessionmaker = dialog_manager.middleware_data.get('session')
+        await game_result_writer(sessionmaker=session, 
+                                 deposit=float(result['game_deposit']),
+                                 winner_id=int(result['winner_id']),
+                                 loser_id=int(result['loser_id'])
+
     user_id = event_from_user.id
     logger.info(f'User {user_id} in Main Menu')
     

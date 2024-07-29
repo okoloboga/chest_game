@@ -198,7 +198,18 @@ async def room_to_game(user_id: int
         return 'guest'
 
     
-    
+# Game result processong
+async def game_result(owner: int,
+                      deposit: float,
+                      winner_id: int,
+                      loser_id: int) -> dict:
+
+    r = aioredis.Redis(host='localhost', port=6379)
+    await r.delete('go_'+str(owner))
+
+    return {'game_deposit': deposit,
+            'winner_id': winner_id,
+            'loser_id': loser_id}
         
     
     
