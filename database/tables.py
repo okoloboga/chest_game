@@ -5,12 +5,13 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 # Annotating types
 tg_id = Annotated[int, mapped_column(BigInteger, primary_key=True)]
+tr_hash = Annotated[str, mapped_column(String, primary_key=True)]
 required_short_str = Annotated[str, mapped_column(String(15), nullable=False)]
 required_str = Annotated[str, mapped_column(String, nullable=False)]
 optional_str = Annotated[str, mapped_column(String, nullable=True)]
 required_int = Annotated[int, mapped_column(Integer, nullable=False)]
 required_float = Annotated[float, mapped_column(Float, nullable=False)]
-optional_str = Annotated[int, mapped_column(Integer, nullable=True)]
+optional_int = Annotated[int, mapped_column(Integer, nullable=True)]
 
 
 class Base(DeclarativeBase):
@@ -18,7 +19,7 @@ class Base(DeclarativeBase):
 
 
 class User(Base):
-    __tablenanme__ = 'users'
+    __tablename__ = 'users'
 
     telegram_id: Mapped[tg_id]
     first_name: Mapped[required_short_str]
@@ -31,7 +32,7 @@ class User(Base):
     referrals: Mapped[required_int]
     ton: Mapped[required_float]
     
-    createdat: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
             DateTime(timezone=True),
             nullable=False,
             server_default=func.now()
@@ -48,10 +49,10 @@ class User(Base):
 class TransactionHashes(Base):
     __tablename__ = 'hashes'
     
-    transaction_hash: Mapped[required_str]
+    transaction_hash: Mapped[tr_hash]
     transaction_value: Mapped[required_int]
-    created: Mapped[datetime] = mapped_column(
-            Datetime(timezone=true),
-            nullable=False,
-            server_default=func.now()
-            )
+    created_at: Mapped[datetime] = mapped_column(
+                DateTime(timezone=True),
+                nullable=False,
+                server_default=func.now()
+                )

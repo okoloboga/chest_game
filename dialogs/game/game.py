@@ -15,7 +15,7 @@ from aiogram_dialog import DialogManager, StartMode
 from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
 
-from states import GameSG, LobbySG
+from states import GameSG, LobbySG, MainSG
 from config import get_config, BotConfig
 from services import get_game, room_to_game, game_result
 from .keyboard import *
@@ -127,7 +127,7 @@ async def main_game_process(callback: CallbackQuery,
 
         # If User is Searcher
         else:
-           target = str(user_game[b'target'], encoding='utf-8')
+            target = str(user_game[b'target'], encoding='utf-8')
 
             # Checking for success or not 
             if target == callback.data:
@@ -135,7 +135,7 @@ async def main_game_process(callback: CallbackQuery,
             
                 result = await game_result(int(owner), float(deposit), 
                                            winner_id=int(searcher),
-                                           loser_id=int(hidder)
+                                           loser_id=int(hidder))
 
                 try:
                     await callback.message.edit_text(text=i18n.game.youwin(deposit=deposit))

@@ -8,7 +8,7 @@ from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 
-from services import (comission_counter, game_result_writer()
+from services import (comission_counter, game_result_writer,
                       get_user, CENTRAL_WALLET)
 
 
@@ -36,7 +36,7 @@ async def main_getter(dialog_manager: DialogManager,
         await game_result_writer(sessionmaker=session, 
                                  deposit=float(result['game_deposit']),
                                  winner_id=int(result['winner_id']),
-                                 loser_id=int(result['loser_id'])
+                                 loser_id=int(result['loser_id']))
 
     user_id = event_from_user.id
     logger.info(f'User {user_id} in Main Menu')

@@ -7,7 +7,7 @@ from .getter import *
 from .handler import *
 from states import MainSG
 from services import check_value_and_address, TELEGRAPH, CHANNEL
-from dialogs import back
+from dialogs.buttons import back
 
 main_dialog = Dialog(
     Window(

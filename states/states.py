@@ -1,4 +1,4 @@
-from aiogram.fsm.states import States, StatesGroup
+from aiogram.fsm.state import State, StatesGroup
 
 class StartSG(StatesGroup):
     start = State()
@@ -24,7 +24,8 @@ class LobbySG(StatesGroup):
     search = State()
     joined_s = State()
     game_ready = State()
+    game_confirm = State()
     
-class GameSG(StateGroup):
+class GameSG(StatesGroup):
     main = State()
     

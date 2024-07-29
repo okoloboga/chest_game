@@ -1,12 +1,12 @@
 import logging
 import pprint
 import random
+import services.db_services
 
 from aiogram_dialog import DialogManager
 from redis import asyncio as aioredis
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from services import get_user
 from states import LobbySG
 
 
@@ -14,6 +14,7 @@ from states import LobbySG
 async def comission_counter(user_id: int,
                       session: async_sessionmaker) -> dict:
     
+    get_user = services.db_services.get_user
     comission: int | float  # result comission by referrals
     user_data = await get_user(session, user_id)
     referrals = user_data.referrals

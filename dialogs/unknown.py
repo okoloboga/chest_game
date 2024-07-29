@@ -4,11 +4,11 @@ from aiogram.fsm.context import FSMContext
 
 from fluentogram import TranslatorRunner
 
-router_unknown = Router()
+unknown_router = Router()
 
 
 # Unknown messages
-@router_unknown.message()
+@unknown_router.message()
 async def send_answer(message: Message, 
                       state: FSMContext,
                       i18n: TranslatorRunner):

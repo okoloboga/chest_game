@@ -1,10 +1,10 @@
 import asyncio
 import logging
+import services.services
 
-from aiogram import session
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from database import User, TransactionHashes
-from .services import comission_counter
+
 
 
 logger = logging.getLogger(__name__)
@@ -81,7 +81,9 @@ async def game_result_writer(session: async_sessionmaker,
                              deposit: float,
                              winner_id: int,
                              loser_id: int):
-    
+
+    comission_counter = services.services.comission_counter
+
     # Get Entities from database
     winner_statement = session(User).where(winner_id == User.telegram_id)
     loser_statement = session(User).where(loser_id == User.telegram_id)
