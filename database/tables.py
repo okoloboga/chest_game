@@ -1,6 +1,6 @@
 from typing import Annotated
 from datetime import datetime
-from sqlalchemy import func, Column, BigInteger, String, Integer, Float
+from sqlalchemy import func, BigInteger, DateTime, String, Integer, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 # Annotating types
@@ -32,7 +32,7 @@ class User(Base):
     ton: Mapped[required_float]
     
     createdat: Mapped[datetime] = mapped_column(
-            Datetime(timezone=True),
+            DateTime(timezone=True),
             nullable=False,
             server_default=func.now()
             )
