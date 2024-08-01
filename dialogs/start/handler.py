@@ -8,7 +8,7 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
 from fluentogram import TranslatorRunner
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from states import MainSG, StartSG
 from services import create_user, get_user, DOG_CHANNEL
@@ -23,7 +23,6 @@ logging.basicConfig(
     format='%(filename)s:%(lineno)d #%(levelname)-8s '
            '[%(asctime)s] - %(name)s - %(message)s')
 
-
 # Process START CommandStart
 @start_router.message(CommandStart(deep_link_encoded=True))
 async def command_start_getter(message: Message,
@@ -31,7 +30,7 @@ async def command_start_getter(message: Message,
                                command: CommandObject):
 
     user_id = message.from_user.id
-    session: async_sessionmaker = dialog_manager.middleware_data.get('session')
+    session: AsyncSession = dialog_manager.middleware_data.get('session')
 
     # If user start bot by referral link 
     if command.args:
@@ -73,7 +72,7 @@ async def check_subscribe(callback: CallbackQuery,
 async def start_confirm(callback: CallbackQuery,
                         button: Button,
                         dialog_manager: DialogManager):
-    session: async_sessionmaker = dialog_manager.middleware_data.get('session')
+    session: AsyncSession = dialog_manager.middleware_data.get('session')
 
     # Add new User to Database
     await create_user(session,

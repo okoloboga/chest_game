@@ -15,7 +15,7 @@ from redis.asyncio.client import Redis
 from config import get_config, BotConfig, DbConfig, Config, load_config
 from dialogs import dialogs, routers, unknown_router
 from utils import TranslatorHub, create_translator_hub
-from middlewares import TranslatorRunnerMiddleware
+from middlewares import TranslatorRunnerMiddleware, DbSessionMiddleware
 from database import Base
 
 logger = logging.getLogger(__name__)
@@ -39,13 +39,13 @@ async def main():
 
     engine = create_async_engine(
         url=str(db_config.dsn),
-        echo=False
+        echo=db_config.is_echo
     )
     
-    # Connection test with database
-    async with engine.begin() as connection:
-        await connection.run_sync(Base.metadata.drop_all)
-        await connection.run_sync(Base.metadata.create_all)
+    # Connection test with databas
+    # async with engine.begin() as connection:
+    #   await connection.run_sync(Base.metadata.drop_all)
+    #   await connection.run_sync(Base.metadata.create_all)
     
     Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
  
@@ -68,6 +68,7 @@ async def main():
     dp.include_routers(unknown_router)
     
     dp.update.middleware(TranslatorRunnerMiddleware())
+    dp.update.middleware(DbSessionMiddleware(Sessionmaker))
 
     setup_dialogs(dp)
 

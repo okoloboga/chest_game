@@ -25,7 +25,5 @@ async def back(callback: CallbackQuery,
     
     logger.info(f'User {callback.from_user.id} pressed to Back Button')
     
-    await dialog_manager.start(state=MainSG.start,
-                               mode=StartMode.RESET_STACK,
-                               data={'user_id': callback.from_user.id}
-                               )
+    await dialog_manager.start(state=MainSG.main,
+                               mode=StartMode.RESET_STACK)

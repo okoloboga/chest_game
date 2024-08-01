@@ -30,7 +30,7 @@ async def find_game(callback: CallbackQuery,
     logger.info(f'User {user_id} Search for Game')
     dialog_manager.current_context().dialog_data['find_create'] = 'find'
 
-    await dialog_manager.switch_to(LobbySG.type)
+    await dialog_manager.switch_to(LobbySG.mode)
 
 
 # Select to Create new Game
