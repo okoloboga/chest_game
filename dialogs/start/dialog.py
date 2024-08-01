@@ -11,7 +11,7 @@ from services import CHANNEL
 start_dialog = Dialog(
     Window(
         Format('{start_dialog}'),
-        Url(Format('{button_subscribe}'), Const(CHANNEL)),
+        Url(Format('{button_subscribe}'), url=Const(CHANNEL)),
         Button(Format('{button_check_subscribe}'), id='b_check_subscribe', on_click=check_subscribe),
         getter=start_getter,
         state=StartSG.start

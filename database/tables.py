@@ -43,7 +43,7 @@ class User(Base):
             name = self.first_name
         else:
             name = f'{self.first_name} {self.last_name}'
-        return f'[{telegram_id}] {name}'
+        return f'[{self.telegram_id}] {name}'
     
 
 class TransactionHashes(Base):

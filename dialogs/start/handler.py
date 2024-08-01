@@ -5,12 +5,13 @@ from aiogram.utils.deep_linking import decode_payload
 from aiogram.filters import CommandStart, CommandObject
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
+from aiogram_dialog.widgets.kbd import Button
 
 from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from states import MainSG, StartSG
-from services import create_user, get_user, CHANNEL
+from services import create_user, get_user, DOG_CHANNEL
 
 
 start_router = Router()
@@ -56,11 +57,12 @@ async def command_start_getter(message: Message,
 
 # Checking for channel subscribe
 async def check_subscribe(callback: CallbackQuery,
-                          bot: Bot,
+                          button: Button,
                           dialog_manager: DialogManager):
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    bot: Bot = dialog_manager.middleware_data.get('bot')
 
-    user_channel_status = await bot.get_chat_member(chat_id=CHANNEL, user_id=callback.from_user.id)
+    user_channel_status = await bot.get_chat_member(chat_id=DOG_CHANNEL, user_id=callback.from_user.id)
 
     if user_channel_status.status != 'left':
         await dialog_manager.switch_to(StartSG.welcome)

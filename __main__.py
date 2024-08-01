@@ -5,10 +5,12 @@ import sys
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
 from aiogram_dialog import setup_dialogs
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy import text
 from fluentogram import TranslatorHub
+from redis.asyncio.client import Redis
 
 from config import get_config, BotConfig, DbConfig, Config, load_config
 from dialogs import dialogs, routers, unknown_router
@@ -32,6 +34,8 @@ async def main():
 
     # Config
     db_config = get_config(DbConfig, "db")
+    storage = RedisStorage(Redis(),
+                           key_builder=DefaultKeyBuilder(with_destiny=True))
 
     engine = create_async_engine(
         url=str(db_config.dsn),
@@ -49,7 +53,7 @@ async def main():
     bot_config = get_config(BotConfig, "bot")
     bot = Bot(token=bot_config.token.get_secret_value(),
               default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    dp = Dispatcher(db_engine=engine)
+    dp = Dispatcher(db_engine=engine, storage=storage)
 
     # i18n init
     translator_hub: TranslatorHub = create_translator_hub()
