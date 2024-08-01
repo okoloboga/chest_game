@@ -31,7 +31,7 @@ async def command_start_getter(message: Message,
                                command: CommandObject):
 
     user_id = message.from_user.id
-    session = dialog_manager.middleware_data.get('session')
+    session: async_sessionmaker = dialog_manager.middleware_data.get('session')
 
     # If user start bot by referral link 
     if command.args:
@@ -50,8 +50,7 @@ async def command_start_getter(message: Message,
                                    data={'user_id': user_id,
                                          'payload': payload})
     else:
-        await dialog_manager.start(MainSG.start,
-                                   data={'user_id': user_id})
+        await dialog_manager.start(MainSG.main)
 
 
 
@@ -72,9 +71,15 @@ async def check_subscribe(callback: CallbackQuery,
 
 # Confirming registration after subscribing to channel
 async def start_confirm(callback: CallbackQuery,
-                        bot: Bot,
+                        button: Button,
                         dialog_manager: DialogManager):
-    await dialog_manager.start(MainSG.start,
-                               data={'user_id': callback.from_user.id})
+    session: async_sessionmaker = dialog_manager.middleware_data.get('session')
 
+    # Add new User to Database
+    await create_user(session,
+                      callback.from_user.id,
+                      callback.from_user.first_name,
+                      callback.from_user.last_name)
+
+    await dialog_manager.start(MainSG.main)
 

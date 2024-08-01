@@ -3,6 +3,7 @@ import logging
 import services.services
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy import select
 from database import User, TransactionHashes
 
 
@@ -43,10 +44,12 @@ async def create_user(sessionmaker: async_sessionmaker,
 async def get_user(sessionmaker: async_sessionmaker,
                    telegram_id: int
                    ) -> User | None:
+    logger.info(f'Getting User from Database with id {telegram_id}')
+    user_stmt = select(User).where(telegram_id == User.telegram_id)
+
     async with sessionmaker() as session:
-        result = await session.get(User, telegram_id)
-    
-    logger.info(f'User from database {result}')
+        result = await session.execute(user_stmt)
+        logger.info(f'User from database {result}')
     
     return result
 

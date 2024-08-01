@@ -48,6 +48,7 @@ async def main():
         await connection.run_sync(Base.metadata.create_all)
     
     Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
+ 
 
     # Init Bot in Dispatcher
     bot_config = get_config(BotConfig, "bot")

@@ -41,17 +41,10 @@ async def welcome_getter(dialog_manager: DialogManager,
 
     user_id = event_from_user.id 
 
-    logger.info(f'User {user_id} subscribed to channel')
-    first_name = event_from_user.first_name
+    logger.info(f'User {user_id} subscribed to channel') 
     dialog_manager.current_context().dialog_data['first_name'] = first_name
     payload = dialog_manager.start_data['payload']
     Sessionmaker: async_sessionmaker = dialog_manager.middleware_data.get('session')
-
-    # Add new user to database as registred after subscribing
-    await create_user(sessionmaker=Sessionmaker,
-                      telegram_id=event_from_user.id,
-                      first_name=event_from_user.first_name,
-                      last_name=event_from_user.last_name)
     
     # Add referral to link Parent
     if payload is not None:

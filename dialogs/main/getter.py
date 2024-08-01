@@ -29,7 +29,7 @@ async def main_getter(dialog_manager: DialogManager,
                       ) -> dict:
     # Is it after game?
     result = dialog_manager.start_data if dialog_manager.start_data is not None else None
-    
+    logger.info(f'Result is {result} - if it exit from game')
     # If yes - write this to Database
     if result is not None:
         session: async_sessionmaker = dialog_manager.middleware_data.get('session')
@@ -84,10 +84,10 @@ async def ton_balance_getter(dialog_manager: DialogManager,
     user_id = event_from_user.id
     logger.info(f'User {user_id} in TON Balace Menu')
     
-    ton_balance = await get_user(session, user_id)
-    logger.info(f'Ton balance getted for {user_id}: {ton_balance}')
+    user = await get_user(session, user_id)
+    logger.info(f'Ton balance getted for {user_id}: {user.ton}')
     
-    return {'balance': i18n.balance(ton_balance=ton_balance),
+    return {'balance': i18n.balance(ton_balance=user.ton),
             'button_import': i18n.button.tonimport(),
             'button_export': i18n.button.tonexport(),
             'button_back': i18n.button.back()}
