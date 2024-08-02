@@ -94,7 +94,6 @@ async def deposit_0_5(callback: CallbackQuery,
                       button: Button,
                       dialog_manager: DialogManager):
 
-    user_id = callback.from_user.id
     dialog_manager.current_context().dialog_data['deposit'] = 0.5
     await dialog_manager.switch_to(LobbySG.game_confirm)
 
@@ -103,7 +102,6 @@ async def deposit_1(callback: CallbackQuery,
                     button: Button,
                     dialog_manager: DialogManager):
 
-    user_id = callback.from_user.id
     dialog_manager.current_context().dialog_data['deposit'] = 1
     await dialog_manager.switch_to(LobbySG.game_confirm)
 
@@ -112,7 +110,6 @@ async def deposit_2(callback: CallbackQuery,
                     button: Button,
                     dialog_manager: DialogManager):
 
-    user_id = callback.from_user.id
     dialog_manager.current_context().dialog_data['deposit'] = 2
     await dialog_manager.switch_to(LobbySG.game_confirm)
 
@@ -121,7 +118,6 @@ async def deposit_4(callback: CallbackQuery,
                     button: Button,
                     dialog_manager: DialogManager):
 
-    user_id = callback.from_user.id
     dialog_manager.current_context().dialog_data['deposit'] = 4
     await dialog_manager.switch_to(LobbySG.game_confirm)
     
@@ -130,7 +126,6 @@ async def deposit_8(callback: CallbackQuery,
                     button: Button,
                     dialog_manager: DialogManager):
 
-    user_id = callback.from_user.id
     dialog_manager.current_context().dialog_data['deposit'] = 8
     await dialog_manager.switch_to(LobbySG.game_confirm)
     
@@ -139,7 +134,6 @@ async def deposit_25(callback: CallbackQuery,
                      button: Button,
                      dialog_manager: DialogManager):
 
-    user_id = callback.from_user.id
     dialog_manager.current_context().dialog_data['deposit'] = 25
     await dialog_manager.switch_to(LobbySG.game_confirm) 
     
@@ -148,7 +142,6 @@ async def deposit_50(callback: CallbackQuery,
                      button: Button,
                      dialog_manager: DialogManager):
 
-    user_id = callback.from_user.id
     dialog_manager.current_context().dialog_data['deposit'] = 50
     await dialog_manager.switch_to(LobbySG.game_confirm)
     
@@ -157,7 +150,6 @@ async def deposit_100(callback: CallbackQuery,
                       button: Button,
                       dialog_manager: DialogManager):
 
-    user_id = callback.from_user.id
     dialog_manager.current_context().dialog_data['deposit'] = 100
     await dialog_manager.switch_to(LobbySG.game_confirm)
     
@@ -205,7 +197,8 @@ async def wait_check_o(callback: CallbackQuery,
     
     if room[b'guest'] == b'wait':
         
-        # Nothing new... 
+        # Nothing new...
+        i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
         await callback.message.answer(text=i18n.still.waiting.opponent())
     else:
         await dialog_manager.switch_to(LobbySG.game_ready)

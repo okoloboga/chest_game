@@ -89,6 +89,8 @@ async def game_confirm_getter(dialog_manager: DialogManager,
     mode = dialog_manager.current_context().dialog_data['mode']
     deposit = dialog_manager.current_context().dialog_data['deposit']
     
+    logger.info(f'Player {event_from_user.id} {find_create} {mode} game for {deposit}')
+
     speech_map = {'find': i18n.find.speech(),
                	  'create': i18n.create.speech()}
     
@@ -132,7 +134,7 @@ async def wait_owner_1vs1_getter(dialog_manager: DialogManager,
       Owner, deposit: {deposit}')   
     
     return {'owner_1vs1': i18n.owner1vs1(deposit=deposit),
-            'button_wait_check_o': i18n.wait.check.o(),
+            'button_wait_check_o': i18n.button.wait.check.o(),
             'button_back': i18n.button.back()}
 
 
@@ -142,8 +144,7 @@ async def wait_owner_super_getter(dialog_manager: DialogManager,
                                   session: async_sessionmaker,
                                   i18n: TranslatorRunner,
                                   bot: Bot,
-                                  event_from_user: User,
-                                  **kwargs
+                                  event_from_user: User, **kwargs
                                   ) -> dict:
 
     deposit = dialog_manager.current_context().dialog_data['deposit']
@@ -177,7 +178,7 @@ async def search_getter(dialog_manager: DialogManager,
           
     return {'search_game': i18n.search.game(deposit=deposit,
                                             mode=mode),
-            'button_wait_check_search': i18n.wait.check.search(),
+            'button_wait_check_search': i18n.button.wait.check.search(),
             'button_back': i18n.button.back()}
 
 

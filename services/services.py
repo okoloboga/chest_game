@@ -73,7 +73,7 @@ async def create_room_query(user_id: int,
                 await r.hmset('ro_' + str(user_id), room_1vs1)
                 
                 # After writing Data to Redis
-                await dialog_manager.start(LobbySG.owner_o)
+                await dialog_manager.switch_to(LobbySG.owner_o)
                 
                 
             elif mode == 'super':
@@ -85,13 +85,11 @@ async def create_room_query(user_id: int,
                 await r.hmset('rs_' + str(user_id), room_super)
                 
                 # After writing Data to Redis
-                await dialog_manager.start(LobbySG.owner_s)
+                await dialog_manager.switch_to(LobbySG.owner_s)
                 
         elif find_create == 'find':
             
-            await dialog_manager.start(LobbySG.search,
-                                       data={'mode': mode,
-                                             'deposit': deposit})   
+            await dialog_manager.switch_to(LobbySG.search)   
     else:
         await dialog_manager.switch_to(LobbySG.not_enough_ton)
         
