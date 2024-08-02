@@ -6,8 +6,11 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.input.text import ManagedTextInput
 from fluentogram import TranslatorRunner
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from services import import_ton_check, process_transaction, export_ton
+from services import (import_ton_check, process_transaction, 
+                      export_ton, decrement_ton, get_user)
+from services.constants import CENTRAL_WALLET
 from states import MainSG, LobbySG
 from database import User
 
@@ -67,6 +70,15 @@ async def ton_export(callback: CallbackQuery,
     await dialog_manager.switch_to(MainSG.ton_export)
 
 
+# Get Central Wallet address for import TON
+async def get_wallet(callback: CallbackQuery,
+                     button: Button,
+                     dialog_manager: DialogManager):
+    
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    await callback.message.answer(text=i18n.central.wallet(wallet=CENTRAL_WALLET))
+
+
 # Checking for succesfull import
 async def import_check(callback: CallbackQuery,
                        button: Button,
@@ -79,22 +91,18 @@ async def import_check(callback: CallbackQuery,
     result = await import_ton_check(user_id)
      
     if type(result) is dict:
+    
+        session: AsyncSession = dialog_manager.middleware_data.get('session')
 
         # Checking for used transactions
         transaction_hash = result['hash']
         transaction_value = result['value']
-            
-        transaction_check = process_transaction(transaction_hash,
-                                                transaction_value)
+        
+        transaction_check = await process_transaction(session,
+                                                      user_id,
+                                                      transaction_hash,
+                                                      transaction_value)
         if transaction_check:
-            # Transaction is new
-            # Add TON amount to user account
-            session = dialog_manager.middleware_data.get('session')
-            user_statement = session(User).where(user_id == User.telegram_id)
-            user_db = await session.execute(user_statement)
-            user = user_db.scalar()
-            user.ton = user.ton + float(result['value'])
-
             await callback.answer(text=i18n.tonimport.success(value=result['value']))
         else:
             # Transaction is old - send notification
@@ -118,32 +126,33 @@ async def do_export(callback: CallbackQuery,
     logger.info(f'User {user_id} doing export with validated data:')
     logger.info(f'{result_list}')
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-
-    result = await export_ton(user_id=user_id,
-                              amount=float(result_list[1]),
-                              destination_address=result_list[0])
+    session = dialog_manager.middleware_data['session']   
     
-    if result:
-        session = dialog_manager.middleware_data['session']
-        
-        # decrement TON value in database
-        user_statement = session(User).where(user_id == User.telegram_id)
-        user = await session.execute(user_statement)
-        
-        # If users TON is enough...
-        if user.ton >= result_list[1]:
-            user_scalar = user.scalar()
-            user_scalar.ton = user_scalar.ton - float(result_list[1])
+    user_balance = (await get_user(session, user_id)).ton
 
-            await callback.answer(text=i18n.tonexport.success(value=result_list[1],
-                                                              address=result_list[0]))
-        
+    logger.info(f'Users {user_id} balance is {user_balance}')
+
+    if float(user_balance) > float(result_list[1]):
+        result = await export_ton(user_id=user_id,
+                                  amount=float(result_list[1]),
+                                  destination_address=result_list[0])        
+        if result:    
+            result_decrement = await decrement_ton(session, user_id, result_list[1])
+            
+            # If users TON is enough...
+            if result_decrement is True:
+                await callback.answer(text=i18n.tonexport.success(value=result_list[1],
+                                                                  address=result_list[0]))
+            else:
+                await callback.answer(text=i18n.tonexport.notenough(value=result_list[1],
+                                                                    user_ton=user_balance))
+        # If no transaction in exports...
         else:
-            await callback.answer(text=i18n.tonexport.notenough(value=result_list[1],
-                                                                user_ton=user.ton))
-    # If no transaction in exports...
+            await callback.answer(text=i18n.tonexport.error())
     else:
-        await callback.answer(text=i18n.tonexport.error())
+        await callback.answer(text=i18n.tonexport.notenough(value=result_list[1],
+                                                            user_ton=result_decrement))
+ 
 
 
 # Wrong export data filled

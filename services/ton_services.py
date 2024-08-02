@@ -4,6 +4,7 @@ import time
 
 from environs import Env
 from TonTools import *
+from sqlalchemy import except_, values
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ def _load_config(path: str | None = None) -> list:
     env = Env()
     env.read_env(path)
     logger.info("Enviroment executed")
-    return [env('BOT_TOKEN'), env('API'), env('API_TEST'), env('CENTRAL_WALLET_MNEMONICS'), env('CENTRAL_WALLET')]
+    return [env('BOT_TOKEN'), env('API_TEST'), env('CENTRAL_WALLET_MNEMONICS'), env('CENTRAL_WALLET')]
 
     
 # Checking for correct export input
@@ -52,7 +53,7 @@ async def ton_value(wallet: str) -> int:
     client = TonCenterClient(key=config[1], testnet=True)
     logger.info('TonCenterClient started')
 
-    wallet = Wallet(provider=client, address=config[4], version='v4r2')
+    wallet = Wallet(provider=client, address=config[3], version='v4r2')
     balance = await wallet.get_balance()
     
     logger.info(f'Wallet {wallet} have {balance / 1000000000}')
@@ -73,28 +74,41 @@ async def export_ton(user_id: int,
     client = TonCenterClient(key=config[1], testnet=True)
     logger.info('TonCenterClient started')
     
-    central_wallet = Wallet(provider=client, mnemonics=config[3].split(), version='v4r2')
+    central_wallet = Wallet(provider=client, mnemonics=config[2].split(), version='v4r2')
+    logger.info(f'Central wallet connected {central_wallet}')
     
-    logger.info(f'Central wallet connected')
-    current_time = time.time()
-    comment = f'export {user_id} at {current_time}'
-    
-    await central_wallet.transfer_ton(destination_address=destination_address,
-                                      amount=amount,
-                                      message=comment)
-    logger.info('TON export complete')
-    
-    # Checking for successful
-    transactions = await central_wallet.get_transactions(limit=10)
-    
-    for transaction in transactions:
-        logger.info(f'{transaction.to_dict_user_friendly()}')
-        if transaction.to_dict_user_friendly()['comment'] == comment:
-            return True
-            break
-    else:
+    # Checking Balance of central wallet
+    balance = await ton_value(central_wallet.address)
+    logger.info(f'central_wallet balance is {balance} TON')
+
+    if balance > amount:
+        comment = f'export_{user_id}'
+        
+        logger.info(f'Prepared transaction from central_wallet\n \
+                {central_wallet.address}\nto =>\n{destination_address}\n\
+                by')
+        logger.info(f'With comment: {comment}')
+        
+        await central_wallet.transfer_ton(destination_address=destination_address,
+                                          amount=float(amount),
+                                          message=comment
+                                          ) 
+        logger.info(f'TON export complete')
+        
+        # Checking for successful
+        transactions = await central_wallet.get_transactions(limit=10)
+        await asyncio.sleep(5)
+
+        for transaction in transactions:
+            logger.info(f'{transaction.to_dict_user_friendly()}')
+            if transaction.to_dict_user_friendly()['comment'] == comment:
+                return True
+                break
+        else:
+            return False
+    else: 
         return False
-    
+
 
 # Check import transaction
 async def import_ton_check(user_id: int) -> dict | str:
@@ -106,24 +120,27 @@ async def import_ton_check(user_id: int) -> dict | str:
     client = TonCenterClient(key=config[1], testnet=True)
     logger.info('TonCenterClient started')
     
-    wallet = Wallet(client, config[4], version='v4r2')
+    wallet = Wallet(client, config[3], version='v4r2')
     transaction = await wallet.get_transactions(limit=10)
     
     for t in transaction:
         
-        logger.info(f'{transaction.to_dict_user_friendly()}')
-        
-        if transaction.to_dict_user_friendly()['comment'] == user_id:
-            if float(transaction.to_dict_user_friendly()['value']) >= 0.5:
+        logger.info(f'{t.to_dict_user_friendly()}')
 
-                result['value'] = float(transaction.to_dict_user_friendly()['value'])
-                result['hash'] = int(transaction.to_dict_user_friendly()['hash'])
-                result['comment'] = int(transaction.to_dict_user_friendly()['comment'])
-             
-                return result
+        try:
+            if int(t.to_dict_user_friendly()['comment']) == user_id:
+                if float(t.to_dict_user_friendly()['value']) >= 0.5:
 
-            else: 
-                return 'not_enough'
-        else:
-            return 'no_transaction'
+                    result['value'] = float(t.to_dict_user_friendly()['value'])
+                    result['hash'] = str(t.to_dict_user_friendly()['hash'])
+                    result['comment'] = int(t.to_dict_user_friendly()['comment'])
+                 
+                    return result
+                    break
+                else: 
+                    return 'not_enough'
+            else:
+                return 'no_transaction'
+        except ValueError:
+            pass
     

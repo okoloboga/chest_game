@@ -42,8 +42,10 @@ main_dialog = Dialog(
     ),
     Window(
         Format('{import}'),
-        Format('{central_wallet}'),
-        Button(Format('{button_import_check}'), id='b_import_check', on_click=import_check),
+        Row(
+            Button(Format('{button_import_check}'), id='b_import_check', on_click=import_check),
+            Button(Format('{button_get_wallet}'), id='b_get_wallet', on_click=get_wallet)
+            ),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=ton_import_getter,
         state=MainSG.ton_import

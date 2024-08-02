@@ -56,3 +56,6 @@ class TransactionHashes(Base):
                 nullable=False,
                 server_default=func.now()
                 )
+
+    def __repr__(self) -> str:
+        return f'[{self.transaction_hash}] = {self.transaction_value}'

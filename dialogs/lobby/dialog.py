@@ -16,14 +16,16 @@ lobby_dialog = Dialog(
         getter=lobby_getter,
         state=LobbySG.main
     ),
-    Window(
-        Format('{select_mode}'),
-        Button(Format('{button_mode_1vs1}'), id='b_find_1vs1', on_click=mode_1vs1),
-        # Button(Format('{button_mode_super}'), id='b_find_super', on_click=mode_super),
-        Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=mode_getter,
-        state=LobbySG.mode
-    ),
+
+    # Window(
+    #     Format('{select_mode}'),
+    #     Button(Format('{button_mode_1vs1}'), id='b_find_1vs1', on_click=mode_1vs1),
+    #     # Button(Format('{button_mode_super}'), id='b_find_super', on_click=mode_super),
+    #     Button(Format('{button_back}'), id='b_back', on_click=back),
+    #     getter=mode_getter,
+    #     state=LobbySG.mode
+    # ),
+
     Window(
         Format('{select_deposit}'),
         Button(Const('0.5'), id='b_deposit_0_5', on_click=deposit_0_5),
@@ -50,7 +52,7 @@ lobby_dialog = Dialog(
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=game_confirm_getter,
         state=LobbySG.game_confirm  
-    ),
+    ), 
     Window(
         Format('{not_enough_ton}'),
         Button(Format('{button_tonimport}'), id='b_import_from_lobby', on_click=import_from_lobby),

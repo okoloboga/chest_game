@@ -29,8 +29,10 @@ async def find_game(callback: CallbackQuery,
     user_id = callback.from_user.id
     logger.info(f'User {user_id} Search for Game')
     dialog_manager.current_context().dialog_data['find_create'] = 'find'
+    dialog_manager.current_context().dialog_data['mode'] = '1vs1'
 
-    await dialog_manager.switch_to(LobbySG.mode)
+    # await dialog_manager.switch_to(LobbySG.mode)
+    await dialog_manager.switch_to(LobbySG.deposit)
 
 
 # Select to Create new Game
@@ -41,10 +43,13 @@ async def create_game(callback: CallbackQuery,
     user_id = callback.from_user.id
     logger.info(f'User {user_id} Create new Game')
     dialog_manager.current_context().dialog_data['find_create'] = 'create'
+    dialog_manager.current_context().dialog_data['mode'] = '1vs1'
 
-    await dialog_manager.switch_to(LobbySG.mode)
+    # await dialog_manager.switch_to(LobbySG.mode)
+    await dialog_manager.switch_to(LobbySG.deposit)
 
 
+'''
 # Seacrh or create for 1 VS 1 Game
 async def mode_1vs1(callback: CallbackQuery,
                     button: Button,
@@ -67,7 +72,7 @@ async def mode_super(callback: CallbackQuery,
     dialog_manager.current_context().dialog_data['mode'] = 'super'
 
     await dialog_manager.switch_to(LobbySG.deposit)
-    
+'''   
 
 
 ''' 

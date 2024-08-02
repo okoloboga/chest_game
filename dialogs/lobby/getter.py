@@ -41,7 +41,7 @@ async def lobby_getter(dialog_manager: DialogManager,
             'button_create_game': i18n.button.create.game(),
             'button_back': i18n.button.back()}
     
-    
+
 # Select type of game: Suber and 1VS1. For Create and Find
 async def mode_getter(dialog_manager: DialogManager,
                       session: async_sessionmaker,
@@ -97,7 +97,7 @@ async def game_confirm_getter(dialog_manager: DialogManager,
     return {'game_confirm': i18n.game.confirm(find_create_speech=find_create_speech,
                                               mode=mode.capitalize(),
                                               deposit=deposit),
-            'button_game_confirm': i18n.game.confirm(),
+            'button_game_confirm': i18n.button.confirm(),
             'button_back': i18n.button.back()}
  
     

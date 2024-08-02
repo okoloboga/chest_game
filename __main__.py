@@ -8,7 +8,6 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
 from aiogram_dialog import setup_dialogs
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlalchemy import text
 from fluentogram import TranslatorHub
 from redis.asyncio.client import Redis
 
@@ -44,8 +43,8 @@ async def main():
     
     # Connection test with databas
     # async with engine.begin() as connection:
-    #   await connection.run_sync(Base.metadata.drop_all)
-    #   await connection.run_sync(Base.metadata.create_all)
+    #     await connection.run_sync(Base.metadata.drop_all)
+    #     await connection.run_sync(Base.metadata.create_all)
     
     Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
  
