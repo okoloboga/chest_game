@@ -34,7 +34,7 @@ async def main_getter(dialog_manager: DialogManager,
     # If yes - write this to Database
     if result is not None:
         session: async_sessionmaker = dialog_manager.middleware_data.get('session')
-        await game_result_writer(sessionmaker=session, 
+        await game_result_writer(session=session, 
                                  deposit=float(result['game_deposit']),
                                  winner_id=int(result['winner_id']),
                                  loser_id=int(result['loser_id']))
@@ -42,7 +42,7 @@ async def main_getter(dialog_manager: DialogManager,
     user_id = event_from_user.id
     logger.info(f'User {user_id} in Main Menu')
     
-    return {'main_menu': i18n.welcome.dialog(name=event_from_user.first_name),
+    return {'main_menu': i18n.main.menu(),
             'button_play': i18n.button.play(),
             'button_balance': i18n.button.balance(),
             'button_how_to_play': i18n.button.howtoplay(),

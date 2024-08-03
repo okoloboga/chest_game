@@ -212,21 +212,20 @@ async def wait_joined_super_getter(dialog_manager: DialogManager,
 async def game_ready_getter(dialog_manager: DialogManager,
                             session: async_sessionmaker,
                             i18n: TranslatorRunner,
-                            bot: Bot,
                             event_from_user: User,
                             **kwargs
                             ) -> dict:
 
     deposit = dialog_manager.current_context().dialog_data['deposit']
-    mode = deialog_manager.current_context().dialog_data['mode']
-    players = deialog_manager.current_context().dialog_data['players']
+    mode = dialog_manager.current_context().dialog_data['mode']
+    # players = dialog_manager.current_context().dialog_data['players']
         
     logger.info(f'User {event_from_user.id}; offer to confirm {mode} game\
-     with deposit {deposit}, total {players} players')
+     with deposit {deposit}')
  
     return {'game_ready': i18n.game.ready(deposit=deposit,
-                                       	  mode=mode,
-                                          players=players),
+                                       	  mode=mode,),
+                                          # players=players),
             'button_game_ready': i18n.button.game.ready(),
             'button_back': i18n.button.back()}
     

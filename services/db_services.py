@@ -155,14 +155,14 @@ async def game_result_writer(session: AsyncSession,
         loser = (await session.execute(loser_statement)).scalar()
 
         # Writing winner data
-        winner_comission = ((await comission_counter(winner_id, session)) / 100) * deposit
+        winner_comission = ((await comission_counter(winner_id, session))['comission'] / 100) * deposit
         winner.games = winner.games + 1
         winner.wins = winner.wins + 1
-        winner.wins_ton = winner.wins_ton + deposit + winner_comission
-        winner.ton = winner.ton + deposit + winner_comission
+        winner.wins_ton = winner.wins_ton + deposit - winner_comission
+        winner.ton = winner.ton + deposit - winner_comission
 
         # Writing loser data
-        loser_comission = ((await comission_counter(loser_id, session)) / 100) * deposit
+        loser_comission = ((await comission_counter(loser_id, session))['comission'] / 100) * deposit
         loser.games = loser.games + 1
         loser.lose = loser.lose + 1
         loser.lose_ton = loser.lose_ton + deposit + loser_comission

@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.client.default import DefaultBotProperties
 from aiogram.exceptions import TelegramBadRequest
 
+import aiogram_dialog
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog import DialogManager, StartMode
 from fluentogram import TranslatorRunner
@@ -34,49 +35,57 @@ logging.basicConfig(
 # Returning Game menu for HIdder or Searcher 
 # And delete last message
 @game_router.callback_query(StateFilter(LobbySG.game_confirm))
-async def confirm_game(callback: CallbackQuery,
-                       button: Button,
-                       dialog_manager: DialogManager,
-                       state: FSMContext
-                       ):
-    
+async def game_start(callback: CallbackQuery,
+                     button: Button,
+                     dialog_manager: DialogManager
+                     ):
+    room = dialog_manager.current_context().dialog_data['room']
+    logger.info(f'Room is {room}')
+
     user_id = callback.from_user.id
-    result = await room_to_game(user_id)
+    result = await room_to_game(user_id, str(room[b'owner'], encoding='utf-8'))
     r = aioredis.Redis(host='localhost', port=6379)
-    logger.info(f'User {callback.from_user.id} start game: {result}')
-    
-    await dialog_manager.reset_stack()
+
+    logger.info(f'User {callback.from_user.id} start game as {result}')
+    # pprint.pprint(dialog_manager.middleware_data)
 
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    bot: Bot = dialog_manager.middleware_data.get('bot')
     
     # Getting hidder from Game data
     user_game_str = await r.get(user_id)
-    user_game = await r.hgetall('go_'+str(user_game_str, encoding='utf-8'))
-    hidder = str(user_game[b'hidder'], encoding='utf-8')
-
-    # Checking users Role in that game
-    if hidder == user_id:
-        msg = await callback.message.answer(text=i18n.game.hidder(),
-                                            reply_markup=game_chest_keyboard(i18n))
-    else:
-        msg = await callback.message.answer(text=i18n.game.wait.searcher(),
-                                            reply_markup=game_exit_keyboard(i18n))
-
-    # Init bot
-    bot_config = get_config(BotConfig, 'bot')
-    bot = Bot(token=bot_config.token.get_secret_value(),
-              default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    logger.info(f'user_game_str: {user_game_str}')
+    user_game = await r.hgetall(str(user_game_str, encoding='utf-8'))
+    logger.info(f'user_game is {user_game}')
     
-    await bot.delete_message(user_id, msg.message_id - 1)
+    # If Game owner didn't create Game yet
+    if len(user_game) > 0:
 
-    # And close it
-    await (await bot.get_session()).close()
+        await dialog_manager.reset_stack()
+        hidder = int(str(user_game[b'hidder'], encoding='utf-8'))
+        
+        state = dialog_manager.middleware_data.get('state')
+        await state.set_state(GameSG.main)
 
-    await state.set_state(GameSG.main)
+        # Checking users Role in that game
+        if hidder == int(user_id):
+            logger.info(f'Hidder is {hidder}')
+            msg = await callback.message.answer(text=i18n.game.hidder(),
+                                                reply_markup=game_chest_keyboard(i18n))
+        else:
+            msg = await callback.message.answer(text=i18n.game.wait.searcher(),
+                                                reply_markup=game_exit_keyboard(i18n))
 
-
+        try:
+            await bot.delete_message(user_id, msg.message_id - 1)
+        except TelegramBadRequest:
+            await callback.answer()
+    else:
+        await dialog_manager.switch_to(LobbySG.game_ready)
+        
 # All game in one handler
-@game_router.callback_query(F.data.in_(['first', 'second', 'third', 'game_exit']),
+@game_router.callback_query(F.data.in_(['first', 'second', 'third', 
+                                        'game_exit', 'game_end']),
                             StateFilter(GameSG.main))
 async def main_game_process(callback: CallbackQuery,
                             state: FSMContext,
@@ -84,129 +93,149 @@ async def main_game_process(callback: CallbackQuery,
                             dialog_manager: DialogManager,
                             bot: Bot
                             ):
-    
-    # Init variables
+        # It an end of Game - press buttom GAME END
+    if callback.data == 'game_end':
+        await dialog_manager.start(state=MainSG.main,
+                                   mode=StartMode.RESET_STACK)
+    else:
+        # Init variables
 
-    r = aioredis.Redis(host='localhost', port=6379)
-    user_id = callback.from_user.id
-    last_message = callback.message.message_id - 1
-    chat_id = callback.chat_instance
-    user_game_str = await r.get(user_id)
-    user_game = await r.hgetall('go_'+str(user_game_str, encoding='utf-8'))
-    
-    owner = str(user_game[b'owner'], encoding='utf-8')
-    guest = str(user_game[b'guest'], encoding='utf-8')
-    enemy = owner if guest == user_id else guest
-    hidder = str(user_game[b'hidder'], encoding='utf-8') 
-    searcher = guest if hidder == owner else owner
-    
-    # If it Not Exit from Game
-    if callback.data != 'game_exit':
-        # If User is Hidder
-        if user_id == hidder:
-           
-            # Writing to Redis database
-            user_game[b'target'] = callback.data
-            await r.hmset(str(callback.from_user.id), user)
+        r = aioredis.Redis(host='localhost', port=6379)
+        user_id = callback.from_user.id
+        last_message = callback.message.message_id - 1
+        chat_id = callback.chat_instance
+        user_game_str = await r.get(user_id)
 
-            try: 
-                await callback.message.edit_text(text=i18n.game.hidden(),
-                                                 reply_markup=game_exit_keyboard(i18n))
-                await bot.delete_message(chat_id, id)
-            except TelegramBadRequest:
-                await callback.answer()
+        logger.info(f'user_game_str: {user_game_str}')
 
-            # Give turn to Searcher
-            await asyncio.sleep(2)
-            msg = await bot.send_message(searcher, text=i18n.game.searcher(),
-                                         reply_markup=game_chest_keyboard(i18n))
-            try:
-                await bot.delete_message(searcher, msg.message_id - 1)
-            except TelegramBadRequest:
-                await callback.answer()
+        user_game = await r.hgetall(str(user_game_str, encoding='utf-8'))
+        
+        logger.info(f'user_game: {user_game}')
 
-        # If User is Searcher
-        else:
-            target = str(user_game[b'target'], encoding='utf-8')
+        owner = str(user_game[b'owner'], encoding='utf-8')
+        guest = str(user_game[b'guest'], encoding='utf-8')
+        enemy = owner if guest == user_id else guest
+        hidder = str(user_game[b'hidder'], encoding='utf-8') 
+        searcher = guest if hidder == owner else owner
 
-            # Checking for success or not 
-            if target == callback.data:
-                deposit = str(user_game[b'deposit'], encoding='utf-8')
-            
-                result = await game_result(int(owner), float(deposit), 
-                                           winner_id=int(searcher),
-                                           loser_id=int(hidder))
+        logger.info(f'Hidder: {hidder}, Searcher: {searcher}')
+        
+        # If it Not Exit from Game
+        if callback.data != 'game_exit' and callback.data != 'game_end':
+            # If User is Hidder
+            if int(user_id) == int(hidder):
+               
+                # Writing to Redis database
+                user_game[b'target'] = callback.data
 
-                try:
-                    await callback.message.edit_text(text=i18n.game.youwin(deposit=deposit))
+                logger.info(f'user_game after hidding: {user_game}')
+
+                await r.hmset(user_game_str, user_game)
+
+                try: 
+                    msg = await callback.message.edit_text(text=i18n.game.hidden(),
+                                                           reply_markup=game_exit_keyboard(i18n))
+                    await bot.delete_message(chat_id, msg.message_id - 1)
                 except TelegramBadRequest:
                     await callback.answer()
 
-                await state.clear()   
-
-                # Initiator of game_result() will bring data about result to lobby and database
-                await dialog_manager.start(state=MainSG.main,
-                                           mode=StartMode.RESET_STACK,
-                                           data={**result})
-                 
-                # Send notification to Hidder
+                # Give turn to Searcher
                 await asyncio.sleep(2)
-                msg = await bot.send_message(hidder, text=i18n.game.youlose(deposit=deposit),
-                                             reply_markup=game_end_keyboard(i18n))
-                try:
-                    await bot.delete_message(hidder, msg.message_id - 1)
-                except TelegramBadRequest:
-                    await callback.answer()
-                
-            else:
-                try:
-                    await callback.message.edit_text(text=i18n.game.wrong.choice(),
-                                                     reply_markup=game_exit_keyboard(i18n))
-                except TelegramBadRequest:
-                    await callback.answer()
-
-                # Give turn to Hidder                
-                await asyncio.sleep(2)
-                msg = await bot.send_message(hidder, text=i18n.game.hidder(),
+                msg = await bot.send_message(searcher, text=i18n.game.searcher(),
                                              reply_markup=game_chest_keyboard(i18n))
                 try:
-                    await bot.delete_message(hidder, msg.message_id - 1)
+                    await bot.delete_message(searcher, msg.message_id - 1)
                 except TelegramBadRequest:
                     await callback.answer()
 
-    else:
-        
-        deposit = str(user_game[b'deposit'], encoding='utf-8')
- 
-        result = await game_result(int(owner), float(deposit), 
-                                   winner_id=int(enemy),
-                                   loser_id=int(user_id))
-        try:           
-            await callback.message.edit_text(text=game.youlose(deposit=deposit))
-        except TelegramBadRequest:
-            await callback.answer()
+            # If User is Searcher
+            else:
+                target = str(user_game[b'target'], encoding='utf-8')
 
-        await state.clear()
+                logger.info(f'Target is {target}')
 
-        # Initiator of game_result() will bring data about result to lobby and database
-        await dialog_manager.start(state=MainSG.main,
-                                   mode=StartMode.RESET_STACK,
-                                   data={**result})
-                 
-        # Send notification to enemy
-        await asyncio.sleep(2)
-        msg = await bot.send_message(enemy, text=i18n.game.youwin(deposit=deposit),
-                                     reply_markup=game_end_keyboard(i18n))
-        try:
-            await bot.delete_message(enemy, msg.message_id - 1)
-        except TelegramBadRequest:
-            await callback.answer()
+                # Checking for success or not 
+                if target == callback.data:
+                    deposit = str(user_game[b'deposit'], encoding='utf-8')
                 
+                    result = await game_result(int(owner), float(deposit), 
+                                               winner_id=int(searcher),
+                                               loser_id=int(hidder))
 
+                    try:
+                        await callback.message.answer(text=i18n.game.youwin(deposit=deposit))
+                    except TelegramBadRequest:
+                        await callback.answer()
+
+                    # Initiator of game_result() will bring data about result to lobby and database
+                    await dialog_manager.start(state=MainSG.main,
+                                               mode=StartMode.RESET_STACK,
+                                               data={**result})
+                     
+                    # Send notification to Hidder
+                    await asyncio.sleep(2)
+                    msg = await bot.send_message(hidder, text=i18n.game.youlose(deposit=deposit),
+                                                 reply_markup=game_end_keyboard(i18n))
+                    try:
+                        await bot.delete_message(hidder, msg.message_id - 1)
+                    except TelegramBadRequest:
+                        await callback.answer()
+                    
+                else:
+                    
+                    # Switch Roles
+                    user_game[b'hidder'] = searcher
+                    await r.hmset(user_game_str, user_game)
+
+                    # Send notifications to players
+                    try:
+                        await callback.message.edit_text(text=i18n.game.wrong.choice(),
+                                                         reply_markup=game_chest_keyboard(i18n))
+                    except TelegramBadRequest:
+                        await callback.answer()
+
+                    # Give turn to Hidder                
+                    await asyncio.sleep(2)
+                    msg = await bot.send_message(hidder, text=i18n.game.searcher(),
+                                                 reply_markup=game_exit_keyboard(i18n))
+                    try:
+                        await bot.delete_message(hidder, msg.message_id - 1)
+                    except TelegramBadRequest:
+                        await callback.answer()
+                        
+                    
+        elif callback.data == 'game_exit':
+            
+            deposit = str(user_game[b'deposit'], encoding='utf-8')
+     
+            result = await game_result(int(owner), float(deposit), 
+                                       winner_id=int(enemy),
+                                       loser_id=int(user_id))
+            try:           
+                await callback.message.answer(text=game.youlose(deposit=deposit))
+            except TelegramBadRequest:
+                await callback.answer()
+
+            # Initiator of game_result() will bring data about result to lobby and database
+            await dialog_manager.start(state=MainSG.main,
+                                       mode=StartMode.RESET_STACK,
+                                       data={**result})
+                     
+            # Send notification to enemy
+            await asyncio.sleep(2)
+            msg = await bot.send_message(enemy, text=i18n.game.youwin(deposit=deposit),
+                                         reply_markup=game_end_keyboard(i18n))
+            try:
+                await bot.delete_message(enemy, msg.message_id - 1)
+            except TelegramBadRequest:
+                await callback.answer()
+
+                
+'''
 # Processing End Game button, when User is lose
 # For exit to Lobby
-@game_router.callback_query(F.text == 'game_end', 
-                            StateFilter(GameSG.main))
+@game_router.callback_query(F.text == 'game_end', )
+                           # StateFilter(GameSG.main))
 async def game_end_process(callback: CallbackQuery,
                            state: FSMContext,
                            dialog_manager: DialogManager
@@ -216,7 +245,7 @@ async def game_end_process(callback: CallbackQuery,
     await state.clear()
     await dialog_manager.start(state=MainSG.main,
                                mode=StartMode.RESET_STACK)
-
+'''
 
 
 

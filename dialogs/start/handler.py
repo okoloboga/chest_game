@@ -80,5 +80,8 @@ async def start_confirm(callback: CallbackQuery,
                       callback.from_user.first_name,
                       callback.from_user.last_name)
 
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+
+    await callback.message.answer(text=i18n.welcome.dialog())
     await dialog_manager.start(MainSG.main)
 

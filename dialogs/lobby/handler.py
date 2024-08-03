@@ -201,6 +201,7 @@ async def wait_check_o(callback: CallbackQuery,
         i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
         await callback.message.answer(text=i18n.still.waiting.opponent())
     else:
+        dialog_manager.current_context().dialog_data['room'] = room
         await dialog_manager.switch_to(LobbySG.game_ready)
 
 
@@ -232,13 +233,15 @@ async def wait_check_search(callback: CallbackQuery,
              'deposit': deposit}
     
     result = await get_game(query)
+    logger.info(f'Founded Game: {result}')
+
     if result == 'no_rooms':
         i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
         await callback.message.answer(text=i18n.still.searching.game())
     else:
+        dialog_manager.current_context().dialog_data['room'] = result
         await write_as_guest(result, callback.from_user.id)
-        await dialog_manager.switch_to(LobbySG.game_ready(),
-                                       data={'room': result})
+        await dialog_manager.switch_to(LobbySG.game_ready)
         
 '''
 # Checking for ready of another players in SUPER Mode

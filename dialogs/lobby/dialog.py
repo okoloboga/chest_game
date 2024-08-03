@@ -6,6 +6,7 @@ from .getter import *
 from .handler import *
 from states import LobbySG
 from dialogs import back
+from dialogs.game.game import game_start
 
 lobby_dialog = Dialog(
     Window(
@@ -92,7 +93,7 @@ lobby_dialog = Dialog(
     # ),
     Window(
         Format('{game_ready}'),
-        Button(Format('{button_game_ready}'), id='b_game_ready', on_click=confirm_game),
+        Button(Format('{button_game_ready}'), id='b_game_ready', on_click=game_start),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=game_ready_getter,
         state=LobbySG.game_ready

@@ -116,17 +116,21 @@ async def get_game(query: dict
                 'super': 's'}
     # 'o' or 's'
     mode = mode_map[query['mode']]
-    
+    logger.info(f'Search for ={mode}= Mode')
+
     # Search for required room
     for key in await r.keys(f'r{mode}_*'):
+        logger.info(f'Searching... {key}')
+
+        room = await r.hgetall(key)
+        logger.info(f'Founded room: {room}')
+
+        room_deposit = float(str(room[b'deposit'], encoding='utf-8'))
+        room_guest = str(room[b'guest'], encoding='utf-8')
+        logger.info(f'room_deposit: {room_deposit},\nquery["deposit"]: {query["deposit"]}\n\
+                room_guest: {room_guest}')
             
-        room = await r.get(key)
-        room_deposit = room[b'deposit']
-        room_guest = room[b'guest']
-            
-        logger.info(f'Checking Room: {pprint.pprint(room)}')
-            
-        if room_deposit == query['deposit'] and room_guest == b'wait':
+        if room_deposit == float(query['deposit']) and room_guest == 'wait':
             logger.info(f'Founded!')
             result = room
             break
@@ -158,19 +162,28 @@ async def write_as_guest(room: dict,
     room[b'guest'] = str(user_id)
     await r.hmset('ro_'+str(room[b'owner'], encoding='utf-8'), room)
     
-    logger.info(f'Should be writed...')
+    logger.info(f'Should be writed... {room}')
 
 
 # From Room to Game 1VS1 and get random Hidder
-async def room_to_game(user_id: int
-                       ) -> str:
+async def room_to_game(user_id: int,
+                       owner: str) -> str:
     
+    logger = logging.getLogger(__name__)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(filename)s:%(lineno)d #%(levelname)-8s '
+            '[%(asctime)s] - %(name)s - %(message)s')
+
+
     r = aioredis.Redis(host='localhost', port=6379)
 
     room = await r.hgetall('ro_'+str(user_id))
     
-    if room is not None:
-        
+    if len(room) > 0:
+        logger.info(f'room is {room} with id {user_id}')
+
         # Chosing hidder for first turn
         chose_hidder = random.choice([room[b'owner'], room[b'guest']])
         
@@ -180,11 +193,17 @@ async def room_to_game(user_id: int
                 'guest': str(room[b'guest'], encoding='utf-8'),
                 'deposit': str(room[b'deposit'], encoding='utf-8'),
                 'hidder': str(chose_hidder, encoding='utf-8'),  # Player, witch hide prize. Select randomly
-                'target': None  # Chest with prize, chosen by Hidder
+                'target': 'none'  # Chest with prize, chosen by Hidder
                 }
-    
+        
+        logger.info(f'Game dict: {game}')
+
         # Write Game to Redis Database, and delete Room
         await r.hmset('go_'+str(user_id), game)
+
+        # Checking for writing game:
+        just_writed_game = await r.hgetall('go_'+str(user_id))
+        logger.info(f'Just writed game is {just_writed_game}')
         await r.delete('ro_'+str(user_id))
         
         await r.set(user_id, 'go_'+str(room[b'owner'], encoding='utf-8'))       
@@ -193,7 +212,7 @@ async def room_to_game(user_id: int
     else:
 
         # Write flag for Guest for easy find
-        await r.set(user_id, 'go_'+str(room[b'owner'], encoding='utf-8'))
+        await r.set(user_id, 'go_'+owner)
         return 'guest'
 
     
