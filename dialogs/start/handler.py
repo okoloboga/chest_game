@@ -28,9 +28,10 @@ logging.basicConfig(
 async def command_start_getter(message: Message,
                                dialog_manager: DialogManager,
                                command: CommandObject):
-
+    
     user_id = message.from_user.id
     session: AsyncSession = dialog_manager.middleware_data.get('session')
+    logger.info(f'Referral data: {command}')
 
     # If user start bot by referral link 
     if command.args:
@@ -82,6 +83,5 @@ async def start_confirm(callback: CallbackQuery,
 
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
 
-    await callback.message.answer(text=i18n.welcome.dialog())
     await dialog_manager.start(MainSG.main)
 

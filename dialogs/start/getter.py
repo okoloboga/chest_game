@@ -46,7 +46,8 @@ async def welcome_getter(dialog_manager: DialogManager,
     dialog_manager.current_context().dialog_data['first_name'] = first_name
     payload = dialog_manager.start_data['payload']
     session: AsyncSession = dialog_manager.middleware_data.get('session')
-    
+    logger.info(f'Payload before adding referral: {payload}')
+
     # Add referral to link Parent
     if payload is not None:
         await add_referral(session, payload)

@@ -63,11 +63,12 @@ async def add_referral(session: AsyncSession,
     
     logger.info(f'Adding referral to User {telegram_id}')
     
-    user_stmt = select(User).where(telegram_id == User.telegram_id)
+    user_stmt = select(User).where(int(telegram_id) == User.telegram_id)
     async with session:
         result = await session.execute(user_stmt)
         user = result.scalar()
-        user.referrals = int(user.referrals) + 1        
+        user.referrals = int(user.referrals) + 1 
+        logger.info(f'Parent user referrals {user.referrals}')
         await session.commit()
 
 

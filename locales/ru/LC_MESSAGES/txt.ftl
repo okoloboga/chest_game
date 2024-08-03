@@ -148,11 +148,11 @@ central-wallet = { $wallet }
 
 tonexport = Минимальная сумма для вывода: 1 TON
          
-         Что бы вывести TON - напиши в чат свой кошелек
-         и через пробел сумму вывода
+            Что бы вывести TON - напиши в чат свой кошелек
+            и через пробел сумму вывода
 
-         Например:
-         <code>UQDIkS1d_Lhd7EDttTtcmr9Xzg78uEMDEsYFde-PZCgfoOtU 2</code>
+            Например:
+            <code>UQDIkS1d_Lhd7EDttTtcmr9Xzg78uEMDEsYFde-PZCgfoOtU 2</code>
 
 wrong-export = Введены неверные данные 
                для вывод TON!
@@ -168,7 +168,7 @@ no-transaction = Не было транзакции с комментарием
                  содержащим твой ID
 
 tonimport-success = { $value } TON Успешно поступили
-                    на твой игровой счёт!ы
+                    на твой игровой счёт!
 
 old-transaction = Новой транзакции не было.
                   Последняя транзакция от тебя:

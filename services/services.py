@@ -1,5 +1,4 @@
 import logging
-import pprint
 import random
 import services.db_services
 
@@ -186,7 +185,9 @@ async def room_to_game(user_id: int,
 
         # Chosing hidder for first turn
         chose_hidder = random.choice([room[b'owner'], room[b'guest']])
-        
+        logger.info(f"Chosing hidder... Owner: {room[b'owner']}, Guest: {room[b'guest']}\
+                Hidder: {chose_hidder}")
+
         # Game Dictionary - all process save here
         game = {
                 'owner': str(room[b'owner'], encoding='utf-8'),
