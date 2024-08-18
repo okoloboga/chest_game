@@ -42,9 +42,9 @@ async def main():
     )
     
     # Connection test with databas
-    # async with engine.begin() as connection:
-    #     await connection.run_sync(Base.metadata.drop_all)
-    #     await connection.run_sync(Base.metadata.create_all)
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.drop_all)
+        await connection.run_sync(Base.metadata.create_all)
     
     Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
  
