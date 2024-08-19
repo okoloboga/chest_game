@@ -20,9 +20,7 @@ class LobbySG(StatesGroup):
     not_enough_ton = State()
     waiting = State()
     owner_o = State()
-    owner_s = State()
     search = State()
-    joined_s = State()
     game_ready = State()
     game_confirm = State()
     

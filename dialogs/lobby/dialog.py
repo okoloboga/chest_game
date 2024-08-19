@@ -56,7 +56,7 @@ lobby_dialog = Dialog(
         Button(Format('{button_wait_check_o}'), id='b_wait_check_o', on_click=wait_check_o),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=wait_owner_1vs1_getter,
-        state=LobbySG.search
+        state=LobbySG.owner_o
     ),
     Window(
         Format('{search_game}'),
