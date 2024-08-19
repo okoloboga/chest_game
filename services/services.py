@@ -56,7 +56,8 @@ async def create_room_query(user_id: int,
         logger.info(f'User {user_id} search for Game with deposit {deposit} TON')
 
         if (await get_game(deposit)) == 'no_rooms':
- 
+            
+            dialog_manager.current_context().dialog_data['find_create'] = 'create'
             r = aioredis.Redis(host='localhost', port=6379)
             
             # Creating empty room with Users Game for another players            
@@ -72,7 +73,7 @@ async def create_room_query(user_id: int,
             await dialog_manager.switch_to(LobbySG.owner_o)
                
         else:
-            
+            dialog_manager.current_context().dialog_data['find_create'] = 'find'
             await dialog_manager.switch_to(LobbySG.search)   
     else:
         await dialog_manager.switch_to(LobbySG.not_enough_ton)
@@ -136,9 +137,9 @@ async def write_as_guest(room: dict,
     logger.info(f'User {user_id} write himself as Guest to room {room[b'owner']}\
         with Deposit {room[b'deposit']} in 1VS1 Game')
     
-    room = await r.hgetall('ro_'+str(room[b'owner'], encoding='utf-8'))
+    room = await r.hgetall('r_'+str(room[b'owner'], encoding='utf-8'))
     room[b'guest'] = str(user_id)
-    await r.hmset('ro_'+str(room[b'owner'], encoding='utf-8'), room)
+    await r.hmset('r_'+str(room[b'owner'], encoding='utf-8'), room)
     
     logger.info(f'Should be writed... {room}')
 
@@ -157,7 +158,7 @@ async def room_to_game(user_id: int,
 
     r = aioredis.Redis(host='localhost', port=6379)
 
-    room = await r.hgetall('ro_'+str(user_id))
+    room = await r.hgetall('r_'+str(user_id))
     
     if len(room) > 0:
         logger.info(f'room is {room} with id {user_id}')
@@ -179,20 +180,20 @@ async def room_to_game(user_id: int,
         logger.info(f'Game dict: {game}')
 
         # Write Game to Redis Database, and delete Room
-        await r.hmset('go_'+str(user_id), game)
+        await r.hmset('g_'+str(user_id), game)
 
         # Checking for writing game:
-        just_writed_game = await r.hgetall('go_'+str(user_id))
+        just_writed_game = await r.hgetall('g_'+str(user_id))
         logger.info(f'Just writed game is {just_writed_game}')
-        await r.delete('ro_'+str(user_id))
+        await r.delete('r_'+str(user_id))
         
-        await r.set(user_id, 'go_'+str(room[b'owner'], encoding='utf-8'))       
+        await r.set(user_id, 'g_'+str(room[b'owner'], encoding='utf-8'))       
         return 'owner'
 
     else:
 
         # Write flag for Guest for easy find
-        await r.set(user_id, 'go_'+owner)
+        await r.set(user_id, 'g_'+owner)
         return 'guest'
 
     
@@ -203,7 +204,7 @@ async def game_result(owner: int,
                       loser_id: int) -> dict:
 
     r = aioredis.Redis(host='localhost', port=6379)
-    await r.delete('go_'+str(owner))
+    await r.delete('g_'+str(owner))
 
     return {'game_deposit': deposit,
             'winner_id': winner_id,

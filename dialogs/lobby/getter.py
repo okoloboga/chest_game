@@ -40,25 +40,7 @@ async def lobby_getter(dialog_manager: DialogManager,
             'button_find_game': i18n.button.find.game(),
             'button_create_game': i18n.button.create.game(),
             'button_back': i18n.button.back()}
-    
-
-# Select type of game: Suber and 1VS1. For Create and Find
-async def mode_getter(dialog_manager: DialogManager,
-                      session: async_sessionmaker,
-                      i18n: TranslatorRunner,
-                      bot: Bot,
-                      event_from_user: User,
-                      **kwargs
-                      ) -> dict:
-    
-    user_id = event_from_user.id
-    logger.info(f'User {user_id} in Select Mode')
-    
-    return {'select_mode': i18n.select.mode(),
-            'button_mode_1vs1': i18n.button.mode1vs1(),
-            'button_mode_super': i18n.button.modesuper(),
-            'button_back': i18n.button.back()}
-    
+       
     
 # Select deposit for game. For Create and Find
 async def deposit_getter(dialog_manager: DialogManager,
@@ -85,20 +67,10 @@ async def game_confirm_getter(dialog_manager: DialogManager,
                      	      **kwargs
                          	  ) -> dict:
     
-    find_create = dialog_manager.current_context().dialog_data['find_create']
-    mode = dialog_manager.current_context().dialog_data['mode']
-    deposit = dialog_manager.current_context().dialog_data['deposit']
+    deposit = dialog_manager.current_context().dialog_data['deposit']   
+    logger.info(f'Player {event_from_user.id} search for game with {deposit}')
     
-    logger.info(f'Player {event_from_user.id} {find_create} {mode} game for {deposit}')
-
-    speech_map = {'find': i18n.find.speech(),
-               	  'create': i18n.create.speech()}
-    
-    find_create_speech = speech_map[find_create]
-    
-    return {'game_confirm': i18n.game.confirm(find_create_speech=find_create_speech,
-                                              mode=mode.capitalize(),
-                                              deposit=deposit),
+    return {'game_confirm': i18n.game.confirm(deposit=deposit),
             'button_game_confirm': i18n.button.confirm(),
             'button_back': i18n.button.back()}
  
@@ -148,12 +120,10 @@ async def search_getter(dialog_manager: DialogManager,
                         ) -> dict:
 	
     deposit = dialog_manager.current_context().dialog_data['deposit']	
-    mode = dialog_manager.current_context().dialog_data['mode']
-    logger.info(f'User {event_from_user.id} waiting for {mode} game as\
+    logger.info(f'User {event_from_user.id} waiting for game as\
       Searcher, deposit: {deposit}')  
           
-    return {'search_game': i18n.search.game(deposit=deposit,
-                                            mode=mode),
+    return {'search_game': i18n.search.game(deposit=deposit),
             'button_wait_check_search': i18n.button.wait.check.search(),
             'button_back': i18n.button.back()}
 
@@ -167,15 +137,11 @@ async def game_ready_getter(dialog_manager: DialogManager,
                             ) -> dict:
 
     deposit = dialog_manager.current_context().dialog_data['deposit']
-    mode = dialog_manager.current_context().dialog_data['mode']
-    # players = dialog_manager.current_context().dialog_data['players']
         
-    logger.info(f'User {event_from_user.id}; offer to confirm {mode} game\
+    logger.info(f'User {event_from_user.id}; offer to confirm game\
      with deposit {deposit}')
  
-    return {'game_ready': i18n.game.ready(deposit=deposit,
-                                       	  mode=mode,),
-                                          # players=players),
+    return {'game_ready': i18n.game.ready(deposit=deposit),
             'button_game_ready': i18n.button.game.ready(),
             'button_back': i18n.button.back()}
     

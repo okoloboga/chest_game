@@ -15,7 +15,7 @@ from config import get_config, BotConfig, DbConfig
 from dialogs import dialogs, routers, unknown_router
 from utils import TranslatorHub, create_translator_hub
 from middlewares import TranslatorRunnerMiddleware, DbSessionMiddleware
-# from database import Base
+from database import Base
 
 logger = logging.getLogger(__name__)
 

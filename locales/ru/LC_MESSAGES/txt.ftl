@@ -206,12 +206,7 @@ notenough-ton = Недостаточно TON на аккаунте!
                 Предлагаем пополнить счёт 
                 прямо сейчас
 
-find-speech = ищешь
-
-create-speech = создаешь
-
-game-confirm = Ты { $find_create_speech } игру
-               в режиме { $mode }
+game-confirm = Ты ищешь игру
                С депозитом { $deposit } TON
 
 
@@ -228,18 +223,11 @@ ownersuper = Ожидаем игроков для SUPER
              Найдено { $players } игроков
              { $players_ready } уже готовы!
 
-search-game = Ищем для тебя игру в режиме { $mode }!
+search-game = Ищем для тебя игру в режиме!
               Депозит: { $deposit } TON
 
-joined-super = Ты присоединился к игре { $super }
-               с депозитом { $deposit } TON
-
-               Найдено { $players } игроков
-               { $players_ready } уже готовы! 
-
-game-ready = Игра в режиме { $mode } готова
-             для 2 игроков
-             с депозитом { $deposit } TON
+game-ready = Игра готова!
+             C депозитом { $deposit } TON
              
              Нажми Готов что бы начать!
 

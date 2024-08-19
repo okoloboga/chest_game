@@ -107,7 +107,7 @@ async def wait_check_o(callback: CallbackQuery,
                        dialog_manager: DialogManager):
     
     r = aioredis.Redis(host='localhost', port=6379)
-    room = await r.hgetall('ro_'+str(callback.from_user.id))
+    room = await r.hgetall('r_'+str(callback.from_user.id))
     logger.info(f'Current room status: {room}')
     
     if room[b'guest'] == b'wait':
