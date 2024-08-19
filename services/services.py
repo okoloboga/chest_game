@@ -53,40 +53,25 @@ async def create_room_query(user_id: int,
     if ton_value >= deposit:
         
         # Create Room or Query
-        find_create = dialog_manager.current_context().dialog_data['find_create']
-        mode = dialog_manager.current_context().dialog_data['mode']
-        logger.info(f'User {user_id} {find_create} {mode} Game for {deposit} TON')
+        logger.info(f'User {user_id} search for Game with deposit {deposit} TON')
 
-        if find_create == 'create': 
-
+        if (await get_game(deposit)) == 'no_rooms':
+ 
             r = aioredis.Redis(host='localhost', port=6379)
             
             # Creating empty room with Users Game for another players            
-            if mode == '1vs1':        
-                room_1vs1 = {
-                             'owner': user_id,
-                             'guest': 'wait',
-                             'deposit': deposit,
-                }          
-                # Put room to Redis. ro: room one (vs one)
-                await r.hmset('ro_' + str(user_id), room_1vs1)
-                
-                # After writing Data to Redis
-                await dialog_manager.switch_to(LobbySG.owner_o)
-                
-                
-            elif mode == 'super':
-                room_super = {
-                              'room_id': user_id,
-                              'deposit': deposit, 
-                }
-                # Put room to Redis. rs: room super
-                await r.hmset('rs_' + str(user_id), room_super)
-                
-                # After writing Data to Redis
-                await dialog_manager.switch_to(LobbySG.owner_s)
-                
-        elif find_create == 'find':
+            room_1vs1 = {
+                         'owner': user_id,
+                         'guest': 'wait',
+                         'deposit': deposit,
+            }          
+            # Put room to Redis. ro: room one (vs one)
+            await r.hmset('r_' + str(user_id), room_1vs1)
+            
+            # After writing Data to Redis
+            await dialog_manager.switch_to(LobbySG.owner_o)
+               
+        else:
             
             await dialog_manager.switch_to(LobbySG.search)   
     else:
@@ -94,7 +79,7 @@ async def create_room_query(user_id: int,
         
         
 # Get require Game
-async def get_game(query: dict
+async def get_game(deposit: str | int | float
                    ) -> dict | str:
     
     logger = logging.getLogger(__name__)
@@ -109,16 +94,10 @@ async def get_game(query: dict
     
     result: dict | str  # Success for suitable request
 
-    logger.info(f'User deposit: {query['deposit']}, Query Mode: {query['mode']}')
-    
-    mode_map = {'1vs1': 'o',
-                'super': 's'}
-    # 'o' or 's'
-    mode = mode_map[query['mode']]
-    logger.info(f'Search for ={mode}= Mode')
+    logger.info(f'User deposit: {deposit}')
 
     # Search for required room
-    for key in await r.keys(f'r{mode}_*'):
+    for key in await r.keys(f'r_*'):
         logger.info(f'Searching... {key}')
 
         room = await r.hgetall(key)
@@ -126,10 +105,10 @@ async def get_game(query: dict
 
         room_deposit = float(str(room[b'deposit'], encoding='utf-8'))
         room_guest = str(room[b'guest'], encoding='utf-8')
-        logger.info(f'room_deposit: {room_deposit},\nquery["deposit"]: {query["deposit"]}\n\
+        logger.info(f'room_deposit: {room_deposit},\ndeposit: {deposit}\n\
                 room_guest: {room_guest}')
             
-        if room_deposit == float(query['deposit']) and room_guest == 'wait':
+        if room_deposit == float(deposit) and room_guest == 'wait':
             logger.info(f'Founded!')
             result = room
             break

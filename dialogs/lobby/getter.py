@@ -138,30 +138,6 @@ async def wait_owner_1vs1_getter(dialog_manager: DialogManager,
             'button_back': i18n.button.back()}
 
 
-# User is owner of room SUPER and waiting for guests
-'''
-async def wait_owner_super_getter(dialog_manager: DialogManager,
-                                  session: async_sessionmaker,
-                                  i18n: TranslatorRunner,
-                                  bot: Bot,
-                                  event_from_user: User, **kwargs
-                                  ) -> dict:
-
-    deposit = dialog_manager.current_context().dialog_data['deposit']
-    players = deialog_manager.current_context().dialog_data['players']
-    players_ready = deialog_manager.current_context().dialog_data['players_ready']    
-    logger.info(f'User {event_from_user.id} waiting for SUPER game as\
-      Owner, deposit: {deposit}, players joined: {players}, players ready: {players_ready}')
-        
-    return {'owner_super': i18n.ownersuper(deposit=deposit,
-                                       	   players=players,
-                                           players_ready=players_ready),
-            'button_wait_check_s': i18n.wait.check.o(),
-            'button_owner_ready': i18n.owner.ready(),
-            'button_back': i18n.button.back()}
-'''
-
-
 # User searching for Game...
 async def search_getter(dialog_manager: DialogManager,
                         session: async_sessionmaker,
@@ -180,32 +156,6 @@ async def search_getter(dialog_manager: DialogManager,
                                             mode=mode),
             'button_wait_check_search': i18n.button.wait.check.search(),
             'button_back': i18n.button.back()}
-
-
-# User joined for SUPER game
-'''
-async def wait_joined_super_getter(dialog_manager: DialogManager,
-                                   session: async_sessionmaker,
-                                   i18n: TranslatorRunner,
-                                   bot: Bot,
-                                   event_from_user: User,
-                                   **kwargs
-                                   ) -> dict:
-
-    deposit = dialog_manager.current_context().dialog_data['deposit']
-    players = deialog_manager.current_context().dialog_data['players']
-    players_ready = deialog_manager.current_context().dialog_data['players_ready']    
-    logger.info(f'User {event_from_user.id} waiting for SUPER game as\
-      Joined, deposit: {deposit}, players joined: {players}, players ready: {players_ready}')
-
-    
-    return {'joined_super': i18n.joined.super(deposit=deposit,
-                                       	    players=players,
-                                            players_ready=players_ready),
-            'button_joined_check_s': i18n.joined.check.o(),
-            'button_joined_ready': i18n.joined.ready(),
-            'button_back': i18n.button.back()}
-'''
 
 
 # Game is Ready! Need to Confirm

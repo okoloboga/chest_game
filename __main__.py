@@ -11,11 +11,11 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from fluentogram import TranslatorHub
 from redis.asyncio.client import Redis
 
-from config import get_config, BotConfig, DbConfig, Config, load_config
+from config import get_config, BotConfig, DbConfig
 from dialogs import dialogs, routers, unknown_router
 from utils import TranslatorHub, create_translator_hub
 from middlewares import TranslatorRunnerMiddleware, DbSessionMiddleware
-from database import Base
+# from database import Base
 
 logger = logging.getLogger(__name__)
 

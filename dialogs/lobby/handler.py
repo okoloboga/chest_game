@@ -1,7 +1,7 @@
 import logging
 
 from aiogram import Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, callback_query
 from aiogram_dialog import DialogManager, StartMode
 from aiogram_dialog.widgets.kbd import Button
 from fluentogram import TranslatorRunner
@@ -28,10 +28,8 @@ async def find_game(callback: CallbackQuery,
 
     user_id = callback.from_user.id
     logger.info(f'User {user_id} Search for Game')
-    dialog_manager.current_context().dialog_data['find_create'] = 'find'
-    dialog_manager.current_context().dialog_data['mode'] = '1vs1'
+    dialog_manager.current_context().dialog_data['mode'] = 'public'
 
-    # await dialog_manager.switch_to(LobbySG.mode)
     await dialog_manager.switch_to(LobbySG.deposit)
 
 
@@ -42,38 +40,9 @@ async def create_game(callback: CallbackQuery,
 
     user_id = callback.from_user.id
     logger.info(f'User {user_id} Create new Game')
-    dialog_manager.current_context().dialog_data['find_create'] = 'create'
-    dialog_manager.current_context().dialog_data['mode'] = '1vs1'
-
-    # await dialog_manager.switch_to(LobbySG.mode)
-    await dialog_manager.switch_to(LobbySG.deposit)
-
-
-'''
-# Seacrh or create for 1 VS 1 Game
-async def mode_1vs1(callback: CallbackQuery,
-                    button: Button,
-                    dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} mode is 1VS1') 
-    dialog_manager.current_context().dialog_data['mode'] = '1vs1'
+    dialog_manager.current_context().dialog_data['mode'] = 'private'
 
     await dialog_manager.switch_to(LobbySG.deposit)
-
-
-# Search or create for SUPER Game
-async def mode_super(callback: CallbackQuery,
-                     button: Button,
-                     dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    logger.info(f'User {user_id} mode is SUPER') 
-    dialog_manager.current_context().dialog_data['mode'] = 'super'
-
-    await dialog_manager.switch_to(LobbySG.deposit)
-'''   
-
 
 ''' 
        /$$                                         /$$   /$$             
@@ -90,69 +59,16 @@ async def mode_super(callback: CallbackQuery,
 '''
 
 # FIND 
-async def deposit_0_5(callback: CallbackQuery,
-                      button: Button,
-                      dialog_manager: DialogManager):
-
-    dialog_manager.current_context().dialog_data['deposit'] = 0.5
-    await dialog_manager.switch_to(LobbySG.game_confirm)
-
-
-async def deposit_1(callback: CallbackQuery,
-                    button: Button,
-                    dialog_manager: DialogManager):
-
-    dialog_manager.current_context().dialog_data['deposit'] = 1
-    await dialog_manager.switch_to(LobbySG.game_confirm)
-
-
-async def deposit_2(callback: CallbackQuery,
-                    button: Button,
-                    dialog_manager: DialogManager):
-
-    dialog_manager.current_context().dialog_data['deposit'] = 2
-    await dialog_manager.switch_to(LobbySG.game_confirm)
-
-
-async def deposit_4(callback: CallbackQuery,
-                    button: Button,
-                    dialog_manager: DialogManager):
-
-    dialog_manager.current_context().dialog_data['deposit'] = 4
-    await dialog_manager.switch_to(LobbySG.game_confirm)
+async def deposit(callback: CallbackQuery,
+                  button: Button,
+                  dialog_manager: DialogManager):
     
+    deposit = (callback.data)[10:]
+    deposit = 0.5 if deposit == '0_5' else int(deposit)
 
-async def deposit_8(callback: CallbackQuery,
-                    button: Button,
-                    dialog_manager: DialogManager):
-
-    dialog_manager.current_context().dialog_data['deposit'] = 8
+    dialog_manager.current_context().dialog_data['deposit'] = deposit
     await dialog_manager.switch_to(LobbySG.game_confirm)
-    
 
-async def deposit_25(callback: CallbackQuery,
-                     button: Button,
-                     dialog_manager: DialogManager):
-
-    dialog_manager.current_context().dialog_data['deposit'] = 25
-    await dialog_manager.switch_to(LobbySG.game_confirm) 
-    
-    
-async def deposit_50(callback: CallbackQuery,
-                     button: Button,
-                     dialog_manager: DialogManager):
-
-    dialog_manager.current_context().dialog_data['deposit'] = 50
-    await dialog_manager.switch_to(LobbySG.game_confirm)
-    
-
-async def deposit_100(callback: CallbackQuery,
-                      button: Button,
-                      dialog_manager: DialogManager):
-
-    dialog_manager.current_context().dialog_data['deposit'] = 100
-    await dialog_manager.switch_to(LobbySG.game_confirm)
-    
     
 # If Not Enough TON for Deposit...
 async def import_from_lobby(callback: CallbackQuery,
@@ -169,10 +85,9 @@ async def import_from_lobby(callback: CallbackQuery,
 async def confirm_game(callback: CallbackQuery,
                        button: Button,
                        dialog_manager: DialogManager):
-    
+
     user_id = callback.from_user.id
-    await create_room_query(user_id,
-                            dialog_manager)
+    await create_room_query(user_id, dialog_manager)
   
 '''
                          /$$   /$$    
@@ -205,34 +120,14 @@ async def wait_check_o(callback: CallbackQuery,
         await dialog_manager.switch_to(LobbySG.game_ready)
 
 
-# Checking for founded guests in SUPER
-'''
-async def wait_check_s(callback: CallbackQuery,
-                       button: Button,
-                       dialog_manager: DialogManager):
-    pass
-
-
-# Owner of game room is Ready
-async def owner_ready(callback: CallbackQuery,
-                      button: Button,
-                      dialog_manager: DialogManager):
-    pass
-'''
-
-
 # Checking got game while searching
 async def wait_check_search(callback: CallbackQuery,
                             button: Button,
                             dialog_manager: DialogManager):
     
-    mode = dialog_manager.current_context().dialog_data['mode']
     deposit = dialog_manager.current_context().dialog_data['deposit']
     
-    query = {'mode': mode,
-             'deposit': deposit}
-    
-    result = await get_game(query)
+    result = await get_game(deposit)
     logger.info(f'Founded Game: {result}')
 
     if result == 'no_rooms':
@@ -242,19 +137,4 @@ async def wait_check_search(callback: CallbackQuery,
         dialog_manager.current_context().dialog_data['room'] = result
         await write_as_guest(result, callback.from_user.id)
         await dialog_manager.switch_to(LobbySG.game_ready)
-        
-'''
-# Checking for ready of another players in SUPER Mode
-async def joined_check_s(callback: CallbackQuery,
-                         button: Button,
-                         dialog_manager: DialogManager):
-    pass
-
-
-# Ready for SUPER game
-async def joined_ready(callback: CallbackQuery,
-                       button: Button,
-                       dialog_manager: DialogManager):
-    pass
-'''
 

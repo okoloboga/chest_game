@@ -1,24 +1,19 @@
 import logging
-import pprint
 import asyncio
 
 from aiogram import F, Router, Bot
 from aiogram.filters import StateFilter
 from aiogram.types import CallbackQuery
-from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
-from aiogram.client.default import DefaultBotProperties
 from aiogram.exceptions import TelegramBadRequest
 
-import aiogram_dialog
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog import DialogManager, StartMode
 from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
 
 from states import GameSG, LobbySG, MainSG
-from config import get_config, BotConfig
-from services import get_game, room_to_game, game_result
+from services import room_to_game, game_result
 from .keyboard import *
 
 game_router = Router()
@@ -102,7 +97,6 @@ async def main_game_process(callback: CallbackQuery,
 
         r = aioredis.Redis(host='localhost', port=6379)
         user_id = callback.from_user.id
-        last_message = callback.message.message_id - 1
         chat_id = callback.chat_instance
         user_game_str = await r.get(user_id)
 

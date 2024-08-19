@@ -17,31 +17,21 @@ lobby_dialog = Dialog(
         getter=lobby_getter,
         state=LobbySG.main
     ),
-
-    # Window(
-    #     Format('{select_mode}'),
-    #     Button(Format('{button_mode_1vs1}'), id='b_find_1vs1', on_click=mode_1vs1),
-    #     # Button(Format('{button_mode_super}'), id='b_find_super', on_click=mode_super),
-    #     Button(Format('{button_back}'), id='b_back', on_click=back),
-    #     getter=mode_getter,
-    #     state=LobbySG.mode
-    # ),
-
     Window(
         Format('{select_deposit}'),
-        Button(Const('0.5'), id='b_deposit_0_5', on_click=deposit_0_5),
+        Button(Const('0.5'), id='b_deposit_0_5', on_click=deposit),
         Row(
-            Button(Const('1'), id='b_deposit_1', on_click=deposit_1),
-            Button(Const('2'), id='b_deposit_2', on_click=deposit_2)          
+            Button(Const('1'), id='b_deposit_1', on_click=deposit),
+            Button(Const('2'), id='b_deposit_2', on_click=deposit)          
         ),
         Row(
-            Button(Const('4'), id='b_deposit_4', on_click=deposit_4),
-            Button(Const('8'), id='b_deposit_8', on_click=deposit_8),            
-            Button(Const('25'), id='b_deposit_25', on_click=deposit_25)            
+            Button(Const('4'), id='b_deposit_4', on_click=deposit),
+            Button(Const('8'), id='b_deposit_8', on_click=deposit),            
+            Button(Const('25'), id='b_deposit_25', on_click=deposit)            
         ),
         Row(
-            Button(Const('50'), id='b_deposit_50', on_click=deposit_50),
-            Button(Const('100'), id='b_deposit_100', on_click=deposit_100)            
+            Button(Const('50'), id='b_deposit_50', on_click=deposit),
+            Button(Const('100'), id='b_deposit_100', on_click=deposit)            
         ),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=deposit_getter,
@@ -66,16 +56,8 @@ lobby_dialog = Dialog(
         Button(Format('{button_wait_check_o}'), id='b_wait_check_o', on_click=wait_check_o),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=wait_owner_1vs1_getter,
-        state=LobbySG.owner_o
+        state=LobbySG.search
     ),
-    # Window(
-    #     Format('{owner_super}'),
-    #     Button(Format('{button_wait_check_s}'), id='b_wait_check_s', on_click=wait_check_s),
-    #     Button(Format('{button_owner_ready}'), id='b_owner_ready', on_click=owner_ready),
-    #     Button(Format('{button_back}'), id='b_back', on_click=back),
-    #     getter=wait_owner_super_getter,
-    #     state=LobbySG.owner_s
-    # ),
     Window(
         Format('{search_game}'),
         Button(Format('{button_wait_check_search}'), id='b_wait_check_search', on_click=wait_check_search),
@@ -83,14 +65,6 @@ lobby_dialog = Dialog(
         getter=search_getter,
         state=LobbySG.search
     ),
-    # Window(
-    #     Format('{joined_super}'),
-    #     Button(Format('{button_joined_check_s}'), id='b_joined_check_s', on_click=joined_check_s),
-    #     Button(Format('{button_joined_ready}'), id='b_joined_ready', on_click=joined_ready),
-    #     Button(Format('{button_back}'), id='b_back', on_click=back),
-    #     getter=wait_joined_super_getter,
-    #     state=LobbySG.joined_s
-    # ),
     Window(
         Format('{game_ready}'),
         Button(Format('{button_game_ready}'), id='b_game_ready', on_click=game_start),
