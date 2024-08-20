@@ -11,7 +11,7 @@ from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from states import MainSG, StartSG
-from services import create_user, get_user, DOG_CHANNEL
+from services import create_user, get_user, DOG_CHANNEL, add_referral
 
 
 start_router = Router()
@@ -53,17 +53,33 @@ async def command_start_getter(message: Message,
         await dialog_manager.start(MainSG.main)
 
 
-
 # Checking for channel subscribe
 async def check_subscribe(callback: CallbackQuery,
                           button: Button,
                           dialog_manager: DialogManager):
+
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     bot: Bot = dialog_manager.middleware_data.get('bot')
 
-    user_channel_status = await bot.get_chat_member(chat_id=DOG_CHANNEL, user_id=callback.from_user.id)
+    user_channel_status = await bot.get_chat_member(chat_id=DOG_CHANNEL, 
+                                                    user_id=callback.from_user.id)
 
     if user_channel_status.status != 'left':
+
+        session: AsyncSession = dialog_manager.middleware_data.get('session')
+        payload = dialog_manager.start_data['payload']
+
+        # Add new User to Database
+        await create_user(session,
+                          callback.from_user.id,
+                          callback.from_user.first_name,
+                          callback.from_user.last_name)
+        logger.info(f'Payload before adding referral: {payload}')
+
+        # Add referral to link Parent
+        if payload is not None:
+            await add_referral(session, payload, callback.from_user.id)
+
         await dialog_manager.switch_to(StartSG.welcome)
     else:
         await callback.answer(text=i18n.need.subscribe())
@@ -73,14 +89,7 @@ async def check_subscribe(callback: CallbackQuery,
 async def start_confirm(callback: CallbackQuery,
                         button: Button,
                         dialog_manager: DialogManager):
-    session: AsyncSession = dialog_manager.middleware_data.get('session')
-
-    # Add new User to Database
-    await create_user(session,
-                      callback.from_user.id,
-                      callback.from_user.first_name,
-                      callback.from_user.last_name)
-
+    
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
 
     await dialog_manager.start(MainSG.main)

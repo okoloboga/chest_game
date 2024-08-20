@@ -1,19 +1,28 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Format, Const
 from aiogram_dialog.widgets.kbd import Button, Row
+from aiogram_dialog.widgets.input.text import TextInput
 
 from .getter import *
 from .handler import *
 from states import LobbySG
 from dialogs import back
 from dialogs.game.game import game_start
+from services import is_private_room
+
 
 lobby_dialog = Dialog(
     Window(
         Format('{lobby_menu}'),
-        Button(Format('{button_find_game}'), id='b_find_game', on_click=find_game),
-        Button(Format('{button_create_game}'), id='b_create_game', on_click=create_game),
+        Button(Format('{button_public_game}'), id='b_public_game', on_click=public_game),
+        Button(Format('{button_private_game}'), id='b_private_game', on_click=private_game),
         Button(Format('{button_back}'), id='b_back', on_click=back),
+        TextInput(
+            id='admin_panel',
+            type_factory=is_private_room,
+            on_success=join_private_game,
+            on_error=wrong_input
+            ),
         getter=lobby_getter,
         state=LobbySG.main
     ),
@@ -52,11 +61,18 @@ lobby_dialog = Dialog(
         state=LobbySG.not_enough_ton   
     ),
     Window(
-        Format('{owner_1vs1}'),
+        Format('{owner_private}'),
         Button(Format('{button_wait_check_o}'), id='b_wait_check_o', on_click=wait_check_o),
         Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=wait_owner_1vs1_getter,
-        state=LobbySG.owner_o
+        getter=wait_owner_private_getter,
+        state=LobbySG.owner_private
+        ),
+    Window(
+        Format('{owner_public}'),
+        Button(Format('{button_wait_check_o}'), id='b_wait_check_o', on_click=wait_check_o),
+        Button(Format('{button_back}'), id='b_back', on_click=back),
+        getter=wait_owner_public_getter,
+        state=LobbySG.owner_public
     ),
     Window(
         Format('{search_game}'),

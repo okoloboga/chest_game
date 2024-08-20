@@ -48,7 +48,6 @@ async def main():
     
     Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
  
-
     # Init Bot in Dispatcher
     bot_config = get_config(BotConfig, "bot")
     bot = Bot(token=bot_config.token.get_secret_value(),

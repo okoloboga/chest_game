@@ -3,10 +3,10 @@ import logging
 from aiogram import Bot
 from aiogram_dialog import DialogManager
 from aiogram.types import User
-from aiogram.utils.deep_linking import create_start_link
 from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from redis import asyncio as aioredis
+from base64 import b64encode
 
 from services import get_user
 
@@ -37,8 +37,8 @@ async def lobby_getter(dialog_manager: DialogManager,
     dialog_manager.current_context().dialog_data['ton'] = float(user_data.ton)
     
     return {'lobby_menu': i18n.lobby.menu(),
-            'button_find_game': i18n.button.find.game(),
-            'button_create_game': i18n.button.create.game(),
+            'button_public_game': i18n.button.public.game(),
+            'button_private_game': i18n.button.private.game(),
             'button_back': i18n.button.back()}
        
     
@@ -57,6 +57,23 @@ async def deposit_getter(dialog_manager: DialogManager,
     return {'select_deposit': i18n.select.deposit(),
             'button_back': i18n.button.back()}
     
+
+# Create or Join to Private game
+async def create_join_getter(dialog_manager: DialogManager,
+    	                     session: async_sessionmaker,
+                             i18n: TranslatorRunner,
+              	             bot: Bot,
+                   	         event_from_user: User,
+                     	     **kwargs
+                         	 ) -> dict:
+    
+    logger.info(f'Player {event_from_user.id} select create or join\n\
+            to private game')
+    
+    return {'create_or_join': i18n.create.join(),
+            'button_create_private_game': i18n.button.private.game(),
+            'button_back': i18n.button.back()}
+ 
 
 # Confirming requirements for game 
 async def game_confirm_getter(dialog_manager: DialogManager,
@@ -91,21 +108,41 @@ async def not_enough_ton_getter(dialog_manager: DialogManager,
             'button_tonimport': i18n.button.tonimport(),
             'button_back': i18n.button.back()}
     
-    
-# User is owner of room 1VS1 and waiting for guest
-async def wait_owner_1vs1_getter(dialog_manager: DialogManager,
-                                 session: async_sessionmaker,
-                                 i18n: TranslatorRunner,
-                                 bot: Bot,
-                                 event_from_user: User,
-                                 **kwargs
-                                 ) -> dict:
+
+# User is owner of private and waiting for guest
+async def wait_owner_private_getter(dialog_manager: DialogManager,
+                                    session: async_sessionmaker,
+                                    i18n: TranslatorRunner,
+                                    bot: Bot,
+                                    event_from_user: User,
+                                    **kwargs
+                                    ) -> dict:
     
     deposit = dialog_manager.current_context().dialog_data['deposit']
-    logger.info(f'User {event_from_user.id} waiting for 1VS1 game as\
+    invite_code = b64encode(('pr_' + str(event_from_user.id)).encode('utf-8'))
+    logger.info(f'User {event_from_user.id} waiting for Private game as\
+      Owner, deposit: {deposit}, invite_code is {invite_code}')   
+    
+    return {'owner_private': i18n.ownerprivate(invite_code=str(invite_code, encoding='utf-8'),
+                                               deposit=deposit),
+            'button_wait_check_o': i18n.button.wait.check.o(),
+            'button_back': i18n.button.back()}
+
+    
+# User is owner of public and waiting for guest
+async def wait_owner_public_getter(dialog_manager: DialogManager,
+                                   session: async_sessionmaker,
+                                   i18n: TranslatorRunner,
+                                   bot: Bot,
+                                   event_from_user: User,
+                                   **kwargs
+                                   ) -> dict:
+    
+    deposit = dialog_manager.current_context().dialog_data['deposit']
+    logger.info(f'User {event_from_user.id} waiting for Public game as\
       Owner, deposit: {deposit}')   
     
-    return {'owner_1vs1': i18n.owner1vs1(deposit=deposit),
+    return {'owner_public': i18n.ownerpublic(deposit=deposit),
             'button_wait_check_o': i18n.button.wait.check.o(),
             'button_back': i18n.button.back()}
 

@@ -30,7 +30,9 @@ class User(Base):
     wins_ton: Mapped[required_float]
     lose_ton: Mapped[required_float]
     referrals: Mapped[required_int]
+    parent: Mapped[required_str]
     ton: Mapped[required_float]
+    promo: Mapped[required_int]
     
     created_at: Mapped[datetime] = mapped_column(
             DateTime(timezone=True),

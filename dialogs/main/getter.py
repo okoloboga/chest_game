@@ -8,7 +8,7 @@ from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 
-from services import (comission_counter, game_result_writer,
+from services import (coef_counter, game_result_writer,
                       get_user, CENTRAL_WALLET)
 
 
@@ -62,15 +62,15 @@ async def referrals_getter(dialog_manager: DialogManager,
     logger.info(f'User {user_id} in Referral Menu')
     session = dialog_manager.middleware_data.get('session')
     
-    # getting user data from database for referrals count and comission
-    referrals_comission = await comission_counter(user_id, session)
-    referrals = referrals_comission['referrals']
-    comission = referrals_comission['comission']
+    # getting user data from database for referrals count and coefs
+    referrals_coef = await coef_counter(user_id, session)
+    referrals = referrals_coef['referrals']
+    coef = referrals_coef['coef']
     link = await create_start_link(bot, str(user_id), encode=True)
     
     return {'referrals': i18n.referrals(link=link,
                                         referrals=referrals,
-                                        comission=comission),
+                                        coef=coef),
             'button_back': i18n.button.back()}
     
     

@@ -1,11 +1,13 @@
 import logging
 
 from aiogram import Router
-from aiogram.types import CallbackQuery, callback_query
+from aiogram.types import CallbackQuery, Message, callback_query
 from aiogram_dialog import DialogManager, StartMode
 from aiogram_dialog.widgets.kbd import Button
+from aiogram_dialog.widgets.input.text import ManagedTextInput
 from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
+from base64 import b64decode
 
 from states import LobbySG, MainSG
 from services import (create_room_query, get_game, 
@@ -22,9 +24,9 @@ logging.basicConfig(
 
 
 # Select to Find Games
-async def find_game(callback: CallbackQuery,
-                    button: Button,
-                    dialog_manager: DialogManager):
+async def public_game(callback: CallbackQuery,
+                      button: Button,
+                      dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
     logger.info(f'User {user_id} Search for Game')
@@ -34,9 +36,9 @@ async def find_game(callback: CallbackQuery,
 
 
 # Select to Create new Game
-async def create_game(callback: CallbackQuery,
-                      button: Button,
-                      dialog_manager: DialogManager):
+async def private_game(callback: CallbackQuery,
+                       button: Button,
+                       dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
     logger.info(f'User {user_id} Create new Game')
@@ -58,16 +60,54 @@ async def create_game(callback: CallbackQuery,
                     |__/  
 '''
 
-# FIND 
+
+# Chose deposit
 async def deposit(callback: CallbackQuery,
                   button: Button,
                   dialog_manager: DialogManager):
     
     deposit = (callback.data)[10:]
     deposit = 0.5 if deposit == '0_5' else int(deposit)
-
+    
     dialog_manager.current_context().dialog_data['deposit'] = deposit
+
     await dialog_manager.switch_to(LobbySG.game_confirm)
+ 
+
+# Checking for existing game by invite code
+async def join_private_game(callback: CallbackQuery,
+                            widget: ManagedTextInput,
+                            dialog_manager: DialogManager,
+                            invite_code: str):
+    
+    user_id = callback.from_user.id
+    r = aioredis.Redis(host='localhost', port=6379)
+    
+    if await r.exists(invite_code) != 0:
+        logger.info(f'User {user_id} join to {invite_code}')
+        room = await r.hgetall(invite_code)
+        deposit = str(room[b'deposit'], encoding='utf-8')
+        dialog_manager.current_context().dialog_data['deposit'] = deposit
+        dialog_manager.current_context().dialog_data['room'] = room
+        await write_as_guest(room, user_id)
+
+        await dialog_manager.switch_to(LobbySG.game_ready)
+    else:
+        logger.info(f'Game {invite_code} doesnt exists')
+        i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+        await callback.message.answer(text=i18n.game.notexists())
+
+
+# Invited code is wrong completely
+async def wrong_input(message: Message,
+                      widget: ManagedTextInput,
+                      dialog_manager: DialogManager,
+                      invite_code: str):
+    
+    user_id = message.from_user.id
+    logger.info(f'User {user_id} entered wrong invite_code')
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    await message.answer(text=i18n.game.notexists())
 
     
 # If Not Enough TON for Deposit...
@@ -81,6 +121,7 @@ async def import_from_lobby(callback: CallbackQuery,
     await dialog_manager.start(MainSG.ton_import,
                                mode=StartMode.RESET_STACK)
     
+
 # CONFIRM GAME FINALLY
 async def confirm_game(callback: CallbackQuery,
                        button: Button,
@@ -107,7 +148,12 @@ async def wait_check_o(callback: CallbackQuery,
                        dialog_manager: DialogManager):
     
     r = aioredis.Redis(host='localhost', port=6379)
-    room = await r.hgetall('r_'+str(callback.from_user.id))
+    mode = dialog_manager.current_context().dialog_data['mode']
+
+    if mode == 'public':
+        room = await r.hgetall('r_'+str(callback.from_user.id))
+    else:
+        room = await r.hgetall('pr_'+str(callback.from_user.id))
     logger.info(f'Current room status: {room}')
     
     if room[b'guest'] == b'wait':

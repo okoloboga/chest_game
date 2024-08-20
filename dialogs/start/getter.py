@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import User as UserDataBase
-from services import add_referral
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +44,6 @@ async def welcome_getter(dialog_manager: DialogManager,
 
     logger.info(f'User {user_id} subscribed to channel') 
     dialog_manager.current_context().dialog_data['first_name'] = first_name
-    payload = dialog_manager.start_data['payload']
-    session: AsyncSession = dialog_manager.middleware_data.get('session')
-    logger.info(f'Payload before adding referral: {payload}')
-
-    # Add referral to link Parent
-    if payload is not None:
-        await add_referral(session, payload)
 
     return {'welcome_dialog': i18n.welcome.dialog(name=first_name),
             'button_confirm': i18n.button.confirm()}

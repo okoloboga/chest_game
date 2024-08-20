@@ -34,6 +34,7 @@ async def game_start(callback: CallbackQuery,
                      button: Button,
                      dialog_manager: DialogManager
                      ):
+
     room = dialog_manager.current_context().dialog_data['room']
     logger.info(f'Room is {room}')
 
@@ -88,7 +89,8 @@ async def main_game_process(callback: CallbackQuery,
                             dialog_manager: DialogManager,
                             bot: Bot
                             ):
-        # It an end of Game - press buttom GAME END
+    
+    # It an end of Game - press buttom GAME END
     if callback.data == 'game_end':
         await dialog_manager.start(state=MainSG.main,
                                    mode=StartMode.RESET_STACK)
@@ -134,7 +136,7 @@ async def main_game_process(callback: CallbackQuery,
                     await callback.answer()
 
                 # Give turn to Searcher
-                await asyncio.sleep(2)
+                await asyncio.sleep(1)
                 msg = await bot.send_message(searcher, text=i18n.game.searcher(),
                                              reply_markup=game_chest_keyboard(i18n))
                 try:
@@ -167,7 +169,7 @@ async def main_game_process(callback: CallbackQuery,
                                                data={**result})
                      
                     # Send notification to Hidder
-                    await asyncio.sleep(2)
+                    await asyncio.sleep(1)
                     msg = await bot.send_message(hidder, text=i18n.game.youlose(deposit=deposit),
                                                  reply_markup=game_end_keyboard(i18n))
                     try:
@@ -189,7 +191,7 @@ async def main_game_process(callback: CallbackQuery,
                         await callback.answer()
 
                     # Give turn to Hidder                
-                    await asyncio.sleep(2)
+                    await asyncio.sleep(1)
                     msg = await bot.send_message(hidder, text=i18n.game.searcher(),
                                                  reply_markup=game_exit_keyboard(i18n))
                     try:
@@ -216,30 +218,12 @@ async def main_game_process(callback: CallbackQuery,
                                        data={**result})
                      
             # Send notification to enemy
-            await asyncio.sleep(2)
+            await asyncio.sleep(1)
             msg = await bot.send_message(enemy, text=i18n.game.youwin(deposit=deposit),
                                          reply_markup=game_end_keyboard(i18n))
             try:
                 await bot.delete_message(enemy, msg.message_id - 1)
             except TelegramBadRequest:
                 await callback.answer()
-
-                
-'''
-# Processing End Game button, when User is lose
-# For exit to Lobby
-@game_router.callback_query(F.text == 'game_end', )
-                           # StateFilter(GameSG.main))
-async def game_end_process(callback: CallbackQuery,
-                           state: FSMContext,
-                           dialog_manager: DialogManager
-                           ):
-
-    user_id = callback.from_user.id
-    await state.clear()
-    await dialog_manager.start(state=MainSG.main,
-                               mode=StartMode.RESET_STACK)
-'''
-
 
 

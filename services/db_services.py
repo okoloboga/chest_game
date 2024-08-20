@@ -34,7 +34,9 @@ async def create_user(session: AsyncSession,
                 'wins_ton': 0,
                 'lose_ton': 0,
                 'referrals': 0,
-                'ton': 0
+                'parent': 0,
+                'ton': 0,
+                'promo': 0
                 }
             )    
     await session.execute(user)
@@ -59,18 +61,24 @@ async def get_user(session: AsyncSession,
 
 # Add referrals to referral link Parent
 async def add_referral(session: AsyncSession,
-                       telegram_id: int):
+                       parent_id: int,
+                       user_id: int):
     
-    logger.info(f'Adding referral to User {telegram_id}')
+    logger.info(f'Adding referral to User {parent_id}')
     
-    user_stmt = select(User).where(int(telegram_id) == User.telegram_id)
+    parent_stmt = select(User).where(int(parent_id) == User.telegram_id)
+    user_stmt = select(User).where(int(user_id) == User.telegram_id)
+    
     async with session:
-        result = await session.execute(user_stmt)
-        user = result.scalar()
-        user.referrals = int(user.referrals) + 1 
-        logger.info(f'Parent user referrals {user.referrals}')
+        parent = (await session.execute(parent_stmt)).scalar()
+        user = (await session.execute(user_stmt)).scalar()
+        
+        parent.referrals = int(parent.referrals) + 1 
+        user.parent = parent_id
+        logger.info(f'Parent user referrals {parent.referrals}')
+        logger.info(f'Added Parent {parent_id} to User {user_id}')
+        
         await session.commit()
-
 
 
 # Try to get Transaction with same Hash
@@ -145,7 +153,7 @@ async def game_result_writer(session: AsyncSession,
                              winner_id: int,
                              loser_id: int):
 
-    comission_counter = services.services.comission_counter
+    coef_counter = services.services.coef_counter
 
     # Get Entities from database
     winner_statement = select(User).where(winner_id == User.telegram_id)
@@ -156,19 +164,63 @@ async def game_result_writer(session: AsyncSession,
         loser = (await session.execute(loser_statement)).scalar()
 
         # Writing winner data
-        winner_comission = ((await comission_counter(winner_id, session))['comission'] / 100) * deposit
+        winner_coef = (await coef_counter(winner_id, session))['coef']
         winner.games = winner.games + 1
         winner.wins = winner.wins + 1
-        winner.wins_ton = winner.wins_ton + deposit - winner_comission
-        winner.ton = winner.ton + deposit - winner_comission
+        
+        if winner.promo == 1:
+            winner.wins_ton = winner.wins_ton + deposit 
+            winner.ton = winner.ton + deposit
+            winner.promo = 0
+            flag = True
+        else:
+            winner.wins_ton = winner.wins_ton + (deposit * (winner_coef - 1)
+            winner.ton = winner.ton + (deposit * (winner_coef - 1))
+            flag = False
 
         # Writing loser data
-        loser_comission = ((await comission_counter(loser_id, session))['comission'] / 100) * deposit
         loser.games = loser.games + 1
         loser.lose = loser.lose + 1
-        loser.lose_ton = loser.lose_ton + deposit + loser_comission
-        loser.ton = loser.ton - deposit - loser_comission
+        loser.lose_ton = loser.lose_ton + deposit
+        loser.ton = loser.ton - deposit
+        
+        # Prepare vars to write referral parents %
+        winner_parent_id = winner.parent
+        loser_parent_id = loser.parent
         
         await session.commit()
+    
+    # If Winner haven't promocode - parents have 3% from deposit
+    if flag is False:
+        winner_parent_statement = select(User).where(int(winner_parent_id) == User.telegram_id)
+        loser_parent_statement = select(User).where(int(loser_parent_id) == User.telegram_id)
+        
+        async with session:
+            winner_parent = (await session.execute(winner_parent_statement)).scalar()
+            loser_parent = (await session.execute(loser_parent_statement)).scalar()
+            
+            if winner_parent is not None:
+                logger.info(f'winner_parent is {winner_parent.telegram_id}')
+                winner_parent.ton = winner_parent.ton + (deposit * 0.03)
+            if loser_parent is not None:
+                logger.info(f'loser_parent is {loser_parent.telegram_id}')
+                loser_parent.ton = loser_parent.ton + (deposit * 0.03)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
