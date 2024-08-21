@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import random
 import services.db_services
 
@@ -245,4 +246,17 @@ async def game_result(owner: int,
             'loser_id': loser_id}
         
    
+# Game timer - 1 minute for game
+async def timer(dialog_manager: DialogManager,
+                game_id: int):
+
+    await asyncio.sleep(60)
+    r = aioredis.Redis(host='localhost', port=6379)
+    game = await r.hgetall('g_'+str(game_id))
+
+    if len(game) == 0:
+        logger.info(f"g_{game_id} doesn't exists")
     
+    else:
+        
+

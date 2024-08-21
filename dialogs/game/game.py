@@ -79,6 +79,7 @@ async def game_start(callback: CallbackQuery,
     else:
         await dialog_manager.switch_to(LobbySG.game_ready)
         
+
 # All game in one handler
 @game_router.callback_query(F.data.in_(['first', 'second', 'third', 
                                         'game_exit', 'game_end']),

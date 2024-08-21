@@ -20,7 +20,7 @@ logging.basicConfig(
 # Create Variables at begin of Bot work session
 async def create_variables(session: AsyncSession):
 
-    variables = insert(Variables).values(
+    variables = insert(Variables).values([
             {
                 'name': 'promocodes',
                 'value': 'PROMOCODE1 PROMOCODE2'
@@ -41,7 +41,7 @@ async def create_variables(session: AsyncSession):
                 'name': 'to_parents',
                 'value': '0'
                 },
-            )
+            ])
     await session.execute(variables)
     await session.commit()
 
@@ -139,7 +139,7 @@ async def process_transaction(session: AsyncSession,
         
         # Update Users TON value in Database
         user_stmt = select(User).where(telegram_id == User.telegram_id)
-        income_stmt = select(Variables).where('income' = Variables.name)
+        income_stmt = select(Variables).where('income' == Variables.name)
 
         async with session:
             user = (await session.execute(user_stmt)).scalar()

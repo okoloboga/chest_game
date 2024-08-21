@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.input.text import TextInput
 from .getter import *
 from .handler import *
 from states import MainSG
-from services import check_value_and_address, TELEGRAPH, CHANNEL
+from services import check_value_and_address, is_promocode, TELEGRAPH, CHANNEL
 from dialogs.buttons import back
 
 main_dialog = Dialog(
