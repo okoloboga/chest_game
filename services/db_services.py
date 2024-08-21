@@ -163,15 +163,18 @@ async def decrement_ton(session: AsyncSession,
                         telegram_id: int,
                         value: float):
 
-    logger.info(f'Decrement Users {telegram_id} TON value by {value}')
+    logger.info(f'Decrement Users {telegram_id} TON value for {value}')
 
     user_stmt = select(User).where(telegram_id == User.telegram_id)
+    outcome_stmt = select(Variables).where('outcome' == Variables.name)
+
     async with session:
 
-        result = await session.execute(user_stmt)
-        user = result.scalar()
+        user = (await session.execute(user_stmt)).scalar()
+        outcome = (await session.execute(outcome_stmt)).scalar()
 
         if float(user.ton) > float(value):
+            outcome.value = str(float(outcome.value) + float(value))
             user.ton = float(user.ton) - float(value)
             await session.commit()
             return True
@@ -218,26 +221,34 @@ async def game_result_writer(session: AsyncSession,
     # Get Entities from database
     winner_statement = select(User).where(winner_id == User.telegram_id)
     loser_statement = select(User).where(loser_id == User.telegram_id)
-    
+    pure_income_statement = select(Variables).where('pure_income' == Variables.name)
+    to_parent_statement = select(Variables).where('to_parent' == Variables.name)
+
+    winner_coef = (await coef_counter(winner_id, session))['coef']
+    winner_prize = winner_coef * deposit
+    winner_parent_comission = 0
+    loser_parent_comission = 0
+
+    logger.info(f'Default game results: winner prize = {winner_prize}')
+
     async with session:
         winner = (await session.execute(winner_statement)).scalar()
         loser = (await session.execute(loser_statement)).scalar()
 
-        # Writing winner data
-        winner_coef = (await coef_counter(winner_id, session))['coef']
+        # Writing winner data        
         winner.games = winner.games + 1
         winner.wins = winner.wins + 1
         
         if winner.promo == 1:
-            winner.wins_ton = winner.wins_ton + deposit 
-            winner.ton = winner.ton + deposit
+            winner_prize = deposit
             winner.promo = 0
             flag = True
         else:
-            winner.wins_ton = winner.wins_ton + (deposit * (winner_coef - 1))
-            winner.ton = winner.ton + (deposit * (winner_coef - 1))
             flag = False
 
+        winner.wins_ton = winner.wins_ton + winner_prize
+        winner.ton = winner.ton + winner_prize
+        
         # Writing loser data
         loser.games = loser.games + 1
         loser.lose = loser.lose + 1
@@ -257,19 +268,21 @@ async def game_result_writer(session: AsyncSession,
         winner_parent_statement = select(User).where(int(winner_parent_id) == User.telegram_id)
         loser_parent_statement = select(User).where(int(loser_parent_id) == User.telegram_id)
         
+        # Is winner parent exists?
         if int(winner_parent_id) == 0:
             logger.info(f'Winner parent is 0')
-            winner_parent_comission = 0.03
+            winner_parent_comission = 0.03 * deposit
         else:
             logger.info(f'Winner parent is not 0: {winner_parent_id}')
-            winner_parent_comission = (await coef_counter(winner_parent_id, session))['comission']
+            winner_parent_comission = (await coef_counter(winner_parent_id, session))['comission'] * deposit
 
+        # Is loser parent exists?
         if int(loser_parent_id) == 0:
             logger.info(f'Loser parent is 0')
-            loser_parent_comission = 0.03
+            loser_parent_comission = 0.03 * deposit
         else:
             logger.info(f'Loser parent is not 0: {loser_parent_id}')
-            loser_parent_comission = (await coef_counter(loser_parent_id, session))['comission']
+            loser_parent_comission = (await coef_counter(loser_parent_id, session))['comission'] * deposit
 
         async with session:
             winner_parent = (await session.execute(winner_parent_statement)).scalar()
@@ -277,12 +290,30 @@ async def game_result_writer(session: AsyncSession,
             
             if winner_parent is not None:
                 logger.info(f'winner_parent is {winner_parent.telegram_id}')
-                winner_parent.ton = winner_parent.ton + (deposit * winner_parent_comission)
+                winner_parent.ton = winner_parent.ton + winner_parent_comission
             if loser_parent is not None:
                 logger.info(f'loser_parent is {loser_parent.telegram_id}')
-                loser_parent.ton = loser_parent.ton + (deposit * loser_parent_comission)
+                loser_parent.ton = loser_parent.ton + loser_parent_comission
             
             await session.commit()
+
+
+    # Write parent comission and pure income to Variables Database
+    pure_income = (deposit * 2) - winner_prize - winner_parent_comission - loser_parent_comission
+    
+    logger.info(f'Game result after counting:\nwinner prize = {winner_prize}\n\
+                winner parent comission = {winner_parent_comission}\n\
+                loser parent comission = {loser_parent_comission}\n\
+                pure income = {pure_income}')
+
+    async with session: 
+        pure_income_scalar = (await session.execute(pure_income_statement)).scalar()
+        to_parent_scalar = (await session.execute(to_parent_statement)).scalar()
+
+        pure_income_scalar.value = str(float(pure_income_scalar.value) + float(pure_income))
+        to_parent_scalar.value = str(float(to_parent_scalar.value) + float(winner_parent_comission + loser_parent_comission))
+
+        await session.commit()
 
 
 
