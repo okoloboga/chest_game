@@ -131,16 +131,15 @@ async def main_game_process(callback: CallbackQuery,
                 try: 
                     msg = await callback.message.edit_text(text=i18n.game.hidden(),
                                                            reply_markup=game_exit_keyboard(i18n))
-                    await bot.delete_message(chat_id, msg.message_id - 1)
+                    await bot.delete_messages(chat_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
                 except TelegramBadRequest:
                     await callback.answer()
 
                 # Give turn to Searcher
-                await asyncio.sleep(1)
                 msg = await bot.send_message(searcher, text=i18n.game.searcher(),
                                              reply_markup=game_chest_keyboard(i18n))
                 try:
-                    await bot.delete_message(searcher, msg.message_id - 1)
+                    await bot.delete_messages(searcher, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
                 except TelegramBadRequest:
                     await callback.answer()
 
@@ -152,9 +151,6 @@ async def main_game_process(callback: CallbackQuery,
 
                 # Checking for success or not 
                 if target == callback.data:
-                    result = await game_result(int(owner), float(deposit), 
-                                               winner_id=int(searcher),
-                                               loser_id=int(hidder))
                     try:
                         await callback.message.answer(text=i18n.game.youwin(deposit=deposit))
                     except TelegramBadRequest:
@@ -166,18 +162,18 @@ async def main_game_process(callback: CallbackQuery,
                                                data={**result})
                      
                     # Send notification to Hidder
-                    await asyncio.sleep(1)
                     msg = await bot.send_message(hidder, text=i18n.game.youlose(deposit=deposit),
                                                  reply_markup=game_end_keyboard(i18n))
                     try:
-                        await bot.delete_message(hidder, msg.message_id - 1)
+                        await bot.delete_messages(hidder, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
                     except TelegramBadRequest:
                         await callback.answer()
                     
-                else:
                     result = await game_result(int(owner), float(deposit), 
-                                               winner_id=int(hidder),
-                                               loser_id=int(searcher))
+                                               winner_id=int(searcher),
+                                               loser_id=int(hidder))
+
+                else:
                     try:
                         await callback.message.answer(text=i18n.game.youlose(deposit=deposit))
                     except TelegramBadRequest:
@@ -189,23 +185,20 @@ async def main_game_process(callback: CallbackQuery,
                                                data={**result})
                      
                     # Send notification to Hidder
-                    await asyncio.sleep(1)
                     msg = await bot.send_message(hidder, text=i18n.game.youwin(deposit=deposit),
                                                  reply_markup=game_end_keyboard(i18n))
                     try:
-                        await bot.delete_message(hidder, msg.message_id - 1)
+                        await bot.delete_messages(hidder, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)]) 
                     except TelegramBadRequest:
                         await callback.answer()
                                        
-                        
+                    result = await game_result(int(owner), float(deposit), 
+                                               winner_id=int(hidder),
+                                               loser_id=int(searcher))   
                     
         elif callback.data == 'game_exit':
             
             deposit = str(user_game[b'deposit'], encoding='utf-8')
-     
-            result = await game_result(int(owner), float(deposit), 
-                                       winner_id=int(enemy),
-                                       loser_id=int(user_id))
             try:           
                 await callback.message.answer(text=game.youlose(deposit=deposit))
             except TelegramBadRequest:
@@ -217,12 +210,14 @@ async def main_game_process(callback: CallbackQuery,
                                        data={**result})
                      
             # Send notification to enemy
-            await asyncio.sleep(1)
             msg = await bot.send_message(enemy, text=i18n.game.youwin(deposit=deposit),
                                          reply_markup=game_end_keyboard(i18n))
             try:
-                await bot.delete_message(enemy, msg.message_id - 1)
+                await bot.delete_message(enemy, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])  
             except TelegramBadRequest:
                 await callback.answer()
 
+            result = await game_result(int(owner), float(deposit), 
+                                       winner_id=int(enemy),
+                                       loser_id=int(user_id))
 

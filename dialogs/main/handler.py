@@ -9,7 +9,7 @@ from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services import (import_ton_check, process_transaction, 
-                      export_ton, decrement_ton, get_user)
+                      export_ton, decrement_ton, get_user, increment_promo)
 from services.constants import CENTRAL_WALLET
 from states import MainSG, LobbySG
 from database import User
@@ -126,7 +126,7 @@ async def do_export(callback: CallbackQuery,
     logger.info(f'User {user_id} doing export with validated data:')
     logger.info(f'{result_list}')
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-    session = dialog_manager.middleware_data['session']   
+    session = dialog_manager.middleware_data.get('session')   
     
     user_balance = (await get_user(session, user_id)).ton
 
@@ -140,7 +140,7 @@ async def do_export(callback: CallbackQuery,
             result_decrement = await decrement_ton(session, user_id, result_list[1])
             
             # If users TON is enough...
-            if result_decrement is True:
+            if result_decrement:
                 await callback.answer(text=i18n.tonexport.success(value=result_list[1],
                                                                   address=result_list[0]))
             else:
@@ -154,7 +154,6 @@ async def do_export(callback: CallbackQuery,
                                                             user_ton=result_decrement))
  
 
-
 # Wrong export data filled
 async def wrong_export(callback: CallbackQuery,
                        widget: ManagedTextInput,
@@ -165,3 +164,34 @@ async def wrong_export(callback: CallbackQuery,
 
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     await callback.answer(text=i18n.wrong.export())
+
+
+# Entered promocode is Valid
+async def check_promocode(callback: CallbackQuery,
+                          widget: ManagedTextInput,
+                          dialog_manager: DialogManager,
+                          promocode: str):
+
+    user_id = callback.from_user.id
+    logger.info(f'User {user_id} entered promocode {promocode}')
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    session = dialog_manager.middleware_data.get('session')
+
+    if await increment_promo(session, user_id, promocode):
+        await callback.message.answer(text=i18n.promocode.activated())
+    else:
+        await callback.message.answer(text=i18n.promocode.activated.yet())
+
+
+
+# Entered promocode is invalid
+async def wrong_input(callback: CallbackQuery,
+                       widget: ManagedTextInput,
+                       dialog_manager: DialogManager,
+                       result_list: str):
+
+    logger.info(f'User {callback.from_user.id} fills wrong promocode')
+
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    await callback.answer(text=i18n.wrong.promocode())
+

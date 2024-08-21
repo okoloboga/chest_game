@@ -61,6 +61,18 @@ main_dialog = Dialog(
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=ton_export_getter,
         state=MainSG.ton_export
-    )
+    ),
+    Window(
+        Format('{enter_promocode}'),
+        Button(Format('{button_back}'), id='b_back', on_click=back),
+        TextInput(
+            id='promocode',
+            type_factory=is_promocode,
+            on_success=check_promocode,
+            on_error=wrong_input
+            ),
+        getter=promocode_getter,
+        state=MainSG.promocode
+        )
 )
 

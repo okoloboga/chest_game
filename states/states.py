@@ -11,8 +11,9 @@ class MainSG(StatesGroup):
     ton_balance = State()
     ton_import = State()
     ton_export = State()
+    promocode = State()  
     
-    
+
 class LobbySG(StatesGroup):
     main = State()
     mode = State()
@@ -26,6 +27,7 @@ class LobbySG(StatesGroup):
     game_ready = State()
     game_confirm = State()
     
+
 class GameSG(StatesGroup):
     main = State()
     

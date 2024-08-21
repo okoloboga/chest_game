@@ -8,10 +8,8 @@ tg_id = Annotated[int, mapped_column(BigInteger, primary_key=True)]
 tr_hash = Annotated[str, mapped_column(String, primary_key=True)]
 required_short_str = Annotated[str, mapped_column(String(15), nullable=False)]
 required_str = Annotated[str, mapped_column(String, nullable=False)]
-optional_str = Annotated[str, mapped_column(String, nullable=True)]
 required_int = Annotated[int, mapped_column(Integer, nullable=False)]
 required_float = Annotated[float, mapped_column(Float, nullable=False)]
-optional_int = Annotated[int, mapped_column(Integer, nullable=True)]
 
 
 class Base(DeclarativeBase):
@@ -33,6 +31,7 @@ class User(Base):
     parent: Mapped[required_str]
     ton: Mapped[required_float]
     promo: Mapped[required_int]
+    used_promo: Mapped[required_str]
     
     created_at: Mapped[datetime] = mapped_column(
             DateTime(timezone=True),

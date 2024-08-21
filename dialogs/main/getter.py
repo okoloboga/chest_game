@@ -123,4 +123,18 @@ async def ton_export_getter(dialog_manager: DialogManager,
     
     return {'export': i18n.tonexport(),
             'button_back': i18n.button.back()}
-    
+ 
+
+# Enter promocode
+async def promocode_getter(dialog_manager: DialogManager,
+                           session: async_sessionmaker,
+                           i18n: TranslatorRunner,
+                           event_from_user: User,
+                           **kwargs
+                           ) -> dict:
+
+    user_id = event_from_user.id
+    logger.info(f'User {user_id} in Enter Promocode menu')
+
+    return {'enter_promocode': i18n.enter.promocode(),
+            'button_back': i18n.button.back()}

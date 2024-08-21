@@ -57,6 +57,17 @@ def is_private_room(invite_code: str) -> str:
     raise ValueError
 
 
+# Checking for valid promocode
+def is_promocode(promocode: str) -> str:
+
+    logger.info(f'is_promocode({promocode})')
+    
+    # For example
+    if len(promocode) != 0:
+        return promocode
+    raise ValueError
+
+
 # Making Deposit and go to wati for game, if success  
 async def create_room_query(user_id: int,
                             dialog_manager: DialogManager):
@@ -233,5 +244,5 @@ async def game_result(owner: int,
             'winner_id': winner_id,
             'loser_id': loser_id}
         
-    
+   
     

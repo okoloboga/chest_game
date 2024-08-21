@@ -36,15 +36,15 @@ async def create_user(session: AsyncSession,
                 'referrals': 0,
                 'parent': 0,
                 'ton': 0,
-                'promo': 0
+                'promo': 0,
+                'used_promo': ''
                 }
             )    
     await session.execute(user)
     await session.commit()
  
 
-# Read User data from Database:w
-
+# Read User data from Database
 async def get_user(session: AsyncSession,
                    telegram_id: int
                    ) -> User | None:
@@ -142,6 +142,31 @@ async def decrement_ton(session: AsyncSession,
             user.ton = float(user.ton) - float(value)
             await session.commit()
 
+            return True
+        else:
+            return False
+
+
+# Increment promocode to 1, not mode
+async def increment_promo(session: AsyncSession,
+                          telegram_id: int,
+                          promocode: str):
+
+    logger.info(f'Increment Users {telegram_id} promo')
+
+    user_stmt = select(User).where(telegram_id == User.telegram_id)
+    async with session:
+
+        result = await session.execute(user_stmt)
+        user = result.scalar()
+        used_promo = (user.used_promo).split()
+
+        logger.info(f'User promo status: {user.promo}, users used promo: {used_promo}, promo: {promocode}')
+
+        if user.promo != 1 and promocode not in used_promo:
+            user.promo = 1
+            user.used_promo = str(user.used_promo) + ' ' + str(promocode) 
+            await session.commit()
             return True
         else:
             return False
