@@ -16,6 +16,7 @@ from dialogs import dialogs, routers, unknown_router
 from utils import TranslatorHub, create_translator_hub
 from middlewares import TranslatorRunnerMiddleware, DbSessionMiddleware
 from database import Base
+from services import create_variables
 
 logger = logging.getLogger(__name__)
 
@@ -41,13 +42,18 @@ async def main():
         echo=db_config.is_echo
     )
     
-    # Connection test with databas
-    # async with engine.begin() as connection:
-    #     await connection.run_sync(Base.metadata.drop_all)
-    #     await connection.run_sync(Base.metadata.create_all)
+    Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)   
     
-    Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
- 
+    '''
+    Clear Database and create Finances table
+    COMMENT BEFORE REBOOT!
+    
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.drop_all)
+        await connection.run_sync(Base.metadata.create_all)
+    await create_variables(Sessionmaker)
+    '''
+    
     # Init Bot in Dispatcher
     bot_config = get_config(BotConfig, "bot")
     bot = Bot(token=bot_config.token.get_secret_value(),

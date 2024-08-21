@@ -1,11 +1,13 @@
 import asyncio
 import logging
+import datetime
+from database.tables import Variables
 import services.services
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import select
-from database import User, TransactionHashes
+from database import User, TransactionHashes, Variables
 
 
 logger = logging.getLogger(__name__)
@@ -14,6 +16,34 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(filename)s:%(lineno)d #%(levelname)-8s '
            '[%(asctime)s] - %(name)s - %(message)s')
+
+# Create Variables at begin of Bot work session
+async def create_variables(session: AsyncSession):
+
+    variables = insert(Variables).values(
+            {
+                'name': 'promocodes',
+                'value': 'PROMOCODE1 PROMOCODE2'
+                },
+            {
+                'name': 'income',
+                'value': '0'
+                },
+            {
+                'name': 'outcome',
+                'value': '0'
+                },
+            {
+                'name': 'pure_income',
+                'value': '0'
+                },
+            {
+                'name': 'to_parents',
+                'value': '0'
+                },
+            )
+    await session.execute(variables)
+    await session.commit()
 
 
 # Add new User to database
@@ -92,7 +122,7 @@ async def process_transaction(session: AsyncSession,
     logger.info(f'Getting info about transaction {transaction_hash} for {transaction_value} TON')
     
     transaction_stmt = await session.get(
-            TransactionHashes, {'transaction_hash': transaction_hash}
+            TransactionsHashes, {'transaction_hash': transaction_hash}
             )
     
     logger.info(f'Transaction is {transaction_hash}')
@@ -109,9 +139,12 @@ async def process_transaction(session: AsyncSession,
         
         # Update Users TON value in Database
         user_stmt = select(User).where(telegram_id == User.telegram_id)
+        income_stmt = select(Variables).where('income' = Variables.name)
+
         async with session:
-            result = await session.execute(user_stmt)
-            user = result.scalar()
+            user = (await session.execute(user_stmt)).scalar()
+            income = (await session.execute(income_stmt)).scalar()
+            income.value = str(float(income.value) + float(transaction_value))
             user.ton = float(user.ton) + float(transaction_value)
             await session.commit()
         await session.commit()
@@ -141,7 +174,6 @@ async def decrement_ton(session: AsyncSession,
         if float(user.ton) > float(value):
             user.ton = float(user.ton) - float(value)
             await session.commit()
-
             return True
         else:
             return False
@@ -155,15 +187,18 @@ async def increment_promo(session: AsyncSession,
     logger.info(f'Increment Users {telegram_id} promo')
 
     user_stmt = select(User).where(telegram_id == User.telegram_id)
-    async with session:
+    promo_stmt = select(Variables).where('promocodes' == Variables.name)
 
-        result = await session.execute(user_stmt)
-        user = result.scalar()
+    async with session:
+        
+        actual_promo = (((await session.execute(promo_stmt)).scalar()).value).split()
+        user = (await session.execute(user_stmt)).scalar()
         used_promo = (user.used_promo).split()
 
         logger.info(f'User promo status: {user.promo}, users used promo: {used_promo}, promo: {promocode}')
+        logger.info(f'Actual promos: {actual_promo}')
 
-        if user.promo != 1 and promocode not in used_promo:
+        if (user.promo != 1) and (promocode not in used_promo) and (user.promo not in actual_promo):
             user.promo = 1
             user.used_promo = str(user.used_promo) + ' ' + str(promocode) 
             await session.commit()

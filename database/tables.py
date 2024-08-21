@@ -1,11 +1,13 @@
 from typing import Annotated
 from datetime import datetime
+from fluent_compiler.utils import re
 from sqlalchemy import func, BigInteger, DateTime, String, Integer, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 # Annotating types
 tg_id = Annotated[int, mapped_column(BigInteger, primary_key=True)]
 tr_hash = Annotated[str, mapped_column(String, primary_key=True)]
+name = Annotated[str, mapped_column(String, primary_key=True)]
 required_short_str = Annotated[str, mapped_column(String(15), nullable=False)]
 required_str = Annotated[str, mapped_column(String, nullable=False)]
 required_int = Annotated[int, mapped_column(Integer, nullable=False)]
@@ -60,3 +62,16 @@ class TransactionHashes(Base):
 
     def __repr__(self) -> str:
         return f'[{self.transaction_hash}] = {self.transaction_value}'
+
+
+class Variables(Base):
+    __tablename__ = 'variables'
+
+    name: Mapped[name]
+    value: Mapped[required_str] 
+    created_at: Mapped[datetime] = mapped_column(
+                DateTime(timezone=True),
+                nullable=False,
+                server_default=func.now()
+                )
+
