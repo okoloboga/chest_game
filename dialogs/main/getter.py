@@ -64,13 +64,12 @@ async def referrals_getter(dialog_manager: DialogManager,
     
     # getting user data from database for referrals count and coefs
     referrals_coef = await coef_counter(user_id, session)
-    referrals = referrals_coef['referrals']
-    coef = referrals_coef['coef']
     link = await create_start_link(bot, str(user_id), encode=True)
     
     return {'referrals': i18n.referrals(link=link,
-                                        referrals=referrals,
-                                        coef=coef),
+                                        referrals=referrals_coef['referrals'],
+                                        coef=referrals_coef['coef'],
+                                        comission=int(referrals_coef['comission'] * 100)),
             'button_back': i18n.button.back()}
     
     

@@ -174,7 +174,7 @@ async def game_result_writer(session: AsyncSession,
             winner.promo = 0
             flag = True
         else:
-            winner.wins_ton = winner.wins_ton + (deposit * (winner_coef - 1)
+            winner.wins_ton = winner.wins_ton + (deposit * (winner_coef - 1))
             winner.ton = winner.ton + (deposit * (winner_coef - 1))
             flag = False
 
@@ -192,19 +192,37 @@ async def game_result_writer(session: AsyncSession,
     
     # If Winner haven't promocode - parents have 3% from deposit
     if flag is False:
+        logger.info(f'Winner parent: {winner_parent_id}, Loser parent: {loser_parent_id}')
+
         winner_parent_statement = select(User).where(int(winner_parent_id) == User.telegram_id)
         loser_parent_statement = select(User).where(int(loser_parent_id) == User.telegram_id)
         
+        if int(winner_parent_id) == 0:
+            logger.info(f'Winner parent is 0')
+            winner_parent_comission = 0.03
+        else:
+            logger.info(f'Winner parent is not 0: {winner_parent_id}')
+            winner_parent_comission = (await coef_counter(winner_parent_id, session))['comission']
+
+        if int(loser_parent_id) == 0:
+            logger.info(f'Loser parent is 0')
+            loser_parent_comission = 0.03
+        else:
+            logger.info(f'Loser parent is not 0: {loser_parent_id}')
+            loser_parent_comission = (await coef_counter(loser_parent_id, session))['comission']
+
         async with session:
             winner_parent = (await session.execute(winner_parent_statement)).scalar()
             loser_parent = (await session.execute(loser_parent_statement)).scalar()
             
             if winner_parent is not None:
                 logger.info(f'winner_parent is {winner_parent.telegram_id}')
-                winner_parent.ton = winner_parent.ton + (deposit * 0.03)
+                winner_parent.ton = winner_parent.ton + (deposit * winner_parent_comission)
             if loser_parent is not None:
                 logger.info(f'loser_parent is {loser_parent.telegram_id}')
-                loser_parent.ton = loser_parent.ton + (deposit * 0.03)
+                loser_parent.ton = loser_parent.ton + (deposit * loser_parent_comission)
+            
+            await session.commit()
 
 
 
