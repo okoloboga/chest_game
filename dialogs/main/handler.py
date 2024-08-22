@@ -1,7 +1,7 @@
 import logging
 
 from aiogram import Router
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager 
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.input.text import ManagedTextInput
@@ -41,6 +41,15 @@ async def balance(callback: CallbackQuery,
     
     logger.info(f'User {callback.from_user.id} go to Balance')
     await dialog_manager.switch_to(MainSG.ton_balance)
+
+
+# Go to Promocode enter page
+async def promocode(callback: CallbackQuery,
+                    button: Button,
+                    dialog_manager: DialogManager):
+
+    logger.info(f'User {callback.from_user.id} go to Promocode')
+    await dialog_manager.switch_to(MainSG.promocode)
 
 
 # Go to Referrals page: referral link, comission
@@ -167,31 +176,36 @@ async def wrong_export(callback: CallbackQuery,
 
 
 # Entered promocode is Valid
-async def check_promocode(callback: CallbackQuery,
+async def check_promocode(message: Message,
                           widget: ManagedTextInput,
                           dialog_manager: DialogManager,
                           promocode: str):
 
-    user_id = callback.from_user.id
+    user_id = message.from_user.id
     logger.info(f'User {user_id} entered promocode {promocode}')
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     session = dialog_manager.middleware_data.get('session')
+    result = await increment_promo(session, user_id, promocode)
 
-    if await increment_promo(session, user_id, promocode):
-        await callback.message.answer(text=i18n.promocode.activated())
-    else:
-        await callback.message.answer(text=i18n.promocode.activated.yet())
+    if result == 'approved':
+        await message.answer(text=i18n.promocode.activated())
+    elif result == 'wrong promo':
+        await message.answer(text=i18n.wrong.promocode())
+    elif result == 'used yet':
+        await message.answer(text=i18n.promocode.used.yet())
+    elif result == 'promo is active':
+        await message.answer(text=i18n.promocode.isactive()) 
 
 
 
 # Entered promocode is invalid
-async def wrong_input(callback: CallbackQuery,
-                       widget: ManagedTextInput,
-                       dialog_manager: DialogManager,
-                       result_list: str):
+async def wrong_input(message: Message,
+                      widget: ManagedTextInput,
+                      dialog_manager: DialogManager,
+                      result_list: str):
 
-    logger.info(f'User {callback.from_user.id} fills wrong promocode')
+    logger.info(f'User {message.from_user.id} fills wrong promocode')
 
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-    await callback.answer(text=i18n.wrong.promocode())
+    await message.answer(text=i18n.wrong.promocode())
 

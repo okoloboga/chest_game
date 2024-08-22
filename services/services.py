@@ -1,12 +1,18 @@
 import logging
 import asyncio
 import random
-import services.db_services
 
-from  base64 import b64decode
+from aiogram.types import InlineKeyboardMarkup
+import services.db_services
+# import dialogs.game.keyboard
+
+from aiogram import Bot
+from aiogram.exceptions import TelegramBadRequest
+from base64 import b64decode
 from aiogram_dialog import DialogManager
 from redis import asyncio as aioredis
 from sqlalchemy.ext.asyncio import async_sessionmaker
+from fluentogram import TranslatorRunner
 
 from states import LobbySG
 
@@ -247,16 +253,55 @@ async def game_result(owner: int,
         
    
 # Game timer - 1 minute for game
-async def timer(dialog_manager: DialogManager,
-                game_id: int):
+async def turn_timer(dialog_manager: DialogManager,
+                     game_id: int,
+                     loser_id: int,
+                     game_end_keyboard: InlineKeyboardMarkup):
 
     await asyncio.sleep(60)
     r = aioredis.Redis(host='localhost', port=6379)
     game = await r.hgetall('g_'+str(game_id))
 
     if len(game) == 0:
-        logger.info(f"g_{game_id} doesn't exists")
+        logger.info(f"g_{game_id} doesn't exists, well done!")
     
     else:
+        game_result_writer = services.db_services.game_result_writer
+        session: async_sessionmaker = dialog_manager.middleware_data.get('session')
+        bot: Bot = dialog_manager.middleware_data.get('bot')
+        i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+
+        deposit = str(game[b'deposit'], encoding='utf-8')
+        owner = str(game[b'owner'], encoding='utf-8')
+        guest = str(game[b'guest'], encoding='utf-8')
+        logger.info(f'Game ended by timer: {game}')
+        logger.info(f'Owner: {owner}, Guest: {guest}, Loser: {loser_id}')
+
+        winner_id = owner if int(loser_id) != int(owner) else guest
+
+        # Send notification to Winner
+        winner_msg = await bot.send_message(chat_id=winner_id, 
+                                            text=i18n.game.youwin(deposit=deposit),
+                                            reply_markup=game_end_keyboard(i18n))
+        try:
+            await bot.delete_messages(winner_id, [msg for msg in range(winner_msg.message_id - 1, winner_msg.message_id - 10, -1)])
+        except TelegramBadRequest as ex:
+            logger.info(f'{ex.message}')
+
+        # Send notification to Loser
+        loser_msg = await bot.send_message(chat_id=loser_id, 
+                                           text=i18n.game.youlose(deposit=deposit),
+                                           reply_markup=game_end_keyboard(i18n))
+        try:
+            await bot.delete_messages(loser_id, [msg for msg in range(loser_msg.message_id - 1, loser_msg.message_id - 10, -1)])
+        except TelegramBadRequest as ex:
+            logger.info(f'{ex.message}')
+    
+        await game_result_writer(session, 
+                                 float(deposit), 
+                                 int(winner_id), 
+                                 int(loser_id))
+
+        
         
 

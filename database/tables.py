@@ -70,9 +70,4 @@ class Variables(Base):
 
     name: Mapped[name]
     value: Mapped[required_str] 
-    created_at: Mapped[datetime] = mapped_column(
-                DateTime(timezone=True),
-                nullable=False,
-                server_default=func.now()
-                )
 

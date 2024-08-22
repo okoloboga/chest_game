@@ -47,12 +47,12 @@ async def main():
     '''
     Clear Database and create Finances table
     COMMENT BEFORE REBOOT!
-    '''
+    
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.drop_all)
         await connection.run_sync(Base.metadata.create_all)
-    await create_variables(Sessionmaker)
-    
+    await create_variables(engine)
+    '''
     
     # Init Bot in Dispatcher
     bot_config = get_config(BotConfig, "bot")

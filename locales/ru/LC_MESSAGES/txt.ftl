@@ -18,6 +18,7 @@ button-play = Играть
 button-balance = Баланс
 button-howtoplay = Как играть
 button-referrals = Реферралы
+button-promocode = Промокод
 button-community = Комьюнити
 button-tonimport = Внести
 button-getwallet = Кошелек
@@ -127,7 +128,10 @@ promocode-activated = Промокод активирован!
                       Следующая победа тебе принесет 
                       Х2 от депозита!
 
-promocode-activated-yet = Ты уже использовал этот промокод!
+promocode-used-yet = Ты уже использовал этот промокод!
+
+promocode-isactive = Ты не можешь испльзовать два промокода подряд!
+                     Сперва используй бонус действующего промокода
 
 
 #################
@@ -245,6 +249,8 @@ game-ready = Игра готова!
 still-waiting-opponent = Пока ждём соперника!
 
 still-searching-game = Пока ищем подходящую игру!
+
+waiting-foropponent = Ждём подтверждения соперника!
 
 ########
 # GAME #

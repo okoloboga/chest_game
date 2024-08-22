@@ -14,11 +14,12 @@ main_dialog = Dialog(
         Format('{main_menu}'),
         Button(Format('{button_play}'), id='b_play', on_click=switch_to_lobby),
         Row(
-            Button(Format('{button_balance}'), id='b_balacne', on_click=balance),
-            Url(Format('{button_how_to_play}'), Const(TELEGRAPH))
+            Button(Format('{button_promocode}'), id='b_promocode', on_click=promocode),
+            Button(Format('{button_referrals}'), id='b_referrals', on_click=referrals)
         ),
+        Button(Format('{button_balance}'), id='b_balacne', on_click=balance),
         Row(
-            Button(Format('{button_referrals}'), id='b_referrals', on_click=referrals),
+            Url(Format('{button_how_to_play}'), Const(TELEGRAPH)),
             Url(Format('{button_community}'), Const(CHANNEL))
         ),
         getter=main_getter,

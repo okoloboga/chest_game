@@ -4,7 +4,7 @@ import datetime
 from database.tables import Variables
 import services.services
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import select
 from database import User, TransactionHashes, Variables
@@ -18,32 +18,19 @@ logging.basicConfig(
            '[%(asctime)s] - %(name)s - %(message)s')
 
 # Create Variables at begin of Bot work session
-async def create_variables(session: AsyncSession):
+async def create_variables(engine):
 
-    variables = insert(Variables).values([
-            {
-                'name': 'promocodes',
-                'value': 'PROMOCODE1 PROMOCODE2'
-                },
-            {
-                'name': 'income',
-                'value': '0'
-                },
-            {
-                'name': 'outcome',
-                'value': '0'
-                },
-            {
-                'name': 'pure_income',
-                'value': '0'
-                },
-            {
-                'name': 'to_parents',
-                'value': '0'
-                },
-            ])
-    await session.execute(variables)
-    await session.commit()
+    async with AsyncSession(engine) as session:
+        session.add_all(
+                [
+                    Variables(name='promocodes', value='PROMOCODE1 PROMOCODE2'),
+                    Variables(name='income', value='0'),
+                    Variables(name='outcome', value='0'),
+                    Variables(name='pure_income', value='0'),
+                    Variables(name='to_parents', value='0')
+                ]
+            )
+        await session.commit()
 
 
 # Add new User to database
@@ -185,7 +172,7 @@ async def decrement_ton(session: AsyncSession,
 # Increment promocode to 1, not mode
 async def increment_promo(session: AsyncSession,
                           telegram_id: int,
-                          promocode: str):
+                          promocode: str) -> str:
 
     logger.info(f'Increment Users {telegram_id} promo')
 
@@ -201,13 +188,19 @@ async def increment_promo(session: AsyncSession,
         logger.info(f'User promo status: {user.promo}, users used promo: {used_promo}, promo: {promocode}')
         logger.info(f'Actual promos: {actual_promo}')
 
-        if (user.promo != 1) and (promocode not in used_promo) and (user.promo not in actual_promo):
-            user.promo = 1
-            user.used_promo = str(user.used_promo) + ' ' + str(promocode) 
-            await session.commit()
-            return True
+        if user.promo != 1: 
+            if promocode not in used_promo: 
+                if promocode in actual_promo:
+                    user.promo = 1
+                    user.used_promo = str(user.used_promo) + ' ' + str(promocode) 
+                    await session.commit()
+                    return 'approved'
+                else:
+                    return 'wrong promo'
+            else:
+                return 'used yet'
         else:
-            return False
+            return 'promo is active'
 
 
 # Changing data of Users after game results
@@ -222,7 +215,7 @@ async def game_result_writer(session: AsyncSession,
     winner_statement = select(User).where(winner_id == User.telegram_id)
     loser_statement = select(User).where(loser_id == User.telegram_id)
     pure_income_statement = select(Variables).where('pure_income' == Variables.name)
-    to_parent_statement = select(Variables).where('to_parent' == Variables.name)
+    to_parents_statement = select(Variables).where('to_parents' == Variables.name)
 
     winner_coef = (await coef_counter(winner_id, session))['coef']
     winner_prize = winner_coef * deposit
@@ -308,12 +301,14 @@ async def game_result_writer(session: AsyncSession,
 
     async with session: 
         pure_income_scalar = (await session.execute(pure_income_statement)).scalar()
-        to_parent_scalar = (await session.execute(to_parent_statement)).scalar()
+        to_parents_scalar = (await session.execute(to_parents_statement)).scalar()
 
         pure_income_scalar.value = str(float(pure_income_scalar.value) + float(pure_income))
-        to_parent_scalar.value = str(float(to_parent_scalar.value) + float(winner_parent_comission + loser_parent_comission))
+        to_parents_scalar.value = str(float(to_parents_scalar.value) + float(winner_parent_comission + loser_parent_comission))
 
         await session.commit()
+
+
 
 
 

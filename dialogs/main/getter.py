@@ -45,6 +45,7 @@ async def main_getter(dialog_manager: DialogManager,
     return {'main_menu': i18n.main.menu(),
             'button_play': i18n.button.play(),
             'button_balance': i18n.button.balance(),
+            'button_promocode': i18n.button.promocode(),
             'button_how_to_play': i18n.button.howtoplay(),
             'button_referrals': i18n.button.referrals(),
             'button_community': i18n.button.community()}
