@@ -46,9 +46,17 @@ async def select_chest(callback: CallbackQuery,
     logger.info(f'User {user_id} selected the Chest')
     role = dialog_manager.current_context().dialog_data['role']
 
-    if role = 'hidder':
+    if role == 'hidder':
         await dialog_manager.switch_to(DemoSG.hidder_wait)
-    elif role = 'searcher':
+
+    elif role == 'searcher':
+        is0 = random.randint(0, 9)
+        result = 'win' if is0 == 0 else 'lose'
+        dialog_manager.current_context().dialog_data['result'] = result
+        deposit = dialog_manager.current_context().dialog_data['deposit']
+        
+        await demo_result_writer(session, deposit, user_id, result)
+
         await dialog_manager.switch_to(DemoSG.end)
 
 
