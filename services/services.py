@@ -1,12 +1,10 @@
 import logging
 import asyncio
 import random
-
-from aiogram.types import InlineKeyboardMarkup
 import services.db_services
-# import dialogs.game.keyboard
 
 from aiogram import Bot
+from aiogram.types import InlineKeyboardMarkup
 from aiogram.exceptions import TelegramBadRequest
 from base64 import b64decode
 from aiogram_dialog import DialogManager
@@ -14,7 +12,7 @@ from redis import asyncio as aioredis
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from fluentogram import TranslatorRunner
 
-from states import LobbySG
+from states import LobbySG, DemoSG
 
 
 logger = logging.getLogger(__name__)
@@ -303,5 +301,35 @@ async def turn_timer(dialog_manager: DialogManager,
                                  int(loser_id))
 
         
+# Imitation Bots Thinking
+async def bot_thinking(dialog_manager: DialogManager,
+                       user_id: int):
+    
+    seconds = random.randint(2, 10)
+    await asyncio.sleep(seconds)
+    
+    session = dialog_manager.middleware_data.get('session')
+    role = dialog_manager.current_context().dialog_data['role']
+    deposit = dialog_manager.current_context().dialog_data['deposit']
+    
+    if role == 'hidder':
+
+        # Count Result
+        if dialog_manager.current_context().dialog_data['mode'] != 'demo':
+            is0 = random.randint(0, 9)
+            result = 'win' if is0 == 0 else 'lose'
+
+            dialog_manager.current_context().dialog_data['result'] = result
+            demo_result_writer = services.db_services.demo_result_writer
+            await demo_result_writer(session, deposit, user_id, result)
+        else:
+            is0 = random.randint(0, 1)
+            result = 'win' if is0 == 0 else 'lose'
+            dialog_manager.current_context().dialog_data['result'] = result
+
+        await dialog_manager.switch_to(DemoSG.end)
+    elif role == 'searcher':
+        await dialog_manager.switch_to(DemoSG.searcher_active)
+
         
 

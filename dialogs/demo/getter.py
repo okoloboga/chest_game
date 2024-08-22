@@ -1,15 +1,9 @@
 import logging
-import asyncio
 
-from aiogram import Bot
 from aiogram_dialog import DialogManager
 from aiogram.types import User
 from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from redis import asyncio as aioredis
-from base64 import b64encode
-
-from services import get_user, bot_thinking
 
 
 logger = logging.getLogger(__name__)
@@ -28,10 +22,12 @@ async def demo_game_ready_getter(dialog_manager: DialogManager,
                                  **kwargs) -> dict:
 
     user_id = event_from_user.id
-    deposit = dialog_manager.current_context().dialog_data['deposit']
 
-    if deposit is None:
+    try:
+        deposit = dialog_manager.current_context().dialog_data['deposit']
+    except KeyError:
         deposit = 100
+        dialog_manager.current_context().dialog_data['deposit'] = deposit
  
     logger.info(f'User {user_id} in Demo Game Ready, with Deposit: {deposit}')
 
@@ -54,7 +50,7 @@ async def demo_hidder_active_getter(dialog_manager: DialogManager,
             'button_chest_1': i18n.button.chest.first(),
             'button_chest_2': i18n.button.chest.second(),
             'button_chest_3': i18n.button.chest.third(),
-            'button_demo_exit': i18n.button.exit()}
+            'button_demo_exit': i18n.button.game.exit()}
 
 
 # Demo - Hidder waiting for result
@@ -66,12 +62,9 @@ async def demo_hidder_wait_getter(dialog_manager: DialogManager,
 
     user_id = event_from_user.id
     logger.info(f'User {user_id} waiting for Searcher')
-    await asyncio.create_task(bot_thinking(dialog_manager,
-                                           user_id), 
-                              name=f'b_{user_id}')
 
     return {'demo_hidder_wait': i18n.game.hidden(),
-            'button_demo_exit': i18n.button.exit}
+            'button_demo_exit': i18n.button.game.exit()}
 
 
 # Demo - Searcher is searching treasure
@@ -88,7 +81,7 @@ async def demo_searcher_active_getter(dialog_manager: DialogManager,
             'button_chest_1': i18n.button.chest.first(),
             'button_chest_2': i18n.button.chest.second(),
             'button_chest_3': i18n.button.chest.third(),
-            'button_demo_exit': i18n.button.exit()}
+            'button_demo_exit': i18n.button.game.exit()}
 
 
 # Demo - Searcher waiting for Hidder
@@ -100,12 +93,9 @@ async def demo_searcher_wait_getter(dialog_manager: DialogManager,
 
     user_id = event_from_user.id
     logger.info(f'User {user_id} waiting for Hidder')
-    await asyncio.create_task(bot_thinking(dialog_manager, 
-                                           user_id), 
-                              name=f'b_{user_id}')
     
     return {'demo_searcher_wait': i18n.game.wait.searcher(),
-            'button_demo_exit': i18n.button.exit}
+            'button_demo_exit': i18n.button.game.exit()}
 
 
 # Demo - Results of game

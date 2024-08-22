@@ -9,9 +9,10 @@ from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
 from base64 import b64decode
 
-from states import LobbySG, MainSG
+from states import LobbySG, MainSG, DemoSG
 from services import (create_room_query, get_game, 
                       write_as_guest)
+
 
 lobby_router = Router()
 
@@ -45,6 +46,18 @@ async def private_game(callback: CallbackQuery,
     dialog_manager.current_context().dialog_data['mode'] = 'private'
 
     await dialog_manager.switch_to(LobbySG.deposit)
+
+
+# Go to plya Demo game vs BOT
+async def demo_game(callback: CallbackQuery,
+                    button: Button,
+                    dialog_manager: DialogManager):
+
+    user_id = callback.from_user.id
+    logger.info(f'User {user_id} go to playe vs Bot in Demo game')
+
+    await dialog_manager.start(DemoSG.main,
+                               data={'demo': 'demo'})
 
 ''' 
        /$$                                         /$$   /$$             

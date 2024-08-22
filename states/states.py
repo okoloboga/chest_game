@@ -28,6 +28,15 @@ class LobbySG(StatesGroup):
     game_confirm = State()
     
 
+class DemoSG(StatesGroup):
+    main = State()
+    hidder_active = State()
+    hidder_wait = State()
+    searcher_active = State()
+    searcher_wait = State()
+    end = State()
+
+
 class GameSG(StatesGroup):
     main = State()
     

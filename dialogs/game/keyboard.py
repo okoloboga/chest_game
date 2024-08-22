@@ -5,13 +5,13 @@ from fluentogram import TranslatorRunner
 # Hidder Keyboard
 def game_chest_keyboard(i18n: TranslatorRunner) -> InlineKeyboardMarkup:
 
-    button_game_first = InlineKeyboardButton(text=i18n.button.hide.first(),
+    button_game_first = InlineKeyboardButton(text=i18n.button.chest.first(),
                                              callback_data='first')
     
-    button_game_second = InlineKeyboardButton(text=i18n.button.hide.second(),
+    button_game_second = InlineKeyboardButton(text=i18n.button.chest.second(),
                                               callback_data='second')
     
-    button_game_third = InlineKeyboardButton(text=i18n.button.hide.third(),
+    button_game_third = InlineKeyboardButton(text=i18n.button.chest.third(),
                                              callback_data='third')
 
     button_exit_game = InlineKeyboardButton(text=i18n.button.game.exit(),

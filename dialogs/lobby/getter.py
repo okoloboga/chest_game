@@ -39,6 +39,7 @@ async def lobby_getter(dialog_manager: DialogManager,
     return {'lobby_menu': i18n.lobby.menu(),
             'button_public_game': i18n.button.public.game(),
             'button_private_game': i18n.button.private.game(),
+            'button_demo_game': i18n.button.demo.game(),
             'button_back': i18n.button.back()}
        
     

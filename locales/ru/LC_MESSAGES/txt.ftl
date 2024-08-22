@@ -26,6 +26,7 @@ button-tonexport = Вывести
 button-importcheck = Проверить ввод
 button-public-game = Найти случайную Игру
 button-private-game = Создать закрытую Игру
+button-demo-game = DEMO
 button-mode1vs1 = 1VS1
 button-modesuper = SUPER
 button-game-confirm = Подтвердить
@@ -39,9 +40,9 @@ button-joined-check-s = Проверить...
 button-joined-ready = Готов!
 button-game-ready = Играть!
 button-back = Назад
-button-hide-first = 1
-button-hide-second = 2
-button-hide-third = 3
+button-chest-first = 1
+button-chest-second = 2
+button-chest-third = 3
 
 
 

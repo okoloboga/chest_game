@@ -309,6 +309,93 @@ async def game_result_writer(session: AsyncSession,
         await session.commit()
 
 
+# Writing result of Game with Bot
+async def demo_result_writer(session: AsyncSession,
+                             deposit: float,
+                             user_id: int,
+                             result: str):
+    
+    coef_counter = services.services.coef_counter
+
+    # Get Entities from database
+    user_statement = select(User).where(user_id == User.telegram_id)
+    pure_income_statement = select(Variables).where('pure_income' == Variables.name)
+    to_parents_statement = select(Variables).where('to_parents' == Variables.name)
+
+    user_coef = (await coef_counter(user_id, session))['coef']
+    user_prize = user_coef * deposit if result == 'win' else -1 * user_coef * deposit
+    user_parent_comission = 0
+
+    logger.info(f'Default game results: winner prize = {user_prize}')
+
+    async with session:
+        user = (await session.execute(user_statement)).scalar()
+
+        # Writing winner data        
+        user.games = user.games + 1
+        
+        if result == 'win': 
+            user.wins = user.wins + 1
+
+            if user.promo == 1:
+                user_prize = deposit
+                user.promo = 0
+                flag = True
+            else:
+                flag = False
+            
+            user.wins_ton = user.wins_ton + user_prize
+            user.ton = user.ton + user_prize
+
+        elif result =='lose':
+            user.lose = user.lose + 1
+            user.games = user.games + 1
+            user.lose_ton = user.lose_ton + deposit
+            user.ton = user.ton - deposit
+        
+        # Prepare vars to write referral parents %
+        user_parent_id = user.parent
+          
+    # If Winner haven't promocode - parents have 3% from deposit
+    if flag is False:
+        logger.info(f'User parent: {user_parent_id}')
+
+        user_parent_statement = select(User).where(int(user_parent_id) == User.telegram_id)
+        
+        # Is users parent exists?
+        if int(user_parent_id) == 0:
+            logger.info('User parent is 0')
+            user_parent_comission = 0.03 * deposit
+        else:
+            logger.info(f'User parent is not 0: {user_parent_id}')
+            user_parent_comission = (await coef_counter(user_parent_id, session))['comission'] * deposit
+
+        async with session:
+            user_parent = (await session.execute(user_parent_statement)).scalar()
+            
+            if user_parent is not None:
+                logger.info(f'user_parent is {user_parent.telegram_id}')
+                user_parent.ton = user_parent.ton + user_parent_comission
+
+            await session.commit()
+
+    # Write parent comission and pure income to Variables Database
+    pure_income = deposit - (user_prize if user_prize > 0 else 0) - user_parent_comission
+    
+    logger.info(f'Game result after counting:\nuser prize = {user_prize}\n\
+                user parent comission = {user_parent_comission}\n\
+                pure income = {pure_income}')
+
+    async with session: 
+        pure_income_scalar = (await session.execute(pure_income_statement)).scalar()
+        to_parents_scalar = (await session.execute(to_parents_statement)).scalar()
+
+        pure_income_scalar.value = str(float(pure_income_scalar.value) + float(pure_income))
+        to_parents_scalar.value = str(float(to_parents_scalar.value) + float(winner_parent_comission + loser_parent_comission))
+
+        await session.commit()
+
+
 
 
 

@@ -51,7 +51,7 @@ demo_dialog = Dialog(
         state=DemoSG.searcher_wait
     ),
     Window(
-        Format('{gemo_game_result}'),
+        Format('{demo_game_result}'),
         Button(Format('{button_demo_end}'), id='b_demo_end', on_click=demo_end),
         getter=demo_game_end_getter,
         state=DemoSG.end

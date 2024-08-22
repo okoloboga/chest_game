@@ -1,17 +1,17 @@
 import logging
 import random
+import asyncio
 
 from aiogram import Router
-from aiogram.types import CallbackQuery, Message, callback_query
-from aiogram_dialog import DialogManager, StartMode
+from aiogram.types import CallbackQuery
+from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
-from fluentogram import TranslatorRunner
 
-from states import DemoSG, MainSG
-from services import demo_result_writer
+from states import DemoSG
+from services import demo_result_writer, bot_thinking
 
 
-lobby_router = Router()
+demo_router = Router()
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +29,22 @@ async def game_demo_start(callback: CallbackQuery,
     user_id = callback.from_user.id
     logger.info(f'User {user_id} confirmed Demo game')
     role = random.choice(['hidder', 'searcher'])
+    
+    # Checking for Demo game, or Public
+    try:
+        mode = dialog_manager.start_data['demo']
+        dialog_manager.current_context().dialog_data['mode'] = mode
+    except KeyError:
+        dialog_manager.current_context().dialog_data['mode'] = 'public'
+        
     dialog_manager.current_context().dialog_data['role'] = role
 
     if role == 'hidder':
         await dialog_manager.switch_to(DemoSG.hidder_active)
     elif role == 'searcher':
         await dialog_manager.switch_to((DemoSG.searcher_wait))
-
+        await asyncio.create_task(bot_thinking(dialog_manager, user_id))
+    
 
 # Process Selecting Chest
 async def select_chest(callback: CallbackQuery,
@@ -48,14 +57,20 @@ async def select_chest(callback: CallbackQuery,
 
     if role == 'hidder':
         await dialog_manager.switch_to(DemoSG.hidder_wait)
+        await asyncio.create_task(bot_thinking(dialog_manager, user_id))
 
     elif role == 'searcher':
-        is0 = random.randint(0, 9)
-        result = 'win' if is0 == 0 else 'lose'
-        dialog_manager.current_context().dialog_data['result'] = result
-        deposit = dialog_manager.current_context().dialog_data['deposit']
-        
-        await demo_result_writer(session, deposit, user_id, result)
+        if dialog_manager.current_context().dialog_data['mode'] != 'demo':
+            is0 = random.randint(0, 9)
+            result = 'win' if is0 == 0 else 'lose'
+            dialog_manager.current_context().dialog_data['result'] = result
+            deposit = dialog_manager.current_context().dialog_data['deposit']
+            
+            await demo_result_writer(session, deposit, user_id, result)
+        else:
+            is0 = random.randint(0, 1)
+            result = 'win' if is0 == 0 else 'lose'
+            dialog_manager.current_context().dialog_data['result'] = result
 
         await dialog_manager.switch_to(DemoSG.end)
 
