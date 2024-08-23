@@ -8,6 +8,7 @@ from .handler import *
 from states import LobbySG
 from dialogs import back
 from dialogs.game.game import game_start
+from dialogs.demo.game import demo_start
 from services import is_private_room
 
 
@@ -88,5 +89,12 @@ lobby_dialog = Dialog(
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=game_ready_getter,
         state=LobbySG.game_ready
+    ),
+    Window(
+        Format('{game_ready}'),
+        Button(Format('{button_game_ready}'), id='b_demo_ready', on_click=demo_start),
+        Button(Format('{button_back}'), id='b_back', on_click=back),
+        getter=game_ready_getter,
+        state=LobbySG.demo_ready
     )
 )

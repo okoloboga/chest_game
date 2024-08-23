@@ -303,33 +303,64 @@ async def turn_timer(dialog_manager: DialogManager,
         
 # Imitation Bots Thinking
 async def bot_thinking(dialog_manager: DialogManager,
-                       user_id: int):
+                       user_id: int,
+                       role: str,
+                       demo_result_writer,
+                       game_end_keyboard: InlineKeyboardMarkup,
+                       game_chest_keyboard: InlineKeyboardMarkup):
     
     seconds = random.randint(2, 10)
     await asyncio.sleep(seconds)
     
+    r = aioredis.Redis(host='localhost', port=6379)
     session = dialog_manager.middleware_data.get('session')
-    role = dialog_manager.current_context().dialog_data['role']
-    deposit = dialog_manager.current_context().dialog_data['deposit']
-    
-    if role == 'hidder':
+    bot: Bot = dialog_manager.middleware_data.get('bot')
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    demo = await r.hgetall('d_'+str(user_id))
 
+    logger.info(f'Demo game is {demo}')
+
+    mode = str(demo[b'mode'], encoding='utf-8')
+    deposit = str(demo[b'deposit'], encoding='utf-8')
+
+    if role == 'hidder':
+                
         # Count Result
-        if dialog_manager.current_context().dialog_data['mode'] != 'demo':
+        if mode != 'demo':
             is0 = random.randint(0, 9)
             result = 'win' if is0 == 0 else 'lose'
-
-            dialog_manager.current_context().dialog_data['result'] = result
-            demo_result_writer = services.db_services.demo_result_writer
             await demo_result_writer(session, deposit, user_id, result)
         else:
             is0 = random.randint(0, 1)
             result = 'win' if is0 == 0 else 'lose'
-            dialog_manager.current_context().dialog_data['result'] = result
-
-        await dialog_manager.switch_to(DemoSG.end)
+        
+        if result == 'win':
+            try:
+                msg = await bot.send_message(chat_id=user_id,
+                                             text=i18n.game.youwin(deposit=deposit),
+                                             reply_markup=game_end_keyboard(i18n))
+                await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
+            except TelegramBadRequest as ex:
+                logger.info(f'{ex.message}')
+        else:
+            try:
+                msg = await bot.send_message(chat_id=user_id,
+                                             text=i18n.game.youlose(deposit=deposit),
+                                             reply_markup=game_end_keyboard(i18n))
+                await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
+            except TelegramBadRequest as ex:
+                logger.info(f'{ex.message}')
+        
     elif role == 'searcher':
-        await dialog_manager.switch_to(DemoSG.searcher_active)
+        msg = await bot.send_message(chat_id=user_id, 
+                                     text=i18n.game.searcher(),
+                                     reply_markup=game_chest_keyboard(i18n))
+        try:
+            await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
+        except TelegramBadRequest as ex:
+            logger.info(f'{ex.message}')
+
+
 
         
 

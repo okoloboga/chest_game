@@ -173,11 +173,12 @@ async def game_ready_getter(dialog_manager: DialogManager,
                             event_from_user: User,
                             **kwargs
                             ) -> dict:
-
+    user_id = event_from_user.id
+    mode = dialog_manager.current_context().dialog_data['mode']    
     deposit = dialog_manager.current_context().dialog_data['deposit']
-        
-    logger.info(f'User {event_from_user.id}; offer to confirm game\
-     with deposit {deposit}')
+     
+    logger.info(f'User {user_id}; offer to confirm game\
+     with deposit {deposit} in {mode} mode')
  
     return {'game_ready': i18n.game.ready(deposit=deposit),
             'button_game_ready': i18n.button.game.ready(),

@@ -42,7 +42,6 @@ async def game_start(callback: CallbackQuery,
     r = aioredis.Redis(host='localhost', port=6379)
 
     logger.info(f'User {callback.from_user.id} start game as {result}')
-    # pprint.pprint(dialog_manager.middleware_data)
 
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     bot: Bot = dialog_manager.middleware_data.get('bot')

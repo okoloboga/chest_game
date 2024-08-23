@@ -55,9 +55,10 @@ async def demo_game(callback: CallbackQuery,
 
     user_id = callback.from_user.id
     logger.info(f'User {user_id} go to playe vs Bot in Demo game')
+    dialog_manager.current_context().dialog_data['mode'] = 'demo'
+    dialog_manager.current_context().dialog_data['deposit'] = 100
 
-    await dialog_manager.start(DemoSG.main,
-                               data={'demo': 'demo'})
+    await dialog_manager.switch_to(LobbySG.demo_ready)
 
 ''' 
        /$$                                         /$$   /$$             
@@ -196,4 +197,8 @@ async def wait_check_search(callback: CallbackQuery,
         dialog_manager.current_context().dialog_data['room'] = result
         await write_as_guest(result, callback.from_user.id)
         await dialog_manager.switch_to(LobbySG.game_ready)
+
+
+
+
 

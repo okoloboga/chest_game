@@ -6,7 +6,7 @@ from .buttons import *
 from .unknown import *
 from .demo import *
 
-dialogs = (start_dialog, main_dialog, lobby_dialog, demo_dialog)
+dialogs = (start_dialog, main_dialog, lobby_dialog)
 
 routers = (start_router, main_router, lobby_router, demo_router, game_router)
 

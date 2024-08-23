@@ -39,7 +39,7 @@ async def main():
 
     engine = create_async_engine(
         url=str(db_config.dsn),
-        echo=db_config.is_echo
+        echo=False
     )
     
     Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)   
