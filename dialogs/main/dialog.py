@@ -1,4 +1,6 @@
+from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
+from aiogram_dialog.widgets.media import StaticMedia
 from aiogram_dialog.widgets.text import Format, Const
 from aiogram_dialog.widgets.kbd import Button, Row, Url
 from aiogram_dialog.widgets.input.text import TextInput
@@ -11,6 +13,10 @@ from dialogs.buttons import back
 
 main_dialog = Dialog(
     Window(
+        StaticMedia(
+            path="img/main.jpg",
+            type=ContentType.PHOTO
+            ),
         Format('{main_menu}'),
         Button(Format('{button_play}'), id='b_play', on_click=switch_to_lobby),
         Row(
@@ -26,12 +32,20 @@ main_dialog = Dialog(
         state=MainSG.main
     ),
     Window(
+        StaticMedia(
+            path="img/referral.jpg",
+            type=ContentType.PHOTO
+            ),
         Format('{referrals}'),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=referrals_getter,
         state=MainSG.referrals
     ),
     Window(
+        StaticMedia(
+            path="img/balance.jpg",
+            type=ContentType.PHOTO
+            ),
         Format('{balance}'),
         Row(
             Button(Format('{button_import}'), id='b_import', on_click=ton_import),
@@ -42,6 +56,10 @@ main_dialog = Dialog(
         state=MainSG.ton_balance
     ),
     Window(
+        StaticMedia(
+            path="img/balance.jpg",
+            type=ContentType.PHOTO
+            ),
         Format('{import}'),
         Row(
             Button(Format('{button_import_check}'), id='b_import_check', on_click=import_check),
@@ -52,6 +70,10 @@ main_dialog = Dialog(
         state=MainSG.ton_import
     ),
     Window(
+        StaticMedia(
+            path="img/balance.jpg",
+            type=ContentType.PHOTO
+            ),
         Format('{export}'),
         TextInput(
             id='export_ton',

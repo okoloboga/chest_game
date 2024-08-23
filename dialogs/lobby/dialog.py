@@ -15,8 +15,10 @@ from services import is_private_room
 lobby_dialog = Dialog(
     Window(
         Format('{lobby_menu}'),
-        Button(Format('{button_public_game}'), id='b_public_game', on_click=public_game),
-        Button(Format('{button_private_game}'), id='b_private_game', on_click=private_game),
+        Row(
+            Button(Format('{button_public_game}'), id='b_public_game', on_click=public_game),
+            Button(Format('{button_private_game}'), id='b_private_game', on_click=private_game)
+        ),
         Button(Format('{button_demo_game}'), id='b_demo_game', on_click=demo_game),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         TextInput(

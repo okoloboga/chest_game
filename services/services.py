@@ -4,7 +4,7 @@ import random
 import services.db_services
 
 from aiogram import Bot
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, FSInputFile
 from aiogram.exceptions import TelegramBadRequest
 from base64 import b64decode
 from aiogram_dialog import DialogManager
@@ -12,7 +12,7 @@ from redis import asyncio as aioredis
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from fluentogram import TranslatorRunner
 
-from states import LobbySG, DemoSG
+from states import LobbySG
 
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,8 @@ async def coef_counter(user_id: int,
 async def losed_and_deposit(user_id: int,
                             session: async_sessionmaker,
                             deposit: float) -> str:
-
+    
+    get_user = services.db_services.get_user
     user_data = await get_user(session, user_id)
     losed_to_bot = user_data.bot_income
     logger.info(f'User {user_id} losed to bot {losed_to_bot}, current deposit {deposit}')
@@ -72,6 +73,7 @@ async def losed_and_deposit(user_id: int,
 async def select_role(session: async_sessionmaker,
                       user_id: int) -> str:
     
+    get_user = services.db_services.get_user
     user_data = await get_user(session, user_id)
     roles = user_data.last_roles
     logger.info(f'User {user_id} roles are {roles}')
@@ -341,18 +343,22 @@ async def turn_timer(dialog_manager: DialogManager,
         winner_id = owner if int(loser_id) != int(owner) else guest
 
         # Send notification to Winner
-        winner_msg = await bot.send_message(chat_id=winner_id, 
-                                            text=i18n.game.youwin(deposit=deposit),
-                                            reply_markup=game_end_keyboard(i18n))
+        win = FSInputFile(path=f'img/happy{random.randint(1, 5)}.jpg')
+        winner_msg = await bot.send_photo(photo=win,
+                                          chat_id=winner_id, 
+                                          caption=i18n.game.youwin(deposit=deposit),
+                                          reply_markup=game_end_keyboard(i18n))
         try:
             await bot.delete_messages(winner_id, [msg for msg in range(winner_msg.message_id - 1, winner_msg.message_id - 10, -1)])
         except TelegramBadRequest as ex:
             logger.info(f'{ex.message}')
 
         # Send notification to Loser
-        loser_msg = await bot.send_message(chat_id=loser_id, 
-                                           text=i18n.game.youlose(deposit=deposit),
-                                           reply_markup=game_end_keyboard(i18n))
+        lose = FSInputFile(path=f'img/sad{random.randint(1, 5)}.jpg')
+        loser_msg = await bot.send_photo(photo=lose,
+                                         chat_id=loser_id, 
+                                         caption=i18n.game.youlose(deposit=deposit),
+                                         reply_markup=game_end_keyboard(i18n))
         try:
             await bot.delete_messages(loser_id, [msg for msg in range(loser_msg.message_id - 1, loser_msg.message_id - 10, -1)])
         except TelegramBadRequest as ex:
@@ -367,11 +373,12 @@ async def turn_timer(dialog_manager: DialogManager,
 # Single player timer - vs Bot
 async def demo_timer(dialog_manager: DialogManager,
                      loser_id: int,
-                     mode: str):
+                     mode: str,
+                     game_end_keyboard: InlineKeyboardMarkup):
 
-    await asyncio.sleep(60)
+    await asyncio.sleep(10)
     r = aioredis.Redis(host='localhost', port=6379)
-    game = r.hgetall('d_'+str(loser_id))
+    game = await r.hgetall('d_'+str(loser_id))
     
     if len(game) == 0:
         logger.info(f'd_{loser_id} doesnt exists, Well Done!')
@@ -379,18 +386,23 @@ async def demo_timer(dialog_manager: DialogManager,
         
         # Count Result
         bot: Bot = dialog_manager.middleware_data.get('bot')
+        i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+        session = dialog_manager.middleware_data.get('session')
+        deposit = float(str(game[b'deposit'], encoding='utf-8'))
         demo_result_writer = services.db_services.demo_result_writer
 
         if mode != 'demo':
             result = 'lose'
-            await demo_result_writer(session, deposit, loesr_id, result)
+            await demo_result_writer(session, deposit, loser_id, result)
         else:
             result = 'lose'
         
         try:
-            msg = await bot.send_message(chat_id=loser_id,
-                                         text=i18n.game.youlose(deposit=deposit),
-                                         reply_markup=game_end_keyboard(i18n))
+            lose = FSInputFile(path=f'img/sad{random.randint(1, 5)}.jpg')
+            msg = await bot.send_photo(photo=lose,
+                                       chat_id=loser_id,
+                                       caption=i18n.game.youlose(deposit=deposit),
+                                       reply_markup=game_end_keyboard(i18n))
             await bot.delete_messages(loser_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
         except TelegramBadRequest as ex:
             logger.info(f'{ex.message}')
@@ -420,6 +432,8 @@ async def bot_thinking(dialog_manager: DialogManager,
 
     mode = str(demo[b'mode'], encoding='utf-8')
     deposit = float(str(demo[b'deposit'], encoding='utf-8'))
+    coef = (await coef_counter(user_id, session))['coef']
+    prize = deposit * coef
 
     if role == 'hidder':
                 
@@ -435,35 +449,43 @@ async def bot_thinking(dialog_manager: DialogManager,
         
         if result == 'win':
             try:
-                msg = await bot.send_message(chat_id=user_id,
-                                             text=i18n.game.youwin(deposit=deposit),
-                                             reply_markup=game_end_keyboard(i18n))
+                win = FSInputFile(path=f'img/happy{random.randint(1, 5)}.jpg')
+                msg = await bot.send_photo(photo=win,
+                                           chat_id=user_id,
+                                           caption=i18n.game.youwin(deposit=deposit),
+                                           reply_markup=game_end_keyboard(i18n))
                 await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
             except TelegramBadRequest as ex:
                 logger.info(f'{ex.message}')
         else:
             try:
-                msg = await bot.send_message(chat_id=user_id,
-                                             text=i18n.game.youlose(deposit=deposit),
-                                             reply_markup=game_end_keyboard(i18n))
+                lose = FSInputFile(path=f'img/sad{random.randint(1, 5)}.jpg')
+                msg = await bot.send_photo(photo=lose,
+                                           chat_id=user_id,
+                                           caption=i18n.game.youlose(deposit=deposit),
+                                           reply_markup=game_end_keyboard(i18n))
                 await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
             except TelegramBadRequest as ex:
                 logger.info(f'{ex.message}')
         
     elif role == 'searcher':
-        msg = await bot.send_message(chat_id=user_id, 
-                                     text=i18n.game.searcher(),
-                                     reply_markup=game_chest_keyboard(i18n))
-
-        # Start timer for 1 minut turn of player
-        await asyncio.create_task(demo_timer(dialog_manager,
-                                             user_id),
-                                  name=f'dt_{user_id}')
+        select = FSInputFile(path=f'img/select.jpg')
+        msg = await bot.send_photo(photo=select,
+                                   chat_id=user_id, 
+                                   caption=i18n.game.searcher(deposit=deposit,
+                                                              coef=coef,
+                                                              prize=prize),
+                                   reply_markup=game_chest_keyboard(i18n))
         try:
             await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
         except TelegramBadRequest as ex:
             logger.info(f'{ex.message}')
 
+        # Start timer for 1 minut turn of player
+        await asyncio.create_task(demo_timer(dialog_manager,
+                                             user_id, mode,
+                                             game_end_keyboard),
+                                  name=f'dt_{user_id}')
 
 
         

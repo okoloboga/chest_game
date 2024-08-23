@@ -1,6 +1,8 @@
 import logging
 import asyncio
+import random
 
+from aiogram.types import FSInputFile
 from aiogram import F, Router, Bot
 from aiogram.filters import StateFilter
 from aiogram.types import CallbackQuery
@@ -12,7 +14,8 @@ from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
 
 from states import GameSG, LobbySG, MainSG
-from services import room_to_game, game_result, turn_timer
+from services import (room_to_game, game_result, turn_timer, 
+                      coef_counter)
 from .keyboard import *
 
 game_router = Router()
@@ -58,17 +61,28 @@ async def game_start(callback: CallbackQuery,
 
         await dialog_manager.reset_stack()
         hidder = int(str(user_game[b'hidder'], encoding='utf-8'))
-        
         state = dialog_manager.middleware_data.get('state')
+        session = dialog_manager.middleware_data.get('session')
         await state.set_state(GameSG.main)
+        coef = (await coef_counter(user_id, session))['coef'] 
+        deposit = float(str(user_game[b'deposit'], encoding='utf-8'))
+        prize = coef * deposit
 
         # Checking users Role in that game
         if hidder == int(user_id):
-            msg = await callback.message.answer(text=i18n.game.hidder(),
-                                                reply_markup=game_chest_keyboard(i18n))
+            hidding = FSInputFile(path='img/hidding.jpg')
+            msg = await callback.message.answer_photo(photo=hidding,
+                                                      caption=i18n.game.hidder(deposit=deposit,
+                                                                               coef=coef,
+                                                                               prize=prize),
+                                                      reply_markup=game_chest_keyboard(i18n))
         else:
-            msg = await callback.message.answer(text=i18n.game.wait.searcher(),
-                                                reply_markup=game_exit_keyboard(i18n))
+            search = FSInputFile(path='img/search.jpg')
+            msg = await callback.message.answer_photo(photo=search,
+                                                      caption=i18n.game.wait.searcher(deposit=deposit,
+                                                                                      coef=coef,
+                                                                                      prize=prize),
+                                                      reply_markup=game_exit_keyboard(i18n))
             # Turn timer for each player
             await asyncio.create_task(turn_timer(dialog_manager, 
                                                  user_game_str[2:],
@@ -119,6 +133,11 @@ async def main_game_process(callback: CallbackQuery,
         enemy = owner if guest == user_id else guest
         hidder = str(user_game[b'hidder'], encoding='utf-8') 
         searcher = guest if hidder == owner else owner
+        session = dialog_manager.middleware_data.get('session')
+
+        coef = (await coef_counter(user_id, session))['coef'] 
+        deposit = float(str(user_game[b'deposit'], encoding='utf-8'))
+        prize = coef * deposit
 
         logger.info(f'Hidder: {hidder}, Searcher: {searcher}')
         
@@ -136,15 +155,24 @@ async def main_game_process(callback: CallbackQuery,
                 await r.hmset(user_game_str, user_game)
 
                 try: 
-                    msg = await callback.message.edit_text(text=i18n.game.hidden(),
-                                                           reply_markup=game_exit_keyboard(i18n))
+                    search = FSInputFile(path='img/search.jpg')
+                    msg = await callback.message.answer_photo(photo=search,
+                                                              caption=i18n.game.hidden(deposit=deposit,
+                                                                                       coef=coef,
+                                                                                       prize=prize),
+                                                              reply_markup=game_exit_keyboard(i18n))
                     await bot.delete_messages(chat_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
                 except TelegramBadRequest:
                     await callback.answer()
 
                 # Give turn to Searcher
-                msg = await bot.send_message(searcher, text=i18n.game.searcher(),
-                                             reply_markup=game_chest_keyboard(i18n))
+                select = FSInputFile(path='img/select.jpg')
+                msg = await bot.send_photo(photo=select,
+                                           chat_id=searcher, 
+                                           caption=i18n.game.searcher(deposit=deposit,
+                                                                      coef=coef,
+                                                                      prize=prize),
+                                           reply_markup=game_chest_keyboard(i18n))
                 try:
                     await bot.delete_messages(searcher, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
                 except TelegramBadRequest:
@@ -164,17 +192,25 @@ async def main_game_process(callback: CallbackQuery,
                 target = str(user_game[b'target'], encoding='utf-8')
                 deposit = str(user_game[b'deposit'], encoding='utf-8')
                 logger.info(f'Target is {target}')
+                photo_map = {'first': '1',
+                             'second': '2',
+                             'third': '3'}
 
                 # Checking for success or not 
                 if target == callback.data:
                     try:
-                        await callback.message.answer(text=i18n.game.youwin(deposit=deposit))
+                        win = FSInputFile(path=f'img/win{photo_map[target]}.jpg')
+                        await callback.message.answer_photo(photo=win,
+                                                            caption=i18n.game.youwin(deposit=deposit))
                     except TelegramBadRequest:
                         await callback.answer()
 
                     # Send notification to Hidder
-                    msg = await bot.send_message(hidder, text=i18n.game.youlose(deposit=deposit),
-                                                 reply_markup=game_end_keyboard(i18n))
+                    lose = FSInputFile(path=f'img/sad{random.randint(1, 5)}.jpg')
+                    msg = await bot.send_photo(photo=lose,
+                                               chat_id=hidder, 
+                                               caption=i18n.game.youlose(deposit=deposit),
+                                               reply_markup=game_end_keyboard(i18n))
                     try:
                         await bot.delete_messages(hidder, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
                     except TelegramBadRequest:
@@ -192,13 +228,18 @@ async def main_game_process(callback: CallbackQuery,
 
                 else:
                     try:
-                        await callback.message.answer(text=i18n.game.youlose(deposit=deposit))
+                        lose = FSInputFile(path=f'img/lose{photo_map[callback.data]}.jpg')
+                        await callback.message.answer_photo(lose,
+                                                            text=i18n.game.youlose(deposit=deposit))
                     except TelegramBadRequest:
                         await callback.answer()
                      
                     # Send notification to Hidder
-                    msg = await bot.send_message(hidder, text=i18n.game.youwin(deposit=deposit),
-                                                 reply_markup=game_end_keyboard(i18n))
+                    win = FSInputFile(path=f'img/happy{random.randint(1, 5)}.jpg')
+                    msg = await bot.send_photo(photo=win,
+                                               chat_id=hidder, 
+                                               caption=i18n.game.youwin(deposit=deposit),
+                                               reply_markup=game_end_keyboard(i18n))
                     try:
                         await bot.delete_messages(hidder, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)]) 
                     except TelegramBadRequest:
@@ -223,13 +264,18 @@ async def main_game_process(callback: CallbackQuery,
             
             deposit = str(user_game[b'deposit'], encoding='utf-8')
             try:           
-                await callback.message.answer(text=i18n.game.youlose(deposit=deposit))
+                lose = FSInputFile(path=f'img/sad{random.randint(1, 5)}.jpg')
+                await callback.message.answer_photo(photo=lose,
+                                                    caption=i18n.game.youlose(deposit=deposit))
             except TelegramBadRequest:
                 await callback.answer()
          
             # Send notification to enemy
-            msg = await bot.send_message(enemy, text=i18n.game.youwin(deposit=deposit),
-                                         reply_markup=game_end_keyboard(i18n))
+            win = FSInputFile(path=f'img/happy{random.randint(1, 5)}.jpg')
+            msg = await bot.send_photo(photo=win,
+                                       chat_id=enemy, 
+                                       caption=i18n.game.youwin(deposit=deposit),
+                                       reply_markup=game_end_keyboard(i18n))
             try:
                 await bot.delete_message(enemy, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])  
             except TelegramBadRequest:
