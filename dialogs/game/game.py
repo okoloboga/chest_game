@@ -35,10 +35,11 @@ async def game_start(callback: CallbackQuery,
                      ):
 
     room = dialog_manager.current_context().dialog_data['room']
+    session = dialog_manager.middleware_data.get('session')
     logger.info(f'Room is {room}')
 
     user_id = callback.from_user.id
-    result = await room_to_game(user_id, str(room[b'owner'], encoding='utf-8'))
+    result = await room_to_game(session, user_id, str(room[b'owner'], encoding='utf-8'))
     r = aioredis.Redis(host='localhost', port=6379)
 
     logger.info(f'User {callback.from_user.id} start game as {result}')

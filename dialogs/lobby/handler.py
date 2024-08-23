@@ -1,4 +1,6 @@
+from asyncio import sleep
 import logging
+import random
 
 from aiogram import Router
 from aiogram.types import CallbackQuery, Message, callback_query
@@ -7,9 +9,9 @@ from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.input.text import ManagedTextInput
 from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
-from base64 import b64decode
 
-from states import LobbySG, MainSG, DemoSG
+
+from states import LobbySG, MainSG
 from services import (create_room_query, get_game, 
                       write_as_guest)
 
@@ -61,7 +63,7 @@ async def demo_game(callback: CallbackQuery,
     await dialog_manager.switch_to(LobbySG.demo_ready)
 
 ''' 
-       /$$                                         /$$   /$$             
+       /$$/$$   /$$             
       | $$                                        |__/  | $$             
   /$$$$$$$  /$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$$ /$$ /$$$$$$ 
  /$$__  $$ /$$__  $$ /$$__  $$ /$$__  $$ /$$_____/| $$|_  $$_/
@@ -160,24 +162,29 @@ async def confirm_game(callback: CallbackQuery,
 async def wait_check_o(callback: CallbackQuery,
                        button: Button,
                        dialog_manager: DialogManager):
-    
-    r = aioredis.Redis(host='localhost', port=6379)
-    mode = dialog_manager.current_context().dialog_data['mode']
+    is0 = random.randint(0, 5)
+    logger.info(f'BOT CHECK: is0 = {is0}')
+    if is0 != 0:
+        r = aioredis.Redis(host='localhost', port=6379)
+        mode = dialog_manager.current_context().dialog_data['mode']
 
-    if mode == 'public':
-        room = await r.hgetall('r_'+str(callback.from_user.id))
-    else:
-        room = await r.hgetall('pr_'+str(callback.from_user.id))
-    logger.info(f'Current room status: {room}')
-    
-    if room[b'guest'] == b'wait':
+        if mode == 'public':
+            room = await r.hgetall('r_'+str(callback.from_user.id))
+        else:
+            room = await r.hgetall('pr_'+str(callback.from_user.id))
+        logger.info(f'Current room status: {room}')
         
-        # Nothing new...
-        i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-        await callback.message.answer(text=i18n.still.waiting.opponent())
+        if room[b'guest'] == b'wait':
+            
+            # Nothing new...
+            i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+            await callback.message.edit_text(text=i18n.still.waiting.opponent())
+            await sleep(1)
+        else:
+            dialog_manager.current_context().dialog_data['room'] = room
+            await dialog_manager.switch_to(LobbySG.game_ready)
     else:
-        dialog_manager.current_context().dialog_data['room'] = room
-        await dialog_manager.switch_to(LobbySG.game_ready)
+        await dialog_manager.switch_to(LobbySG.demo_ready)
 
 
 # Checking got game while searching

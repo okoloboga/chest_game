@@ -48,6 +48,63 @@ async def coef_counter(user_id: int,
             'comission': comission}
 
 
+# Get losed TON to Bot, get current deposit 
+# and count - if losed more than X3 of deposit - Bot play gooood!
+async def losed_and_deposit(user_id: int,
+                            session: async_sessionmaker,
+                            deposit: float) -> str:
+
+    user_data = await get_user(session, user_id)
+    losed_to_bot = user_data.bot_income
+    logger.info(f'User {user_id} losed to bot {losed_to_bot}, current deposit {deposit}')
+
+    if losed_to_bot / deposit < 3:
+        return 'lose'
+    else:
+        is0 = random.randint(0, 2)
+        if is0 == 0:
+            return 'win'
+        else: 
+            return 'lose'
+
+
+# Chose role of player - cant be in one role more than 3 times
+async def select_role(session: async_sessionmaker,
+                      user_id: int) -> str:
+    
+    user_data = await get_user(session, user_id)
+    roles = user_data.last_roles
+    logger.info(f'User {user_id} roles are {roles}')
+    user_stmt = select(User).where(int(user_id) == User.telegram_id)
+
+    if len(roles) == 3:
+        if roles[0] == roles[1] == roles[2]:
+            if roles[0] == 'h':
+                roles = roles[1:] + 's'
+                result = 'searcher'
+            else:
+                roles = roles[1:] + 'h'
+                result = 'hidder'
+        else:
+            result = random.choice(['hidder', 'searcher'])
+            roles = roles[1:] + 'h' if result == 'hidder' else roles[1:] + 's'
+    else:
+        result = random.choice(['hidder', 'searcher'])
+        if len(roles) == 0:
+            roles = 'h' if result == 'hidder' else 's'
+        elif 1 <= len(roles) <= 2 :
+            roles = roles + 'h' if result == 'hidder' else roles + 's'
+    
+    # Write new roles list to Database
+    async with session:
+        user = (await session.execute(user_stmt)).scalar()
+        user.last_roles = roles
+        logger.info(f'Added new roles to User {user_id}: "{roles}"')
+        await session.commit()
+            
+    return result
+
+
 # Checking for valid invite code to game
 def is_private_room(invite_code: str) -> str:
     
@@ -185,7 +242,8 @@ async def write_as_guest(room: dict,
 
 
 # From Room to Game 1VS1 and get random Hidder
-async def room_to_game(user_id: int,
+async def room_to_game(session: async_sessionmaker,
+                       user_id: int,
                        owner: str) -> str:
 
     r = aioredis.Redis(host='localhost', port=6379)
@@ -200,9 +258,14 @@ async def room_to_game(user_id: int,
 
     if len(room) > 0:
         logger.info(f'room is {room} with id {user_id}')
+        guest = str(room[b'guest'], encoding='utf-8')
 
         # Chosing hidder for first turn
-        chose_hidder = random.choice([room[b'owner'], room[b'guest']])
+        user_role = await select_role(session, user_id)
+        second_player = guest if int(owner) == int(user_id) else owner
+        logger.info(f'User role: {user_role}, second_player is {second_player}')
+
+        chose_hidder = user_id if user_role == 'hidder' else second_player 
         logger.info(f"Chosing hidder... Owner: {room[b'owner']}, Guest: {room[b'guest']}\
                 Hidder: {chose_hidder}")
 
@@ -236,7 +299,7 @@ async def room_to_game(user_id: int,
         return 'guest'
 
     
-# Game result processong
+# Game result processing
 async def game_result(owner: int,
                       deposit: float,
                       winner_id: int,
@@ -300,6 +363,41 @@ async def turn_timer(dialog_manager: DialogManager,
                                  int(winner_id), 
                                  int(loser_id))
 
+
+# Single player timer - vs Bot
+async def demo_timer(dialog_manager: DialogManager,
+                     loser_id: int,
+                     mode: str):
+
+    await asyncio.sleep(60)
+    r = aioredis.Redis(host='localhost', port=6379)
+    game = r.hgetall('d_'+str(loser_id))
+    
+    if len(game) == 0:
+        logger.info(f'd_{loser_id} doesnt exists, Well Done!')
+    else: 
+        
+        # Count Result
+        bot: Bot = dialog_manager.middleware_data.get('bot')
+        demo_result_writer = services.db_services.demo_result_writer
+
+        if mode != 'demo':
+            result = 'lose'
+            await demo_result_writer(session, deposit, loesr_id, result)
+        else:
+            result = 'lose'
+        
+        try:
+            msg = await bot.send_message(chat_id=loser_id,
+                                         text=i18n.game.youlose(deposit=deposit),
+                                         reply_markup=game_end_keyboard(i18n))
+            await bot.delete_messages(loser_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
+        except TelegramBadRequest as ex:
+            logger.info(f'{ex.message}')
+        
+        await r.delete('d_' + str(loser_id))
+
+
         
 # Imitation Bots Thinking
 async def bot_thinking(dialog_manager: DialogManager,
@@ -321,15 +419,16 @@ async def bot_thinking(dialog_manager: DialogManager,
     logger.info(f'Demo game is {demo}')
 
     mode = str(demo[b'mode'], encoding='utf-8')
-    deposit = str(demo[b'deposit'], encoding='utf-8')
+    deposit = float(str(demo[b'deposit'], encoding='utf-8'))
 
     if role == 'hidder':
                 
         # Count Result
         if mode != 'demo':
-            is0 = random.randint(0, 9)
-            result = 'win' if is0 == 0 else 'lose'
+            result = await losed_and_deposit(user_id, session, deposit)
             await demo_result_writer(session, deposit, user_id, result)
+            await r.delete('d_' + str(user_id))
+
         else:
             is0 = random.randint(0, 1)
             result = 'win' if is0 == 0 else 'lose'
@@ -355,6 +454,11 @@ async def bot_thinking(dialog_manager: DialogManager,
         msg = await bot.send_message(chat_id=user_id, 
                                      text=i18n.game.searcher(),
                                      reply_markup=game_chest_keyboard(i18n))
+
+        # Start timer for 1 minut turn of player
+        await asyncio.create_task(demo_timer(dialog_manager,
+                                             user_id),
+                                  name=f'dt_{user_id}')
         try:
             await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
         except TelegramBadRequest as ex:

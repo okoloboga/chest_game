@@ -1,6 +1,5 @@
 from typing import Annotated
 from datetime import datetime
-from fluent_compiler.utils import re
 from sqlalchemy import func, BigInteger, DateTime, String, Integer, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -26,10 +25,12 @@ class User(Base):
     first_name: Mapped[required_short_str]
     last_name: Mapped[optional_short_str]
     games: Mapped[required_int]
+    last_roles: Mapped[required_str]
     wins: Mapped[required_int]
     lose: Mapped[required_int]
     wins_ton: Mapped[required_float]
     lose_ton: Mapped[required_float]
+    bot_income: Mapped[required_float]
     referrals: Mapped[required_int]
     parent: Mapped[required_str]
     ton: Mapped[required_float]

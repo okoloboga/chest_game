@@ -13,7 +13,8 @@ from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
 
 from states import DemoSG, LobbySG, MainSG
-from services import bot_thinking, demo_result_writer
+from services import (bot_thinking, demo_result_writer, losed_and_deposit,
+                      demo_timer)
 from .keyboard import *
 
 demo_router = Router()
@@ -59,6 +60,11 @@ async def demo_start(callback: CallbackQuery,
     if role == 'hidder':
         msg = await callback.message.answer(text=i18n.game.hidder(),
                                             reply_markup=game_chest_keyboard(i18n))
+        # Start timer for 1 minut turn of player
+        await asyncio.create_task(demo_timer(dialog_manager,
+                                             user_id,
+                                             mode),
+                                  name=f'dt_{user_id}')
     else:
         msg = await callback.message.answer(text=i18n.game.wait.searcher(),
                                             reply_markup=game_exit_keyboard(i18n))
@@ -68,7 +74,7 @@ async def demo_start(callback: CallbackQuery,
                                                demo_result_writer,
                                                game_end_keyboard,
                                                game_chest_keyboard),
-                                  name=f'dt_{user_id}')
+                                  name=f'bt_{user_id}')
     try:
         await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 10, -1)])
     except TelegramBadRequest:
@@ -98,7 +104,7 @@ async def main_demo_process(callback: CallbackQuery,
         demo = await r.hgetall('d_' + str(user_id))
         role = str(demo[b'role'], encoding='utf-8')
         mode = str(demo[b'mode'], encoding='utf-8') 
-        deposit = str(demo[b'deposit'], encoding='utf-8')
+        deposit = float(str(demo[b'deposit'], encoding='utf-8'))
         session = dialog_manager.middleware_data.get('session')
         
         logger.info(f'User demo: {demo}')
@@ -119,14 +125,12 @@ async def main_demo_process(callback: CallbackQuery,
                                                        demo_result_writer,
                                                        game_end_keyboard,
                                                        game_chest_keyboard),
-                                          name=f'dt_{user_id}')
+                                          name=f'bt_{user_id}')
             # If User is Searcher
             else:
-
                 # Count Result
                 if mode != 'demo':
-                    is0 = random.randint(0, 9)
-                    result = 'win' if is0 == 0 else 'lose'
+                    result = await losed_and_deposit(user_id, session, deposit)
                     await demo_result_writer(session, deposit, user_id, result)
                 else:
                     is0 = random.randint(0, 1)
@@ -148,6 +152,7 @@ async def main_demo_process(callback: CallbackQuery,
                         await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
                     except TelegramBadRequest as ex:
                         logger.info(f'{ex.message}')
+                await r.delete('d_' + str(user_id))
                
         elif callback.data == 'game_exit':
             
@@ -165,8 +170,11 @@ async def main_demo_process(callback: CallbackQuery,
                 await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
             except TelegramBadRequest as ex:
                 logger.info(f'{ex.message}')
+            
+            await r.delete('d_' + str(user_id))
 
             # If game ended before timer is out - stop timer
-            task = [task for task in asyncio.all_tasks() if task.get_name() == f'dt_{user_id}']
+            task = [task for task in asyncio.all_tasks() if task.get_name() == f'bt_{user_id}']
             task[0].cancel()
+
 
