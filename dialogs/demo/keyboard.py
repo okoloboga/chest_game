@@ -34,10 +34,12 @@ def game_exit_keyboard(i18n: TranslatorRunner) -> InlineKeyboardMarkup:
 
 # End Game - when one of players is lose
 def game_end_keyboard(i18n: TranslatorRunner) -> InlineKeyboardMarkup:
+    button_play_again = InlineKeyboardButton(text=i18n.button.play.again(),
+                                             callback_data='play_again')
     button_game_end = InlineKeyboardButton(text=i18n.button.game.end(),
                                             callback_data='game_end')
 
-    return InlineKeyboardMarkup(inline_keyboard=[[button_game_end]])
+    return InlineKeyboardMarkup(inline_keyboard=[[button_play_again], [button_game_end]])
 
    
 

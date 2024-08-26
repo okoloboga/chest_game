@@ -80,17 +80,9 @@ async def check_subscribe(callback: CallbackQuery,
         if payload is not None:
             await add_referral(session, payload, callback.from_user.id)
 
-        await dialog_manager.switch_to(StartSG.welcome)
+        await dialog_manager.start(MainSG.main)
     else:
         await callback.answer(text=i18n.need.subscribe())
 
 
-# Confirming registration after subscribing to channel
-async def start_confirm(callback: CallbackQuery,
-                        button: Button,
-                        dialog_manager: DialogManager):
-    
-    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-
-    await dialog_manager.start(MainSG.main)
 

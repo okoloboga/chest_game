@@ -174,9 +174,25 @@ async def game_ready_getter(dialog_manager: DialogManager,
                             **kwargs
                             ) -> dict:
     user_id = event_from_user.id
-    mode = dialog_manager.current_context().dialog_data['mode']    
-    deposit = dialog_manager.current_context().dialog_data['deposit']
-     
+    logger.info(f'Start data is {dialog_manager.start_data}')
+    try:
+        try:
+            room = dialog_manager.start_data['game_id']
+        except KeyError:
+            logger.info(f"User {user_id} hasn't room, don't worry, it should be game against bot")
+        mode = dialog_manager.start_data['mode']
+        deposit = dialog_manager.start_data['deposit']
+        dialog_manager.current_context().dialog_data['mode'] = mode
+        dialog_manager.current_context().dialog_data['deposit'] = deposit
+        if mode != 'demo':
+            try:
+                dialog_manager.current_context().dialog_data['room'] = room
+            except UnboundLocalError:
+                logger.info(f'User {user_id} havent room, cause it vs bot')
+    except KeyError:
+        mode = dialog_manager.current_context().dialog_data['mode']    
+        deposit = dialog_manager.current_context().dialog_data['deposit']
+
     logger.info(f'User {user_id}; offer to confirm game\
      with deposit {deposit} in {mode} mode')
  

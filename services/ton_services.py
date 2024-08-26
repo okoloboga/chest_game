@@ -4,7 +4,7 @@ import time
 
 from environs import Env
 from TonTools import *
-from sqlalchemy import except_, values
+from sqlalchemy import values
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def _load_config(path: str | None = None) -> list:
 
     
 # Checking for correct export input
-def check_value_and_address(address_and_value: str) -> list:
+def check_address(address_and_value: str) -> list:
     
     result_list = address_and_value.split()
     logger.info(f'User want send {result_list[1]} TON to {result_list[0]}')
@@ -37,9 +37,7 @@ def check_value_and_address(address_and_value: str) -> list:
     wallet = Wallet(provider=client, address=result_list[0], version='v4r2')
 
     if wallet is not None and result_list[1].isdigit:
-        if float(result_list[1]) >= 1:
-            return result_list
-        raise ValueError
+        return result_list
     raise ValueError
 
 
@@ -103,7 +101,6 @@ async def export_ton(user_id: int,
             logger.info(f'{transaction.to_dict_user_friendly()}')
             if transaction.to_dict_user_friendly()['comment'] == comment:
                 return True
-                break
         else:
             return False
     else: 
@@ -126,21 +123,22 @@ async def import_ton_check(user_id: int) -> dict | str:
     for t in transaction:
         
         logger.info(f'{t.to_dict_user_friendly()}')
-
+        comment_raw = t.to_dict_user_friendly()['comment']
+        comment = ''
+        for i in comment_raw:
+            if i.isdigit():
+                comment = comment + i
         try:
-            if int(t.to_dict_user_friendly()['comment']) == user_id:
-                if float(t.to_dict_user_friendly()['value']) >= 0.5:
-
-                    result['value'] = float(t.to_dict_user_friendly()['value'])
-                    result['hash'] = str(t.to_dict_user_friendly()['hash'])
-                    result['comment'] = int(t.to_dict_user_friendly()['comment'])
-                 
-                    return result
-                    break
-                else: 
-                    return 'not_enough'
+            logger.info(f'comment: {comment}, user_id: {user_id}')
+            if int(comment) == int(user_id):
+                logger.info(f'Is comment == user_id? {int(comment) == int(user_id)}')
+                result['value'] = float(t.to_dict_user_friendly()['value'])
+                result['hash'] = str(t.to_dict_user_friendly()['hash'])
+                result['comment'] = comment
+             
+                return result
             else:
                 return 'no_transaction'
-        except ValueError:
-            pass
+        except ValueError as ex:
+            logger.info(f'{ex}')
     

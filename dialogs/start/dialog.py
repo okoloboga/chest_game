@@ -15,11 +15,5 @@ start_dialog = Dialog(
         Button(Format('{button_check_subscribe}'), id='b_check_subscribe', on_click=check_subscribe),
         getter=start_getter,
         state=StartSG.start
-        ),
-    Window(
-        Format('{welcome_dialog}'),
-        Button(Format('{button_confirm}'), id='b_confirm', on_click=start_confirm),
-        getter=welcome_getter,
-        state=StartSG.welcome
         )
     )

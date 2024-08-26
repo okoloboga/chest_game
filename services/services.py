@@ -10,9 +10,11 @@ from base64 import b64decode
 from aiogram_dialog import DialogManager
 from redis import asyncio as aioredis
 from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy import select
 from fluentogram import TranslatorRunner
 
 from states import LobbySG
+from database import User
 
 
 logger = logging.getLogger(__name__)
@@ -63,6 +65,7 @@ async def losed_and_deposit(user_id: int,
         return 'lose'
     else:
         is0 = random.randint(0, 2)
+        logger.info(f'If is0 == 0 => win: {is0}')
         if is0 == 0:
             return 'win'
         else: 
@@ -157,6 +160,7 @@ async def create_room_query(user_id: int,
                 
                 # Creating empty room with Users Game for another players            
                 room_1vs1 = {
+                             'mode': mode,
                              'owner': user_id,
                              'guest': 'wait',
                              'deposit': deposit,
@@ -177,10 +181,11 @@ async def create_room_query(user_id: int,
             r = aioredis.Redis(host='localhost', port=6379)
             
             # Creating empty room with Users Game for another players            
-            room_private = {
-                             'owner': user_id,
-                             'guest': 'wait',
-                             'deposit': deposit,
+            room_private = { 
+                            'mode': mode,
+                            'owner': user_id,
+                            'guest': 'wait',
+                            'deposit': deposit,
             }          
             # Put room to Redis.
             await r.hmset('pr_' + str(user_id), room_private)
@@ -268,15 +273,16 @@ async def room_to_game(session: async_sessionmaker,
         logger.info(f'User role: {user_role}, second_player is {second_player}')
 
         chose_hidder = user_id if user_role == 'hidder' else second_player 
-        logger.info(f"Chosing hidder... Owner: {room[b'owner']}, Guest: {room[b'guest']}\
+        logger.info(f"Chosing hidder... Owner: {room[b'owner']}, Guest: {guest}\
                 Hidder: {chose_hidder}")
 
         # Game Dictionary - all process save here
         game = {
+                'mode': str(room[b'mode'], encoding='utf-8'),
                 'owner': str(room[b'owner'], encoding='utf-8'),
                 'guest': str(room[b'guest'], encoding='utf-8'),
                 'deposit': str(room[b'deposit'], encoding='utf-8'),
-                'hidder': str(chose_hidder, encoding='utf-8'),  # Player, witch hide prize. Select randomly
+                'hidder': str(chose_hidder),  # Player, witch hide prize. Select randomly
                 'target': 'none'  # Chest with prize, chosen by Hidder
                 }
         
@@ -299,20 +305,6 @@ async def room_to_game(session: async_sessionmaker,
         await r.set(user_id, 'g_'+owner)
         logger.info(f'User {user_id} is guest')
         return 'guest'
-
-    
-# Game result processing
-async def game_result(owner: int,
-                      deposit: float,
-                      winner_id: int,
-                      loser_id: int) -> dict:
-
-    r = aioredis.Redis(host='localhost', port=6379)
-    await r.delete('g_'+str(owner))
-
-    return {'game_deposit': deposit,
-            'winner_id': winner_id,
-            'loser_id': loser_id}
         
    
 # Game timer - 1 minute for game
@@ -334,9 +326,9 @@ async def turn_timer(dialog_manager: DialogManager,
         bot: Bot = dialog_manager.middleware_data.get('bot')
         i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
 
-        deposit = str(game[b'deposit'], encoding='utf-8')
-        owner = str(game[b'owner'], encoding='utf-8')
-        guest = str(game[b'guest'], encoding='utf-8')
+        deposit = float(str(game[b'deposit'], encoding='utf-8'))
+        owner = int(str(game[b'owner'], encoding='utf-8'))
+        guest = int(str(game[b'guest'], encoding='utf-8'))
         logger.info(f'Game ended by timer: {game}')
         logger.info(f'Owner: {owner}, Guest: {guest}, Loser: {loser_id}')
 
@@ -346,7 +338,7 @@ async def turn_timer(dialog_manager: DialogManager,
         win = FSInputFile(path=f'img/happy{random.randint(1, 5)}.jpg')
         winner_msg = await bot.send_photo(photo=win,
                                           chat_id=winner_id, 
-                                          caption=i18n.game.youwin(deposit=deposit),
+                                          caption=i18n.game.youwin(),
                                           reply_markup=game_end_keyboard(i18n))
         try:
             await bot.delete_messages(winner_id, [msg for msg in range(winner_msg.message_id - 1, winner_msg.message_id - 10, -1)])
@@ -357,7 +349,7 @@ async def turn_timer(dialog_manager: DialogManager,
         lose = FSInputFile(path=f'img/sad{random.randint(1, 5)}.jpg')
         loser_msg = await bot.send_photo(photo=lose,
                                          chat_id=loser_id, 
-                                         caption=i18n.game.youlose(deposit=deposit),
+                                         caption=i18n.game.youlose(),
                                          reply_markup=game_end_keyboard(i18n))
         try:
             await bot.delete_messages(loser_id, [msg for msg in range(loser_msg.message_id - 1, loser_msg.message_id - 10, -1)])
@@ -365,6 +357,7 @@ async def turn_timer(dialog_manager: DialogManager,
             logger.info(f'{ex.message}')
     
         await game_result_writer(session, 
+                                 owner,
                                  float(deposit), 
                                  int(winner_id), 
                                  int(loser_id))
@@ -376,7 +369,7 @@ async def demo_timer(dialog_manager: DialogManager,
                      mode: str,
                      game_end_keyboard: InlineKeyboardMarkup):
 
-    await asyncio.sleep(10)
+    await asyncio.sleep(60)
     r = aioredis.Redis(host='localhost', port=6379)
     game = await r.hgetall('d_'+str(loser_id))
     
@@ -401,14 +394,11 @@ async def demo_timer(dialog_manager: DialogManager,
             lose = FSInputFile(path=f'img/sad{random.randint(1, 5)}.jpg')
             msg = await bot.send_photo(photo=lose,
                                        chat_id=loser_id,
-                                       caption=i18n.game.youlose(deposit=deposit),
+                                       caption=i18n.game.youlose(),
                                        reply_markup=game_end_keyboard(i18n))
             await bot.delete_messages(loser_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
         except TelegramBadRequest as ex:
             logger.info(f'{ex.message}')
-        
-        await r.delete('d_' + str(loser_id))
-
 
         
 # Imitation Bots Thinking
@@ -439,20 +429,18 @@ async def bot_thinking(dialog_manager: DialogManager,
                 
         # Count Result
         if mode != 'demo':
+            logger.info(f'User {user_id} ended game as hidder vs Bot in {mode} mode')
             result = await losed_and_deposit(user_id, session, deposit)
             await demo_result_writer(session, deposit, user_id, result)
-            await r.delete('d_' + str(user_id))
-
         else:
             is0 = random.randint(0, 1)
             result = 'win' if is0 == 0 else 'lose'
-        
         if result == 'win':
             try:
                 win = FSInputFile(path=f'img/happy{random.randint(1, 5)}.jpg')
                 msg = await bot.send_photo(photo=win,
                                            chat_id=user_id,
-                                           caption=i18n.game.youwin(deposit=deposit),
+                                           caption=i18n.game.youwin(),
                                            reply_markup=game_end_keyboard(i18n))
                 await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
             except TelegramBadRequest as ex:
@@ -462,7 +450,7 @@ async def bot_thinking(dialog_manager: DialogManager,
                 lose = FSInputFile(path=f'img/sad{random.randint(1, 5)}.jpg')
                 msg = await bot.send_photo(photo=lose,
                                            chat_id=user_id,
-                                           caption=i18n.game.youlose(deposit=deposit),
+                                           caption=i18n.game.youlose(),
                                            reply_markup=game_end_keyboard(i18n))
                 await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
             except TelegramBadRequest as ex:
@@ -486,6 +474,16 @@ async def bot_thinking(dialog_manager: DialogManager,
                                              user_id, mode,
                                              game_end_keyboard),
                                   name=f'dt_{user_id}')
+
+
+# Delete message by timer
+async def message_delete(bot: Bot,
+                         msg_id: int,
+                         chat_id: int,
+                         time: int):
+
+    await asyncio.sleep(time)
+    await bot.delete_message(chat_id, msg_id)
 
 
         

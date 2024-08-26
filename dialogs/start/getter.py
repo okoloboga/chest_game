@@ -32,18 +32,3 @@ async def start_getter(dialog_manager: DialogManager,
             'button_check_subscribe': i18n.button.check.subscribe()}
 
 
-# Getting after checking of subscribtion
-async def welcome_getter(dialog_manager: DialogManager,
-                         i18n: TranslatorRunner,
-                         event_from_user: User,
-                         **kwargs
-                         ) -> dict:
-
-    user_id = event_from_user.id 
-    first_name = event_from_user.first_name
-
-    logger.info(f'User {user_id} subscribed to channel') 
-    dialog_manager.current_context().dialog_data['first_name'] = first_name
-
-    return {'welcome_dialog': i18n.welcome.dialog(name=first_name),
-            'button_confirm': i18n.button.confirm()}

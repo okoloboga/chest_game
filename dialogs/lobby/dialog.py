@@ -32,19 +32,19 @@ lobby_dialog = Dialog(
     ),
     Window(
         Format('{select_deposit}'),
-        Button(Const('0.5'), id='b_deposit_0_5', on_click=deposit),
+        Button(Const('💎0.5 TON'), id='b_deposit_0_5', on_click=deposit),
         Row(
-            Button(Const('1'), id='b_deposit_1', on_click=deposit),
-            Button(Const('2'), id='b_deposit_2', on_click=deposit)          
+            Button(Const('💎1 TON'), id='b_deposit_1', on_click=deposit),
+            Button(Const('💎2 TON'), id='b_deposit_2', on_click=deposit)          
         ),
         Row(
-            Button(Const('4'), id='b_deposit_4', on_click=deposit),
-            Button(Const('8'), id='b_deposit_8', on_click=deposit),            
-            Button(Const('25'), id='b_deposit_25', on_click=deposit)            
+            Button(Const('💎4 TON'), id='b_deposit_4', on_click=deposit),
+            Button(Const('💎8 TON'), id='b_deposit_8', on_click=deposit),            
+            Button(Const('💎25 TON'), id='b_deposit_25', on_click=deposit)            
         ),
         Row(
-            Button(Const('50'), id='b_deposit_50', on_click=deposit),
-            Button(Const('100'), id='b_deposit_100', on_click=deposit)            
+            Button(Const('💎50 TON'), id='b_deposit_50', on_click=deposit),
+            Button(Const('💎100 TON'), id='b_deposit_100', on_click=deposit)            
         ),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=deposit_getter,

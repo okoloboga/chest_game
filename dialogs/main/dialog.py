@@ -8,7 +8,7 @@ from aiogram_dialog.widgets.input.text import TextInput
 from .getter import *
 from .handler import *
 from states import MainSG
-from services import check_value_and_address, is_promocode, TELEGRAPH, CHANNEL
+from services import check_address, is_promocode, TELEGRAPH, CHANNEL, HOW_TO_GET_TON_RU
 from dialogs.buttons import back
 
 main_dialog = Dialog(
@@ -65,6 +65,7 @@ main_dialog = Dialog(
             Button(Format('{button_import_check}'), id='b_import_check', on_click=import_check),
             Button(Format('{button_get_wallet}'), id='b_get_wallet', on_click=get_wallet)
             ),
+        Url(Format('{button_how_to_get_ton}'), Const(HOW_TO_GET_TON_RU)),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=ton_import_getter,
         state=MainSG.ton_import
@@ -77,7 +78,7 @@ main_dialog = Dialog(
         Format('{export}'),
         TextInput(
             id='export_ton',
-            type_factory=check_value_and_address,
+            type_factory=check_address,
             on_success=do_export,
             on_error=wrong_export
         ),

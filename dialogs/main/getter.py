@@ -30,19 +30,11 @@ async def main_getter(dialog_manager: DialogManager,
     # Is it after game?
     result = dialog_manager.start_data if dialog_manager.start_data is not None else None
     logger.info(f'Result is {result} - if it exit from game')
-
-    # If yes - write this to Database
-    if result is not None:
-        session: async_sessionmaker = dialog_manager.middleware_data.get('session')
-        await game_result_writer(session=session, 
-                                 deposit=float(result['game_deposit']),
-                                 winner_id=int(result['winner_id']),
-                                 loser_id=int(result['loser_id']))
-
     user_id = event_from_user.id
+    first_name = event_from_user.first_name
     logger.info(f'User {user_id} in Main Menu')
     
-    return {'main_menu': i18n.main.menu(),
+    return {'main_menu': i18n.welcome.dialog(name=first_name),
             'button_play': i18n.button.play(),
             'button_balance': i18n.button.balance(),
             'button_promocode': i18n.button.promocode(),
@@ -108,6 +100,7 @@ async def ton_import_getter(dialog_manager: DialogManager,
     return {'import': i18n.tonimport(id=user_id),
             'button_import_check': i18n.button.importcheck(),
             'button_get_wallet': i18n.button.getwallet(),
+            'button_how_to_get_ton': i18n.button.howtogetton(),
             'button_back': i18n.button.back()}
     
     

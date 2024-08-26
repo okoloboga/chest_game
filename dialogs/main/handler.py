@@ -1,6 +1,7 @@
 import logging
+import asyncio
 
-from aiogram import Router
+from aiogram import Router, Bot
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager 
 from aiogram_dialog.widgets.kbd import Button
@@ -8,7 +9,7 @@ from aiogram_dialog.widgets.input.text import ManagedTextInput
 from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services import (import_ton_check, process_transaction, 
+from services import (import_ton_check, process_transaction, message_delete,
                       export_ton, decrement_ton, get_user, increment_promo)
 from services.constants import CENTRAL_WALLET
 from states import MainSG, LobbySG
@@ -84,9 +85,12 @@ async def get_wallet(callback: CallbackQuery,
                      button: Button,
                      dialog_manager: DialogManager):
     
+    await callback.answer()
+    user_id = callback.from_user.id
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-    await callback.message.answer(text=i18n.central.wallet(wallet=CENTRAL_WALLET))
-
+    bot: Bot = dialog_manager.middleware_data.get('bot')
+    msg = await bot.send_message(chat_id=user_id,
+                                 text=i18n.central.wallet(wallet=CENTRAL_WALLET))
 
 # Checking for succesfull import
 async def import_check(callback: CallbackQuery,
@@ -117,7 +121,6 @@ async def import_check(callback: CallbackQuery,
             # Transaction is old - send notification
             await callback.answer(text=i18n.old.transaction(t_hash=transaction_hash,
                                                             t_value=transaction_value))
-            
     elif result == 'not_unough':
         await callback.answer(text=i18n.notenough.transaction())
         
@@ -184,28 +187,32 @@ async def check_promocode(message: Message,
     user_id = message.from_user.id
     logger.info(f'User {user_id} entered promocode {promocode}')
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    bot: Bot = dialog_manager.middleware_data.get('bot')
     session = dialog_manager.middleware_data.get('session')
     result = await increment_promo(session, user_id, promocode)
 
     if result == 'approved':
-        await message.answer(text=i18n.promocode.activated())
+        msg = await message.answer(text=i18n.promocode.activated())
     elif result == 'wrong promo':
-        await message.answer(text=i18n.wrong.promocode())
+        msg = await message.answer(text=i18n.wrong.promocode())
     elif result == 'used yet':
-        await message.answer(text=i18n.promocode.used.yet())
+        msg = await message.answer(text=i18n.promocode.used.yet())
     elif result == 'promo is active':
-        await message.answer(text=i18n.promocode.isactive()) 
+        msg = await message.answer(text=i18n.promocode.isactive()) 
 
+    await asyncio.create_task(message_delete(bot, msg.message_id, user_id, 3))
 
 
 # Entered promocode is invalid
 async def wrong_input(message: Message,
                       widget: ManagedTextInput,
                       dialog_manager: DialogManager,
-                      result_list: str):
+                      ):
 
     logger.info(f'User {message.from_user.id} fills wrong promocode')
-
+    bot: Bot = dialog_manager.middleware_data.get('bot')
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-    await message.answer(text=i18n.wrong.promocode())
+    msg = await message.answer(text=i18n.wrong.promocode())
+    await asyncio.create_task(message_delete(bot, msg.message_id, message.from_user.id, 3))
+
 

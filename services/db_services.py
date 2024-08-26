@@ -6,6 +6,7 @@ import services.services
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.dialects.postgresql import insert
+from redis import asyncio as aioredis
 from sqlalchemy import select
 from database import User, TransactionHashes, Variables
 
@@ -111,7 +112,7 @@ async def process_transaction(session: AsyncSession,
     logger.info(f'Getting info about transaction {transaction_hash} for {transaction_value} TON')
     
     transaction_stmt = await session.get(
-            TransactionsHashes, {'transaction_hash': transaction_hash}
+            TransactionHashes, {'transaction_hash': transaction_hash}
             )
     
     logger.info(f'Transaction is {transaction_hash}')
@@ -207,6 +208,7 @@ async def increment_promo(session: AsyncSession,
 
 # Changing data of Users after game results
 async def game_result_writer(session: AsyncSession,
+                             owner: int,
                              deposit: float,
                              winner_id: int,
                              loser_id: int):
@@ -352,6 +354,7 @@ async def demo_result_writer(session: AsyncSession,
             
             user.wins_ton = user.wins_ton + user_prize
             user.ton = user.ton + user_prize
+            user.bot_income = user.bot_income - user_prize
 
         elif result == 'lose':
             user.lose = user.lose + 1
