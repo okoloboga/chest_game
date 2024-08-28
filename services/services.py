@@ -49,7 +49,7 @@ async def coef_counter(user_id: int,
             'coef': coef,
             'comission': comission}
 
-
+'''
 # Get losed TON to Bot, get current deposit 
 # and count - if losed more than X3 of deposit - Bot play gooood!
 async def losed_and_deposit(user_id: int,
@@ -70,6 +70,7 @@ async def losed_and_deposit(user_id: int,
             return 'win'
         else: 
             return 'lose'
+'''
 
 
 # Chose role of player - cant be in one role more than 3 times

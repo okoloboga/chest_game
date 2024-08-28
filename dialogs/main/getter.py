@@ -81,6 +81,7 @@ async def ton_balance_getter(dialog_manager: DialogManager,
     logger.info(f'Ton balance getted for {user_id}: {user.ton}')
     
     return {'balance': i18n.balance(ton_balance=user.ton),
+            'button_import_check': i18n.button.importcheck(),
             'button_import': i18n.button.tonimport(),
             'button_export': i18n.button.tonexport(),
             'button_back': i18n.button.back()}

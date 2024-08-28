@@ -277,7 +277,7 @@ async def game_result_writer(session: AsyncSession,
     total_bets_statement = select(Variables).where('total_bets' == Variables.name)
     bets_statement = select(Variables).where('bets' == Variables.name)
 
-    winner_coef = (await coef_counter(winner_id, session))['coef']
+    winner_coef = float((await coef_counter(winner_id, session))['coef'] - 1)
     winner_prize = winner_coef * deposit
     winner_parent_comission = 0
     loser_parent_comission = 0
@@ -394,7 +394,7 @@ async def demo_result_writer(session: AsyncSession,
     total_bets_statement = select(Variables).where('total_bets' == Variables.name)
     bets_statement = select(Variables).where('bets' == Variables.name)
 
-    user_coef = float((await coef_counter(user_id, session))['coef'])
+    user_coef = float((await coef_counter(user_id, session))['coef'] - 1)
     user_prize = user_coef * float(deposit) if result == 'win' else (-1.0 * float(user_coef) * deposit)
     user_parent_comission = 0
 

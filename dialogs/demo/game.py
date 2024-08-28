@@ -13,8 +13,8 @@ from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
 
 from states import DemoSG, LobbySG, MainSG
-from services import (bot_thinking, demo_result_writer, losed_and_deposit,
-                      demo_timer, coef_counter, select_role, get_user)
+from services import (bot_thinking, demo_result_writer, demo_timer, 
+                      coef_counter, select_role, get_user)
 from .keyboard import *
 
 demo_router = Router()
@@ -190,7 +190,7 @@ async def main_demo_process(callback: CallbackQuery,
                                                                                        coef=coef,
                                                                                        prize=prize),
                                                               reply_markup=game_exit_keyboard(i18n))
-                    await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
+                    await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 10, -1)])
                     
                     # Stop timer
                     task = [task for task in asyncio.all_tasks() if task.get_name() == f'dt_{user_id}']
@@ -209,7 +209,7 @@ async def main_demo_process(callback: CallbackQuery,
                 # Count Result
                 if mode != 'demo':
                     logger.info(f'User {user_id} ended game as hidder vs Bot in {mode} mode')
-                    result = await losed_and_deposit(user_id, session, deposit)
+                    result = 'lose'
                     await demo_result_writer(session, deposit, user_id, result)
                 else:
                     is0 = random.randint(0, 1)
@@ -225,7 +225,7 @@ async def main_demo_process(callback: CallbackQuery,
                                                    chat_id=user_id,
                                                    caption=i18n.game.youwin(),
                                                    reply_markup=game_end_keyboard(i18n))
-                        await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
+                        await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 10, -1)])
                     except TelegramBadRequest as ex:
                         logger.info(f'{ex.message}')
                 else:
@@ -250,7 +250,7 @@ async def main_demo_process(callback: CallbackQuery,
                                                        chat_id=user_id,
                                                        caption=i18n.game.youlose(),
                                                        reply_markup=game_end_keyboard(i18n))
-                        await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
+                        await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 10, -1)])
                     except TelegramBadRequest as ex:
                         logger.info(f'{ex.message}')
                 # Stop timer
@@ -271,7 +271,7 @@ async def main_demo_process(callback: CallbackQuery,
                                            chat_id=user_id,
                                            caption=i18n.game.youlose(),
                                            reply_markup=game_end_keyboard(i18n))
-                await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 5, -1)])
+                await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 10, -1)])
             except TelegramBadRequest as ex:
                 logger.info(f'{ex.message}')
             try:

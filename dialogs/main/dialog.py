@@ -54,6 +54,7 @@ main_dialog = Dialog(
             type=ContentType.PHOTO
             ),
         Format('{balance}'),
+        Button(Format('{button_import_check}'), id='b_import_check', on_click=import_check),
         Row(
             Button(Format('{button_import}'), id='b_import', on_click=ton_import),
             Button(Format('{button_export}'), id='b_export', on_click=ton_export)
