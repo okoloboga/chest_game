@@ -218,12 +218,12 @@ async def wrong_input(message: Message,
 
 
 # Cheching for admin - is user that did input - admin?
-async def to_admin(callback: CallbackQuery,
+async def to_admin(message: Message,
                    widget: ManagedTextInput,
                    dialog_manager: DialogManager,
                    admin_password: str):
 
-    user_id = callback.from_user.id
+    user_id = message.from_user.id
     logger.info(f'User {user_id} entered admin password')
     session = dialog_manager.middleware_data.get('session')
     result = await is_admin(session, user_id)
@@ -231,7 +231,7 @@ async def to_admin(callback: CallbackQuery,
         await dialog_manager.start(AdminSG.main)
     else:
         i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-        await callback.message.answer(text=i18n.unknown.message())
+        await message.answer(text=i18n.unknown.message())
 
 
 # Entered password is invalid

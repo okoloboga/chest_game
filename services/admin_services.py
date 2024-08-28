@@ -90,25 +90,15 @@ async def admin_panel_info(session: AsyncSession) -> dict:
     new_users_stmt = (select(func.count())
                       .select_from(User)
                       .where(target_datetime < User.created_at))
-    total_games_players_stmt = (select(func.count())
-                                .select_from(Variables)
-                                .where('total_games_players' == Variables.name))
-    total_games_bot_stmt = (select(func.count())
-                            .select_from(Variables)
-                            .where('total_games_bot' == Variables.name))
-    total_bets_stmt = (select(func.count())
-                       .select_from(Variables)
-                       .where('total_bets' == Variables.name))
-    pure_income_stmt = (select(func.count())
-                        .select_from(Variables)
-                        .where('pure_income' == Variables.name))
-    bets_stmt = (select(func.count())
-                 .select_from(Variables)
-                 .where('bets' == Variables.name))
+    total_games_players_stmt = (select(Variables).where('total_games_players' == Variables.name))
+    total_games_bot_stmt = (select(Variables).where('total_games_bot' == Variables.name))
+    total_bets_stmt = (select(Variables).where('total_bets' == Variables.name))
+    pure_income_stmt = (select(Variables).where('pure_income' == Variables.name))
+    bets_stmt = (select(Variables).where('bets' == Variables.name))
     
     async with session:
-        users_count = ((await session.execute(users_count_stmt)).scalar()).value
-        new_users = ((await session.execute(new_users_stmt)).scalar()).value
+        users_count = ((await session.execute(users_count_stmt)).scalar())
+        new_users = ((await session.execute(new_users_stmt)).scalar())
         total_games_players = ((await session.execute(total_games_players_stmt)).scalar()).value
         total_games_bot = ((await session.execute(total_games_bot_stmt)).scalar()).value
         total_bets = ((await session.execute(total_bets_stmt)).scalar()).value

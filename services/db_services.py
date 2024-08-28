@@ -84,6 +84,21 @@ async def get_user(session: AsyncSession,
     return user
 
 
+# Getting all users id
+async def get_users_id(session: AsyncSession) -> list:
+    
+    logger.info('getting all users_id')
+    users_stms = select(Users.c.telegram_id)
+    result = []
+
+    async with session:
+        users_id = await session.execute(users_stms).fetchall()
+        for user in users_id:
+            result.append(user[0])
+
+    return result
+
+
 # Is user - admin?
 async def is_admin(session: AsyncSession,
                    user_id: int) -> bool:

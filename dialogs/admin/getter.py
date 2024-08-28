@@ -29,13 +29,13 @@ async def main_admin_getter(dialog_manager: DialogManager,
     return {'admin_panel': i18n.admin.panel(users_count = result['users_count'],
                                             new_users = result['new_users'],
                                             total_games_players = result['total_games_players'],
-                                            total_game_bot = result['total_games_bot'],
+                                            total_games_bot = result['total_games_bot'],
                                             total_bets = result['total_bets'],
                                             pure_income = result['pure_income'],
                                             popular_bet = result['popular_bet']),
-            'button_send_messages': i18n.send.messages(),
-            'button_edit_promocode': i18n.edit.promocode(),
-            'button_ban_player': i18n.ban.player(),
+            'button_send_messages': i18n.button.send.messages(),
+            'button_edit_promocode': i18n.button.edit.promocode(),
+            'button_ban_player': i18n.button.ban.player(),
             'button_back': i18n.button.back()}
 
 

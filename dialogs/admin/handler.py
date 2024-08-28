@@ -11,6 +11,7 @@ from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
 
 from states import AdminSG
+from services import edit_promocode_process, ban_player_process, get_users_id
 
 
 admin_router = Router()
@@ -52,8 +53,24 @@ async def complete_edit_promocode(message: Message,
                                   widget: ManagedTextInput,
                                   dialog_manager: DialogManager,
                                   promocode: str):
+    user_id = message.from_user.id
+    session = dialog_manager.middleware_data.get('session')
+    bot: Bot = dialog_manager.middleware_data.get('bot')
+    result = await edit_promocode_process(session, promocode)
+    
+    logger.info(f'complete_edit_promocode({promocode})')
 
-    pass
+    if result == 'added':
+        msg = await message.answer(text=i18n.promocode.added())
+    elif result == 'removed':
+        msg = await message.answer(text=i18n.promocode.removed())
+    elif result == 'no_promocode':
+        msg = await message.answer(text=i18n.nopromocode())
+    elif result == 'invalid_command':
+        msg = await message.answer(text=i18n.invalid.command())
+    
+    await asyncio.sleep(2)
+    await bot.delete_message(user_id, msg.message_id)
 
 
 # Processing ban/unban players
@@ -62,7 +79,26 @@ async def complete_ban_player(message: Message,
                               dialog_manager: DialogManager,
                               ban: str):
 
-    pass
+    user_id = message.from_user.id
+    session = dialog_manager.middleware_data.get('session')
+    bot: Bot = dialog_manager.middleware_data.get('bot')
+    result = await ban_player_process(session, ban)
+
+    logger.info(f'complete_ban_player({ban})')
+    
+    if result == 'banned':
+        msg = await message.answer(text=i18n.user.banned())
+    elif result == 'banned_yet':
+        msg = await message.answer(text=i18n.user.banned.yet())
+    elif result == 'unbanned':
+        msg = await message.answer(text=i18n.user.unbanned())
+    elif result == 'notbanned':
+        msg = await message.answer(text=i18n.user.notbanned())
+    elif result == 'invalid_command':
+        msg = await message.answer(text=i18n.invalid.command())
+    
+    await asyncio.sleep(2)
+    await bot.delete_message(user_id, msg.message_id)
 
 
 # Processing sending messages to all players
@@ -71,4 +107,13 @@ async def complete_send_messages(message: Message,
                                  dialog_manager: DialogManager,
                                  messages: str):
 
-    pass
+    user_id = message.from_user.id
+    session = dialog_manager.middleware_data.get('session')
+    msg = await message.answer(text=i18n.nopromocode())
+    bot: Bot = dialog_manager.middleware_data.get('bot')
+    
+    result = await get_users_id(session)
+
+    for id in result:
+        await bot.send_message(id, messages)
+    
