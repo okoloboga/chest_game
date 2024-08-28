@@ -24,7 +24,7 @@ admin_dialog = Dialog(
         ),
     Window(
         Format('{send_messages}'),
-        Button(Format('{button_back}'), id='b_back', on_click=back),
+        Button(Format('{button_back}'), id='b_back_admin', on_click=back_admin),
         TextInput(
             id='enter_messages',
             type_factory=str,
@@ -36,7 +36,7 @@ admin_dialog = Dialog(
         ),
     Window(
         Format('{edit_promocode}'),
-        Button(Format('{button_back}'), id='b_back', on_click=back),
+        Button(Format('{button_back}'), id='b_back_admin', on_click=back_admin),
         TextInput(
             id='command_promocode',
             type_factory=str,
@@ -48,7 +48,7 @@ admin_dialog = Dialog(
         ),
     Window(
         Format('{ban_player}'),
-        Button(Format('{button_back}'), id='b_back', on_click=back),
+        Button(Format('{button_back}'), id='b_back_admin', on_click=back_admin),
         TextInput(
             id='user_for_ban',
             type_factory=str,

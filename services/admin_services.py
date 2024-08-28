@@ -1,9 +1,12 @@
 import logging
 import datetime
+import json
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from database import Variables, User
+from .db_services import get_user
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +29,7 @@ async def edit_promocode_process(session: AsyncSession,
                                  promocode_command: str) -> str:
     
     logger.info(f'Editing promocode {promocode_command}')
+
     promocode_statement = select(Variables).where('promocodes' == Variables.name)
     
     async with session:
@@ -36,9 +40,12 @@ async def edit_promocode_process(session: AsyncSession,
             promocodes.value = str(promocodes.value + ' ' + promocode_command[1:])
             result = 'added'
         elif promocode_command[0] == '-':
-            promocodes_list = (promocodes.value).split()
+            promocodes_list = (promocodes.value).split(' ')
             if promocode_command[1:] in promocodes_list:
-                promocodes.value = str(' '.join(promocodes_list.remove(promocode_command[1:])))
+                logger.info(f'Promocodes list: {promocodes_list}, removing: {promocode_command[1:]}')
+                promocodes_list.remove(str(promocode_command[1:]))
+                logger.info(f'New promocodes after removing: {promocodes_list}')
+                promocodes.value = str(' '.join(promocodes_list))
                 result = 'removed'
             else:
                 result = 'no_promocode'
@@ -50,29 +57,37 @@ async def edit_promocode_process(session: AsyncSession,
 
 
 # Add to ban player
-async def ban_player_process(session: AsyncSession,
-                             user_for_ban: int) -> str:
+def ban_player_process(user_for_ban: str) -> str:
 
     logger.info(f'Banning user {user_for_ban}')
-    user_statement = select(User).where(int(user_for_ban) == int(User.telegram_id))
+    user = user_for_ban[1:]
+    command = user_for_ban[0]
 
-    async with session:
-        user = (await session.execute(user_statement)).scalar()
-        if user_for_ban[0] == '+':
-            if user.banned == 'no':
-                user.banned = 'yes'
+    with open('database/ban.json', 'r', encoding='utf-8') as ban_file:
+        ban_list = (json.load(ban_file))['ban']
+
+        logger.info(f'Ban list getted: {ban_list}')
+
+        if command == '+':
+            if user not in ban_list:
+                ban_list.append(user)
                 result = 'banned'
             else:
                 result = 'banned_yet'
-        elif user_for_ban[0] == '-':
-            if user.banned == 'yes':
-                user.banned = 'no' 
+        elif command == '-':
+            if user in ban_list:
+                ban_list.remove(user)
                 result = 'unbanned'
             else:
                 result = 'notbanned'
         else:
             result = 'invalid_command'
-        await session.commit()
+
+        ban_dict = {'ban': ban_list}
+
+    with open('database/ban.json', 'w', encoding='utf-8') as ban_file:
+        json.dump(ban_dict, ban_file)
+
     return result
 
 

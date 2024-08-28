@@ -14,7 +14,8 @@ from redis.asyncio.client import Redis
 from config import get_config, BotConfig, DbConfig
 from dialogs import dialogs, routers, unknown_router
 from utils import TranslatorHub, create_translator_hub
-from middlewares import TranslatorRunnerMiddleware, DbSessionMiddleware
+from middlewares import (TranslatorRunnerMiddleware, DbSessionMiddleware, 
+                         ShadowBanMiddleware)
 from database import Base
 from services import create_variables
 
@@ -72,6 +73,7 @@ async def main():
     dp.include_routers(unknown_router)
     
     dp.update.middleware(TranslatorRunnerMiddleware())
+    dp.update.middleware(ShadowBanMiddleware())
     dp.update.middleware(DbSessionMiddleware(Sessionmaker))
 
     setup_dialogs(dp)

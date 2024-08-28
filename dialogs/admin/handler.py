@@ -24,6 +24,14 @@ logging.basicConfig(
            '[%(asctime)s] - %(name)s - %(message)s')
 
 
+# Go back to main admin
+async def back_admin(callback: CallbackQuery,
+                     button: Button,
+                     dialog_manager: DialogManager):
+
+    await dialog_manager.switch_to(AdminSG.main)
+
+
 # Go to Sending Message window
 async def send_messages(callback: CallbackQuery,
                         button: Button,
@@ -56,6 +64,7 @@ async def complete_edit_promocode(message: Message,
     user_id = message.from_user.id
     session = dialog_manager.middleware_data.get('session')
     bot: Bot = dialog_manager.middleware_data.get('bot')
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     result = await edit_promocode_process(session, promocode)
     
     logger.info(f'complete_edit_promocode({promocode})')
@@ -80,9 +89,9 @@ async def complete_ban_player(message: Message,
                               ban: str):
 
     user_id = message.from_user.id
-    session = dialog_manager.middleware_data.get('session')
     bot: Bot = dialog_manager.middleware_data.get('bot')
-    result = await ban_player_process(session, ban)
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    result = ban_player_process(ban)
 
     logger.info(f'complete_ban_player({ban})')
     
@@ -109,11 +118,13 @@ async def complete_send_messages(message: Message,
 
     user_id = message.from_user.id
     session = dialog_manager.middleware_data.get('session')
-    msg = await message.answer(text=i18n.nopromocode())
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     bot: Bot = dialog_manager.middleware_data.get('bot')
     
     result = await get_users_id(session)
 
     for id in result:
         await bot.send_message(id, messages)
-    
+    msg = await message.answer(text=i18n.all.messages.sended())
+    await asyncio.sleep(2)
+    await bot.delete_message(user_id, msg.message_id)

@@ -88,13 +88,14 @@ async def get_user(session: AsyncSession,
 async def get_users_id(session: AsyncSession) -> list:
     
     logger.info('getting all users_id')
-    users_stms = select(Users.c.telegram_id)
+    users_stms = select(User)
     result = []
 
     async with session:
-        users_id = await session.execute(users_stms).fetchall()
+        users_id = await session.execute(users_stms)
         for user in users_id:
-            result.append(user[0])
+            result.append(user[0].telegram_id)
+    logger.info(f'result list after appendin all users {result}')
 
     return result
 
@@ -115,6 +116,16 @@ async def is_banned(session: AsyncSession,
     logger.info(f'Getting user {user_id} banned status from database')
     status = (await get_user(session, user_id)).banned
     return True if status == 'banned' else False
+
+
+# Get count of using promocodes
+async def promocode_use_count(session: AsyncSession) -> int:
+    
+    logger.info('getting count of promocode uses')
+    promocode_stms = select(Variables).where('using_promocodes' == Variables.name)
+
+    async with session:
+        return int(((await session.execute(promocode_stms)).scalar()).value)
 
 
 # Add referrals to referral link Parent

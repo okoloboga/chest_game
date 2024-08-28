@@ -4,7 +4,7 @@ from aiogram.types import User
 from aiogram_dialog import DialogManager
 from fluentogram import TranslatorRunner
 
-from services import admin_panel_info, get_promocodes
+from services import admin_panel_info, get_promocodes, promocode_use_count
 
 
 logger = logging.getLogger(__name__)
@@ -56,9 +56,11 @@ async def edit_promocode_getter(dialog_manager: DialogManager,
                                 **kwargs) -> dict:
 
     session = dialog_manager.middleware_data.get('session')
-    result = await get_promocodes(session)
+    promocodes = await get_promocodes(session)
+    used = await promocode_use_count(session)
 
-    return {'edit_promocode': i18n.edit.promocode(promocodes = result),
+    return {'edit_promocode': i18n.edit.promocode(promocodes=promocodes,
+                                                  used=used),
             'button_back': i18n.button.back()}
 
 
