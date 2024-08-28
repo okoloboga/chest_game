@@ -32,31 +32,20 @@ lobby_dialog = Dialog(
     ),
     Window(
         Format('{select_deposit}'),
-        Button(Const('💎0.5 TON'), id='b_deposit_0_5', on_click=deposit),
         Row(
+            Button(Const('💎0.5 TON'), id='b_deposit_0_5', on_click=deposit),
             Button(Const('💎1 TON'), id='b_deposit_1', on_click=deposit),
             Button(Const('💎2 TON'), id='b_deposit_2', on_click=deposit)          
         ),
         Row(
             Button(Const('💎4 TON'), id='b_deposit_4', on_click=deposit),
-            Button(Const('💎8 TON'), id='b_deposit_8', on_click=deposit),            
-            Button(Const('💎25 TON'), id='b_deposit_25', on_click=deposit)            
-        ),
-        Row(
-            Button(Const('💎50 TON'), id='b_deposit_50', on_click=deposit),
-            Button(Const('💎100 TON'), id='b_deposit_100', on_click=deposit)            
-        ),
+            Button(Const('💎8 TON'), id='b_deposit_8', on_click=deposit)
+            ),
+        Button(Const('💎25 TON'), id='b_deposit_25', on_click=deposit),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=deposit_getter,
         state=LobbySG.deposit               
     ),
-    Window(
-        Format('{game_confirm}'),
-        Button(Format('{button_game_confirm}'), id='b_game_confirm', on_click=confirm_game),
-        Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=game_confirm_getter,
-        state=LobbySG.game_confirm  
-    ), 
     Window(
         Format('{not_enough_ton}'),
         Button(Format('{button_tonimport}'), id='b_import_from_lobby', on_click=import_from_lobby),
@@ -65,22 +54,8 @@ lobby_dialog = Dialog(
         state=LobbySG.not_enough_ton   
     ),
     Window(
-        Format('{owner_private}'),
-        Button(Format('{button_wait_check_o}'), id='b_wait_check_o', on_click=wait_check_o),
-        Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=wait_owner_private_getter,
-        state=LobbySG.owner_private
-        ),
-    Window(
-        Format('{owner_public}'),
-        Button(Format('{button_wait_check_o}'), id='b_wait_check_o', on_click=wait_check_o),
-        Button(Format('{button_back}'), id='b_back', on_click=back),
-        getter=wait_owner_public_getter,
-        state=LobbySG.owner_public
-    ),
-    Window(
         Format('{search_game}'),
-        Button(Format('{button_wait_check_search}'), id='b_wait_check_search', on_click=wait_check_search),
+        Button(Format('{button_wait_check}'), id='b_wait_check_search', on_click=wait_check),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=search_getter,
         state=LobbySG.search

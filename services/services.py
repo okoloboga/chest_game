@@ -169,17 +169,18 @@ async def create_room_query(user_id: int,
                 await r.hmset('r_' + str(user_id), room_1vs1)
                 
                 # After writing Data to Redis
-                await dialog_manager.switch_to(LobbySG.owner_public)
+                await dialog_manager.switch_to(LobbySG.search)
                    
             else:
                 dialog_manager.current_context().dialog_data['find_create'] = 'find'
                 await dialog_manager.switch_to(LobbySG.search)   
         else:
             logger.info(f'User {user_id} creating Private game with deposit {deposit}')
-            
+            dialog_manager.current_context().dialog_data['find_create'] = 'create'
+
             # Create Private room
             r = aioredis.Redis(host='localhost', port=6379)
-            
+
             # Creating empty room with Users Game for another players            
             room_private = { 
                             'mode': mode,
@@ -191,7 +192,7 @@ async def create_room_query(user_id: int,
             await r.hmset('pr_' + str(user_id), room_private)
             
             # After writing Data to Redis
-            await dialog_manager.switch_to(LobbySG.owner_private)
+            await dialog_manager.switch_to(LobbySG.search)
     else:
         await dialog_manager.switch_to(LobbySG.not_enough_ton)
         
@@ -312,7 +313,7 @@ async def turn_timer(dialog_manager: DialogManager,
                      game_id: int,
                      loser_id: int,
                      game_end_keyboard: InlineKeyboardMarkup):
-
+    logger.info(f'Timer created for player {loser_id}')
     await asyncio.sleep(60)
     r = aioredis.Redis(host='localhost', port=6379)
     game = await r.hgetall('g_'+str(game_id))

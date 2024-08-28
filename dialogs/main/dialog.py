@@ -8,7 +8,8 @@ from aiogram_dialog.widgets.input.text import TextInput
 from .getter import *
 from .handler import *
 from states import MainSG
-from services import check_address, is_promocode, TELEGRAPH, CHANNEL, HOW_TO_GET_TON_RU
+from services import (check_address, is_promocode, admin_password,
+                      TELEGRAPH, CHANNEL, HOW_TO_GET_TON_RU)
 from dialogs.buttons import back
 
 main_dialog = Dialog(
@@ -28,6 +29,12 @@ main_dialog = Dialog(
             Url(Format('{button_how_to_play}'), Const(TELEGRAPH)),
             Url(Format('{button_community}'), Const(CHANNEL))
         ),
+        TextInput(
+            id='admin_enter',
+            type_factory=admin_password,
+            on_success=to_admin,
+            on_error=wrong_password
+            ),
         getter=main_getter,
         state=MainSG.main
     ),

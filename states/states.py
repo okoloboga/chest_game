@@ -35,4 +35,11 @@ class DemoSG(StatesGroup):
 
 class GameSG(StatesGroup):
     main = State()
+ 
+
+class AdminSG(StatesGroup):
+    main = State()
+    edit_promocode = State()
+    send_messages = State()
+    ban_player = State()
     

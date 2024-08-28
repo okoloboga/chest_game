@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from redis import asyncio as aioredis
 from base64 import b64encode
 
-from services import get_user
+from services import get_user, create_room_query
 
 
 logger = logging.getLogger(__name__)
@@ -111,44 +111,6 @@ async def not_enough_ton_getter(dialog_manager: DialogManager,
     
 
 # User is owner of private and waiting for guest
-async def wait_owner_private_getter(dialog_manager: DialogManager,
-                                    session: async_sessionmaker,
-                                    i18n: TranslatorRunner,
-                                    bot: Bot,
-                                    event_from_user: User,
-                                    **kwargs
-                                    ) -> dict:
-    
-    deposit = dialog_manager.current_context().dialog_data['deposit']
-    invite_code = b64encode(('pr_' + str(event_from_user.id)).encode('utf-8'))
-    logger.info(f'User {event_from_user.id} waiting for Private game as\
-      Owner, deposit: {deposit}, invite_code is {invite_code}')   
-    
-    return {'owner_private': i18n.ownerprivate(invite_code=str(invite_code, encoding='utf-8'),
-                                               deposit=deposit),
-            'button_wait_check_o': i18n.button.wait.check.o(),
-            'button_back': i18n.button.back()}
-
-    
-# User is owner of public and waiting for guest
-async def wait_owner_public_getter(dialog_manager: DialogManager,
-                                   session: async_sessionmaker,
-                                   i18n: TranslatorRunner,
-                                   bot: Bot,
-                                   event_from_user: User,
-                                   **kwargs
-                                   ) -> dict:
-    
-    deposit = dialog_manager.current_context().dialog_data['deposit']
-    logger.info(f'User {event_from_user.id} waiting for Public game as\
-      Owner, deposit: {deposit}')   
-    
-    return {'owner_public': i18n.ownerpublic(deposit=deposit),
-            'button_wait_check_o': i18n.button.wait.check.o(),
-            'button_back': i18n.button.back()}
-
-
-# User searching for Game...
 async def search_getter(dialog_manager: DialogManager,
                         session: async_sessionmaker,
                         i18n: TranslatorRunner,
@@ -156,13 +118,48 @@ async def search_getter(dialog_manager: DialogManager,
                         event_from_user: User,
                         **kwargs
                         ) -> dict:
-	
-    deposit = dialog_manager.current_context().dialog_data['deposit']	
-    logger.info(f'User {event_from_user.id} waiting for game as\
-      Searcher, deposit: {deposit}')  
-          
-    return {'search_game': i18n.search.game(deposit=deposit),
-            'button_wait_check_search': i18n.button.wait.check.search(),
+    user_id = event_from_user.id
+    try:
+        logger.info(f'User {user_id} search new game after game ')
+        mode = dialog_manager.start_data['mode']
+        deposit = dialog_manager.start_data['deposit']
+        find_create = 'create'
+        dialog_manager.current_context().dialog_data['mode'] = mode
+        dialog_manager.current_context().dialog_data['deposit'] = deposit
+        dialog_manager.current_context().dialog_data['find_create'] = find_create
+        
+        r = aioredis.Redis(host='localhost', port=6379)
+        room = {
+                'mode': mode,
+                'owner': user_id,
+                'guest': 'wait',
+                'deposit': deposit
+                }
+        if mode != 'private':
+            await r.hmset('r_' + str(user_id), room)
+        else:
+            await r.hmset('pr_' + str(user_id), room)
+
+    except KeyError:
+        logger.info(f'User {user_id} search new game')
+        deposit = dialog_manager.current_context().dialog_data['deposit']
+        mode = dialog_manager.current_context().dialog_data['mode']
+        find_create = dialog_manager.current_context().dialog_data['find_create']        
+    if mode == 'private':
+        invite_code = b64encode(('pr_' + str(user_id)).encode('utf-8'))
+        answer = i18n.ownerprivate(invite_code=str(invite_code, encoding='utf-8'),
+                                   deposit=deposit)
+    else:
+        if find_create == 'create':
+            answer = i18n.ownerpublic(deposit=deposit)
+        elif find_create == 'find':
+            answer = i18n.search.game(deposit=deposit)
+
+    logger.info(f'User {user_id} waiting for {mode} game as\
+      Owner, deposit: {deposit}')
+   
+    return {'search_game': answer,
+            'button_wait_check': i18n.button.wait.check.o(),
             'button_back': i18n.button.back()}
 
 
@@ -173,11 +170,11 @@ async def game_ready_getter(dialog_manager: DialogManager,
                             event_from_user: User,
                             **kwargs
                             ) -> dict:
+
     user_id = event_from_user.id
-    logger.info(f'Start data is {dialog_manager.start_data}')
     try:
         try:
-            room = dialog_manager.start_data['game_id']
+            room_id = dialog_manager.start_data['game_id']
         except KeyError:
             logger.info(f"User {user_id} hasn't room, don't worry, it should be game against bot")
         mode = dialog_manager.start_data['mode']
@@ -186,17 +183,24 @@ async def game_ready_getter(dialog_manager: DialogManager,
         dialog_manager.current_context().dialog_data['deposit'] = deposit
         if mode != 'demo':
             try:
+                r = aioredis.Redis(host='localhost', port=6379)
+                if mode == 'private':
+                    room = await r.hgetall('pr_' + str(room_id))
+                elif mode == 'public':
+                    room = await r.hgetall('r_' + str(room_id))
                 dialog_manager.current_context().dialog_data['room'] = room
             except UnboundLocalError:
                 logger.info(f'User {user_id} havent room, cause it vs bot')
     except KeyError:
         mode = dialog_manager.current_context().dialog_data['mode']    
         deposit = dialog_manager.current_context().dialog_data['deposit']
-
+    
+    game_ready = i18n.demo.ready() if mode == 'demo' else i18n.game.ready(deposit=deposit)
+    
     logger.info(f'User {user_id}; offer to confirm game\
      with deposit {deposit} in {mode} mode')
  
-    return {'game_ready': i18n.game.ready(deposit=deposit),
+    return {'game_ready': game_ready,
             'button_game_ready': i18n.button.game.ready(),
             'button_back': i18n.button.back()}
     

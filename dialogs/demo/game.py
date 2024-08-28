@@ -42,6 +42,7 @@ async def demo_start(callback: CallbackQuery,
     session = dialog_manager.middleware_data.get('session')
     mode = dialog_manager.current_context().dialog_data['mode']
     deposit = dialog_manager.current_context().dialog_data['deposit']
+
     coef = (await coef_counter(user_id, session))['coef'] 
     prize = coef * deposit
     
@@ -148,7 +149,6 @@ async def main_demo_process(callback: CallbackQuery,
                             bot: Bot
                             ):
     # Init variables
-    
     r = aioredis.Redis(host='localhost', port=6379)
     user_id = callback.from_user.id
     demo = await r.hgetall('d_' + str(user_id))
@@ -172,7 +172,8 @@ async def main_demo_process(callback: CallbackQuery,
     elif callback.data == 'play_again':
         logger.info(f'User {user_id} want play again in mode: {mode}, deposit: {deposit}')
         await r.delete('d_'+str(user_id))
-        await dialog_manager.start(state=LobbySG.demo_ready,
+        target_state = LobbySG.demo_ready if mode == 'demo' else LobbySG.search
+        await dialog_manager.start(state=target_state,
                                    mode=StartMode.RESET_STACK,
                                    data={'mode': mode,
                                          'deposit': deposit})

@@ -25,6 +25,7 @@ class User(Base):
     first_name: Mapped[required_short_str]
     last_name: Mapped[optional_short_str]
     games: Mapped[required_int]
+    last_game: Mapped[required_str]
     last_roles: Mapped[required_str]
     wins: Mapped[required_int]
     lose: Mapped[required_int]
@@ -36,6 +37,8 @@ class User(Base):
     ton: Mapped[required_float]
     promo: Mapped[required_int]
     used_promo: Mapped[required_str]
+    status: Mapped[required_str]
+    banned: Mapped[required_str]
     
     created_at: Mapped[datetime] = mapped_column(
             DateTime(timezone=True),

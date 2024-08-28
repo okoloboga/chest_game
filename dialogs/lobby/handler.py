@@ -46,6 +46,7 @@ async def private_game(callback: CallbackQuery,
     user_id = callback.from_user.id
     logger.info(f'User {user_id} Create new Game')
     dialog_manager.current_context().dialog_data['mode'] = 'private'
+    dialog_manager.current_context().dialog_data['find_create'] = 'create'
 
     await dialog_manager.switch_to(LobbySG.deposit)
 
@@ -89,7 +90,7 @@ async def deposit(callback: CallbackQuery,
 
     if (await get_user(session, user_id)).ton >= deposit:
         dialog_manager.current_context().dialog_data['deposit'] = deposit
-        await dialog_manager.switch_to(LobbySG.game_confirm)
+        await create_room_query(user_id, dialog_manager)
     else:
         i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
         bot: Bot = dialog_manager.middleware_data.get('bot')
@@ -109,6 +110,7 @@ async def join_private_game(message: Message,
     user_id = message.from_user.id
     r = aioredis.Redis(host='localhost', port=6379)
     dialog_manager.current_context().dialog_data['mode'] = 'private'
+    bot: Bot = dialog_manager.middleware_data.get('bot')
     
     if await r.exists(invite_code) != 0:
         logger.info(f'User {user_id} join to {invite_code}')
@@ -119,6 +121,7 @@ async def join_private_game(message: Message,
         if (await get_user(session, user_id)).ton >= deposit:
             dialog_manager.current_context().dialog_data['deposit'] = deposit
             dialog_manager.current_context().dialog_data['room'] = room
+            dialog_manager.current_context().dialog_data['find_create'] = 'find'
             await write_as_guest(room, user_id)
             await dialog_manager.switch_to(LobbySG.game_ready)
         else:
@@ -131,7 +134,7 @@ async def join_private_game(message: Message,
     else:
         logger.info(f'Game {invite_code} doesnt exists')
         i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-        await message.answer(text=i18n.game.notexists())
+        msg = await message.answer(text=i18n.game.notexists())
         await asyncio.sleep(1)
         await bot.delete_message(user_id, msg.message_id)
 
@@ -160,14 +163,6 @@ async def import_from_lobby(callback: CallbackQuery,
                                mode=StartMode.RESET_STACK)
     
 
-# CONFIRM GAME FINALLY
-async def confirm_game(callback: CallbackQuery,
-                       button: Button,
-                       dialog_manager: DialogManager):
-
-    user_id = callback.from_user.id
-    await create_room_query(user_id, dialog_manager)
-  
 '''
                          /$$   /$$    
                         |__/  | $$    
@@ -181,61 +176,51 @@ async def confirm_game(callback: CallbackQuery,
 
 
 # Checking for founded guest in 1VS1
-async def wait_check_o(callback: CallbackQuery,
+async def wait_check(callback: CallbackQuery,
                        button: Button,
                        dialog_manager: DialogManager):
-
-    mode = dialog_manager.current_context().dialog_data['mode']
-    
-    if mode != 'private':
-        is0 = random.randint(0, 5)
-        logger.info(f'BOT CHECK: is0 = {is0}')
-    else: 
-        is0 = 1
-        logger.info('Bot check is off')
-
-    if is0 != 0:
-        r = aioredis.Redis(host='localhost', port=6379)
-        if mode == 'public':
-            room = await r.hgetall('r_'+str(callback.from_user.id))
-        else:
-            room = await r.hgetall('pr_'+str(callback.from_user.id))
-        logger.info(f'Current room status: {room}')
-        
-        if room[b'guest'] == b'wait':
-            
-            # Nothing new...
-            i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-            await callback.message.edit_text(text=i18n.still.waiting.opponent())
-            await asyncio.sleep(1)
-        else:
-            dialog_manager.current_context().dialog_data['room'] = room
-            await dialog_manager.switch_to(LobbySG.game_ready)
-    else:
-        await dialog_manager.switch_to(LobbySG.demo_ready)
-
-
-# Checking got game while searching
-async def wait_check_search(callback: CallbackQuery,
-                            button: Button,
-                            dialog_manager: DialogManager):
     
     user_id = callback.from_user.id
+    mode = dialog_manager.current_context().dialog_data['mode']
+    find_create = dialog_manager.current_context().dialog_data['find_create']
     deposit = dialog_manager.current_context().dialog_data['deposit']
-    result = await get_game(deposit)
-    logger.info(f'Founded Game: {result}')
 
-    if result == 'no_rooms':
-        i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
-        bot: Bot = dialog_manager.middleware_data.get('bot')
-        msg = await callback.message.answer(text=i18n.still.searching.game())
-        await asyncio.sleep(2)
-        await bot.delete_message(user_id, msg.message_id)
-
-    else:
+    logger.info(f'User {user_id} wait {mode}, {find_create} with deposit {deposit}')
+    
+    if find_create == 'create':
+        if mode != 'private':
+            is0 = random.randint(0, 5)
+            logger.info(f'BOT CHECK: is0 = {is0}')
+        else: 
+            is0 = 1
+            logger.info('Bot check is off')
+        if is0 != 0:
+            r = aioredis.Redis(host='localhost', port=6379)
+            if mode == 'public':
+                room = await r.hgetall('r_'+str(user_id))
+            else:
+                room = await r.hgetall('pr_'+str(user_id))
+            logger.info(f'Current room status: {room}')
+            
+            if room[b'guest'] == b'wait':
+                
+                # Nothing new...
+                i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+                await callback.message.edit_text(text=i18n.still.waiting.opponent())
+                await asyncio.sleep(1)
+            else:
+                dialog_manager.current_context().dialog_data['room'] = room
+                await dialog_manager.switch_to(LobbySG.game_ready)
+        else:
+            await dialog_manager.switch_to(LobbySG.demo_ready)
+    elif find_create == 'find':
+        result = await get_game(deposit)
+        logger.info(f'Founded Game: {result}')
+        
         dialog_manager.current_context().dialog_data['room'] = result
         await write_as_guest(result, user_id)
         await dialog_manager.switch_to(LobbySG.game_ready)
+
 
 
 

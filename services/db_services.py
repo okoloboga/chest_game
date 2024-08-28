@@ -25,10 +25,15 @@ async def create_variables(engine):
         session.add_all(
                 [
                     Variables(name='promocodes', value='PROMOCODE1 PROMOCODE2'),
+                    Variables(name='using_promocodes', value='0'),
                     Variables(name='income', value='0'),
                     Variables(name='outcome', value='0'),
                     Variables(name='pure_income', value='0'),
-                    Variables(name='to_parents', value='0')
+                    Variables(name='to_parents', value='0'),
+                    Variables(name='total_games_players', value='0'),
+                    Variables(name='total_games_bot', value='0'),
+                    Variables(name='total_bets', value='0'),
+                    Variables(name='bets', value='')
                 ]
             )
         await session.commit()
@@ -47,6 +52,7 @@ async def create_user(session: AsyncSession,
                 'first_name': first_name,
                 'last_name': last_name,
                 'games': 0,
+                'last_game': '',
                 'last_roles': '',
                 'wins': 0,
                 'lose': 0,
@@ -57,7 +63,9 @@ async def create_user(session: AsyncSession,
                 'parent': 0,
                 'ton': 0,
                 'promo': 0,
-                'used_promo': ''
+                'used_promo': '',
+                'status': 'user',
+                'banned': 'no'
                 }
             )    
     await session.execute(user)
@@ -70,13 +78,28 @@ async def get_user(session: AsyncSession,
                    ) -> User | None:
 
     logger.info(f'Getting User from Database with id {telegram_id}')
-    
-    
     user = await session.get(
             User, {'telegram_id': telegram_id}
             )
-
     return user
+
+
+# Is user - admin?
+async def is_admin(session: AsyncSession,
+                   user_id: int) -> bool:
+
+    logger.info(f'Getting user {user_id} status from database')
+    status = (await get_user(session, user_id)).status
+    return True if status == 'admin' else False
+
+
+# Is user - banned?
+async def is_banned(session: AsyncSession,
+                    user_id: int) -> bool:
+
+    logger.info(f'Getting user {user_id} banned status from database')
+    status = (await get_user(session, user_id)).banned
+    return True if status == 'banned' else False
 
 
 # Add referrals to referral link Parent
@@ -181,11 +204,13 @@ async def increment_promo(session: AsyncSession,
 
     user_stmt = select(User).where(telegram_id == User.telegram_id)
     promo_stmt = select(Variables).where('promocodes' == Variables.name)
+    using_promo = select(Variables).where('using_promocodes' == Variables.name)
 
     async with session:
         
         actual_promo = (((await session.execute(promo_stmt)).scalar()).value).split()
         user = (await session.execute(user_stmt)).scalar()
+        count_promo = (await session.execute(using_promo)).scalar()
         used_promo = (user.used_promo).split()
 
         logger.info(f'User promo status: {user.promo}, users used promo: {used_promo}, promo: {promocode}')
@@ -195,7 +220,8 @@ async def increment_promo(session: AsyncSession,
             if promocode not in used_promo: 
                 if promocode in actual_promo:
                     user.promo = 1
-                    user.used_promo = str(user.used_promo) + ' ' + str(promocode) 
+                    user.used_promo = str(user.used_promo) + ' ' + str(promocode)
+                    count_promo.value = str(int(count_promo.value) + 1)
                     await session.commit()
                     return 'approved'
                 else:
@@ -204,6 +230,7 @@ async def increment_promo(session: AsyncSession,
                 return 'used yet'
         else:
             return 'promo is active'
+
 
 
 # Changing data of Users after game results
@@ -220,6 +247,9 @@ async def game_result_writer(session: AsyncSession,
     loser_statement = select(User).where(loser_id == User.telegram_id)
     pure_income_statement = select(Variables).where('pure_income' == Variables.name)
     to_parents_statement = select(Variables).where('to_parents' == Variables.name)
+    games_counter_statement = select(Variables).where('total_games_players' == Variables.name)
+    total_bets_statement = select(Variables).where('total_bets' == Variables.name)
+    bets_statement = select(Variables).where('bets' == Variables.name)
 
     winner_coef = (await coef_counter(winner_id, session))['coef']
     winner_prize = winner_coef * deposit
@@ -245,12 +275,14 @@ async def game_result_writer(session: AsyncSession,
 
         winner.wins_ton = winner.wins_ton + winner_prize
         winner.ton = winner.ton + winner_prize
+        winner.last_game = str(datetime.datetime.now())
         
         # Writing loser data
         loser.games = loser.games + 1
         loser.lose = loser.lose + 1
         loser.lose_ton = loser.lose_ton + deposit
         loser.ton = loser.ton - deposit
+        loser.last_game = str(datetime.datetime.now())
         
         # Prepare vars to write referral parents %
         winner_parent_id = winner.parent
@@ -307,9 +339,15 @@ async def game_result_writer(session: AsyncSession,
     async with session: 
         pure_income_scalar = (await session.execute(pure_income_statement)).scalar()
         to_parents_scalar = (await session.execute(to_parents_statement)).scalar()
+        games_counter = (await session.execute(games_counter_statement)).scalar()
+        total_bets = (await session.execute(total_bets_statement)).scalar()
+        bets = (await session.execute(bets_statement)).scalar()
 
         pure_income_scalar.value = str(float(pure_income_scalar.value) + float(pure_income))
         to_parents_scalar.value = str(float(to_parents_scalar.value) + float(winner_parent_comission + loser_parent_comission))
+        games_counter.value = str(int(games_counter.value) + 1)
+        total_bets.value = str(float(total_bets.value) + (deposit * 2))
+        bets.value = bets.value + ' ' + str(deposit)
 
         await session.commit()
 
@@ -326,6 +364,9 @@ async def demo_result_writer(session: AsyncSession,
     user_statement = select(User).where(user_id == User.telegram_id)
     pure_income_statement = select(Variables).where('pure_income' == Variables.name)
     to_parents_statement = select(Variables).where('to_parents' == Variables.name)
+    games_counter_statement = select(Variables).where('total_games_bot' == Variables.name)
+    total_bets_statement = select(Variables).where('total_bets' == Variables.name)
+    bets_statement = select(Variables).where('bets' == Variables.name)
 
     user_coef = float((await coef_counter(user_id, session))['coef'])
     user_prize = user_coef * float(deposit) if result == 'win' else (-1.0 * float(user_coef) * deposit)
@@ -341,6 +382,7 @@ async def demo_result_writer(session: AsyncSession,
 
         # Writing winner data        
         user.games = user.games + 1
+        user.last_game = str(datetime.datetime.now())
         
         if result == 'win': 
             user.wins = user.wins + 1
@@ -402,9 +444,15 @@ async def demo_result_writer(session: AsyncSession,
     async with session: 
         pure_income_scalar = (await session.execute(pure_income_statement)).scalar()
         to_parents_scalar = (await session.execute(to_parents_statement)).scalar()
+        games_counter = (await session.execute(games_counter_statement)).scalar()
+        total_bets = (await session.execute(total_bets_statement)).scalar()
+        bets = (await session.execute(bets_statement)).scalar()
 
         pure_income_scalar.value = str(float(pure_income_scalar.value) + pure_income)
         to_parents_scalar.value = str(float(to_parents_scalar.value) + user_parent_comission)
+        games_counter.value = str(int(games_counter.value) + 1)
+        total_bets.value = str(float(total_bets.value) + deposit)
+        bets.value = bets.value + ' ' + str(deposit)
 
         await session.commit()
 

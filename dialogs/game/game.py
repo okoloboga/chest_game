@@ -2,6 +2,7 @@ import logging
 import asyncio
 import random
 
+from aiogram.methods import delete_message
 from aiogram.types import FSInputFile
 from aiogram import F, Router, Bot
 from aiogram.filters import StateFilter
@@ -16,7 +17,7 @@ from ton.client.function_methods import Key
 
 from states import GameSG, LobbySG, MainSG
 from services import (room_to_game, game_result_writer, turn_timer, 
-                      coef_counter, get_user)
+                      coef_counter, get_user, write_as_guest)
 from .keyboard import *
 
 game_router = Router()
@@ -89,6 +90,9 @@ async def game_start(callback: CallbackQuery,
                                                                                           coef=coef,
                                                                                           prize=prize),
                                                           reply_markup=game_exit_keyboard(i18n))
+            task = [task for task in asyncio.all_tasks() if task.get_name() == f't_{owner}']
+            logger.info(f'Timer for game {user_game_str}: {task}')
+            if len(task) == 0:
                 # Turn timer for each player
                 await asyncio.create_task(turn_timer(dialog_manager, 
                                                      user_game_str[2:],
@@ -143,6 +147,7 @@ async def main_game_process(callback: CallbackQuery,
         hidder = str(user_game[b'hidder'], encoding='utf-8') 
         searcher = guest if int(hidder) == int(owner) else owner
         session = dialog_manager.middleware_data.get('session')
+        mode = str(user_game[b'mode'], encoding='utf-8')
 
         coef = (await coef_counter(user_id, session))['coef'] 
         deposit = float(str(user_game[b'deposit'], encoding='utf-8'))
@@ -164,12 +169,35 @@ async def main_game_process(callback: CallbackQuery,
         await dialog_manager.start(state=MainSG.main,
                                    mode=StartMode.RESET_STACK)
     elif callback.data == 'play_again':
-        await dialog_manager.start(state=LobbySG.game_ready,
-                                   mode=StartMode.RESET_STACK,
-                                   data={'game_id': str(user_game_str, encoding='utf-8')[2:],
-                                         'mode': str(user_game[b'mode'], encoding='utf-8'),
-                                         'deposit': deposit})
-
+        try:
+            if mode == 'private' and int(owner) != int(user_id):
+                logger.info(f'User {user_id} want to play again in {mode} with owner {owner}')
+                logger.info(f"exists? - {await r.hgetall('pr_' + str(owner))}")
+                if await r.exists('pr_' + str(owner)) != 0:
+                    room = await r.hgetall('pr_' + str(owner))
+                    await write_as_guest(room, user_id)
+                    await dialog_manager.start(LobbySG.game_ready,
+                                               mode=StartMode.RESET_STACK,
+                                               data={'game_id': owner,
+                                                     'mode': mode,
+                                                     'deposit': deposit})
+                else: 
+                    msg = await callback.message.answer(text=i18n.waiting.foropponent())
+                    await asyncio.sleep(2)
+                    await bot.delete_message(user_id, msg.message_id)
+                    await callback.answer()
+            else:
+                await dialog_manager.start(state=LobbySG.search,
+                                           mode=StartMode.RESET_STACK,
+                                           data={'game_id': owner,
+                                                 'mode': mode,
+                                                 'deposit': deposit})
+        except UnboundLocalError:
+            msg = await callback.message.answer(text=i18n.opponent.leaved())
+            await asyncio.sleep(2)
+            await bot.delete_message(user_id, msg.message_id)
+            await dialog_manager.start(state=MainSG.main,
+                                       mode=StartMode.RESET_STACK)
     else:        
         # If it Not Exit from Game
         if callback.data != 'game_exit' and callback.data != 'game_end':

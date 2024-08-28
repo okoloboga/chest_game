@@ -28,9 +28,10 @@ async def back(callback: CallbackQuery,
     logger.info(f'User {callback.from_user.id} pressed to Back Button')
     r = aioredis.Redis(host='localhost', port=6379)
     try:
-        room = str(await r.get(user_id), encoding='utf-8')
-        logger.info(f'Users room id is {room}')
-        await r.delete(room)
+        if await r.exists('pr_' + str(user_id)):
+            await r.delete('pr_' + str(user_id))
+        elif await r.exists('r_' + str(user_id)):
+            await r.delete('r_' + str(user_id))
     except TypeError:
         logger.info(f'User {user_id} havent created room')
     await dialog_manager.start(state=MainSG.main,

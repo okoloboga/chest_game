@@ -10,10 +10,9 @@ from fluentogram import TranslatorRunner
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services import (import_ton_check, process_transaction, message_delete,
-                      export_ton, decrement_ton, get_user, increment_promo)
-from services.constants import CENTRAL_WALLET
-from states import MainSG, LobbySG
-from database import User
+                      export_ton, decrement_ton, get_user, increment_promo,
+                      is_admin, CENTRAL_WALLET)
+from states import MainSG, LobbySG, AdminSG
 
 main_router = Router()
 
@@ -207,12 +206,69 @@ async def check_promocode(message: Message,
 async def wrong_input(message: Message,
                       widget: ManagedTextInput,
                       dialog_manager: DialogManager,
+                      promocode: str
                       ):
-
-    logger.info(f'User {message.from_user.id} fills wrong promocode')
+    user_id = callback.from_user.id
+    logger.info(f'User {user_id} fills wrong promocode')
     bot: Bot = dialog_manager.middleware_data.get('bot')
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     msg = await message.answer(text=i18n.wrong.promocode())
-    await asyncio.create_task(message_delete(bot, msg.message_id, message.from_user.id, 3))
+    await asyncio.sleep(2)
+    await bot.delete_message(user_id, msg.message_id)
+
+
+# Cheching for admin - is user that did input - admin?
+async def to_admin(callback: CallbackQuery,
+                   widget: ManagedTextInput,
+                   dialog_manager: DialogManager,
+                   admin_password: str):
+
+    user_id = callback.from_user.id
+    logger.info(f'User {user_id} entered admin password')
+    session = dialog_manager.middleware_data.get('session')
+    result = await is_admin(session, user_id)
+    if result:
+        await dialog_manager.start(AdminSG.main)
+    else:
+        i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+        await callback.message.answer(text=i18n.unknown.message())
+
+
+# Entered password is invalid
+async def wrong_password(message: Message,
+                         widget: ManagedTextInput,
+                         dialog_manager: DialogManager,
+                         promocode: str
+                         ):
+    user_id = message.from_user.id
+    logger.info(f'User {user_id} fills wrong promocode')
+    bot: Bot = dialog_manager.middleware_data.get('bot')
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    msg = await message.answer(text=i18n.unknown.message())
+    await asyncio.sleep(2)
+    await bot.delete_message(user_id, msg.message_id)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
