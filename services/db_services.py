@@ -245,7 +245,7 @@ async def increment_promo(session: AsyncSession,
         if user.promo != 1: 
             if promocode not in used_promo: 
                 if promocode in actual_promo:
-                    user.promo = 1
+                    user.promo = 3
                     user.used_promo = str(user.used_promo) + ' ' + str(promocode)
                     count_promo.value = str(int(count_promo.value) + 1)
                     await session.commit()
@@ -292,9 +292,9 @@ async def game_result_writer(session: AsyncSession,
         winner.games = winner.games + 1
         winner.wins = winner.wins + 1
         
-        if winner.promo == 1:
+        if winner.promo > 0:
             winner_prize = deposit
-            winner.promo = 0
+            winner.promo = winner.promo - 1
             flag = True
         else:
             flag = False
@@ -395,7 +395,7 @@ async def demo_result_writer(session: AsyncSession,
     bets_statement = select(Variables).where('bets' == Variables.name)
 
     user_coef = float((await coef_counter(user_id, session))['coef'] - 1)
-    user_prize = user_coef * float(deposit) if result == 'win' else (-1.0 * float(user_coef) * deposit)
+    user_prize = user_coef * float(deposit) if result == 'win' else (-1.0 * deposit)
     user_parent_comission = 0
 
     logger.info(f'Default game results: winner prize = {user_prize}')
@@ -410,6 +410,7 @@ async def demo_result_writer(session: AsyncSession,
         user.games = user.games + 1
         user.last_game = str(datetime.datetime.now())
         
+        '''
         if result == 'win': 
             user.wins = user.wins + 1
 
@@ -423,19 +424,24 @@ async def demo_result_writer(session: AsyncSession,
             user.wins_ton = user.wins_ton + user_prize
             user.ton = user.ton + user_prize
             user.bot_income = user.bot_income - user_prize
-
+    
         elif result == 'lose':
-            user.lose = user.lose + 1
-            user.games = user.games + 1
-            user.lose_ton = user.lose_ton + deposit
-            user.ton = user.ton - deposit
-            user.bot_income = user.bot_income + deposit
+        '''
+        user.lose = user.lose + 1
+        user.games = user.games + 1
+        user.lose_ton = user.lose_ton + deposit
+        user.ton = user.ton - deposit
+        user.bot_income = user.bot_income + deposit
         
         # Prepare vars to write referral parents %
         user_parent_id = user.parent
         await session.commit()
-
-    our_income = deposit - user_prize
+    '''
+    if result == 'win':
+        our_income = deposit - user_prize
+    elif result == 'lose':
+    '''
+    our_income = deposit
           
     # If Winner haven't promocode - parents have 3% from deposit
     if flag is False:

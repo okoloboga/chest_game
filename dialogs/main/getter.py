@@ -38,7 +38,6 @@ async def main_getter(dialog_manager: DialogManager,
             'button_play': i18n.button.play(),
             'button_balance': i18n.button.balance(),
             'button_promocode': i18n.button.promocode(),
-            'button_how_to_play': i18n.button.howtoplay(),
             'button_referrals': i18n.button.referrals(),
             'button_community': i18n.button.community()}
     
@@ -101,7 +100,6 @@ async def ton_import_getter(dialog_manager: DialogManager,
     return {'import': i18n.tonimport(id=user_id),
             'button_import_check': i18n.button.importcheck(),
             'button_get_wallet': i18n.button.getwallet(),
-            'button_how_to_get_ton': i18n.button.howtogetton(),
             'button_back': i18n.button.back()}
     
     

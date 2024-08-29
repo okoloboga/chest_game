@@ -25,10 +25,7 @@ main_dialog = Dialog(
             Button(Format('{button_referrals}'), id='b_referrals', on_click=referrals)
         ),
         Button(Format('{button_balance}'), id='b_balacne', on_click=balance),
-        Row(
-            Url(Format('{button_how_to_play}'), Const(TELEGRAPH)),
-            Url(Format('{button_community}'), Const(CHANNEL))
-        ),
+        Url(Format('{button_community}'), Const(CHANNEL)),
         TextInput(
             id='admin_enter',
             type_factory=admin_password,
@@ -73,7 +70,6 @@ main_dialog = Dialog(
             Button(Format('{button_import_check}'), id='b_import_check', on_click=import_check),
             Button(Format('{button_get_wallet}'), id='b_get_wallet', on_click=get_wallet)
             ),
-        Url(Format('{button_how_to_get_ton}'), Const(HOW_TO_GET_TON_RU)),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=ton_import_getter,
         state=MainSG.ton_import
