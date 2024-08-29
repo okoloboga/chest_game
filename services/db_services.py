@@ -442,6 +442,8 @@ async def demo_result_writer(session: AsyncSession,
     elif result == 'lose':
     '''
     our_income = deposit
+    parent_coef = float((await coef_counter(user_parent_id, session))['comission']) 
+    logger.info(f'Our income from bot: {our_income}')
           
     # If Winner haven't promocode - parents have 3% from deposit
     if flag is False:
@@ -454,7 +456,7 @@ async def demo_result_writer(session: AsyncSession,
             logger.info('User parent is 0')
         else:
             logger.info(f'User parent is not 0: {user_parent_id}')
-            user_parent_comission = float((await coef_counter(user_parent_id, session))['comission']) * our_income
+            user_parent_comission = parent_coef * our_income
 
         async with session:
             user_parent = (await session.execute(user_parent_statement)).scalar()
