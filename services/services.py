@@ -31,7 +31,7 @@ async def coef_counter(user_id: int,
     
     get_user = services.db_services.get_user
     coef = 1.55
-    comission = 0.03
+    comission = 0
     user_data = await get_user(session, user_id)
     referrals = user_data.referrals
 
@@ -266,7 +266,7 @@ async def room_to_game(session: async_sessionmaker,
     logger.info(f'room_to_game({user_id}, {owner}), room: {room}')
 
     if len(room) > 0:
-        logger.info(f'room is {room} with id {user_id}')
+        logger.info(f'room is {room} with id {user_id}')6768830742:AAE-CgkT58fj4OOhAHVqEhX1BeBhLDwysjs
         guest = str(room[b'guest'], encoding='utf-8')
 
         # Chosing hidder for first turn
@@ -384,7 +384,8 @@ async def demo_timer(dialog_manager: DialogManager,
         i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
         session = dialog_manager.middleware_data.get('session')
         deposit = float(str(game[b'deposit'], encoding='utf-8'))
-        demo_result_writer = services.db_services.demo_result_writer
+        demo_result_writer = services.db_services.demo_result_writer:w
+
 
         if mode != 'demo':
             result = 'lose'
@@ -432,7 +433,7 @@ async def bot_thinking(dialog_manager: DialogManager,
         # Count Result
         if mode != 'demo':
             logger.info(f'User {user_id} ended game as hidder vs Bot in {mode} mode')
-            result = await losed_and_deposit(user_id, session, deposit)
+            result = 'lose'
             await demo_result_writer(session, deposit, user_id, result)
         else:
             is0 = random.randint(0, 1)

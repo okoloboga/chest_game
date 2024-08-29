@@ -126,7 +126,7 @@ async def game_start(callback: CallbackQuery,
 
 # All game in one handler
 @game_router.callback_query(F.data.in_(['first', 'second', 'third', 
-                                        'game_exit', 'game_end', 'play_again']),
+                                        'game_end', 'play_again']),
                             StateFilter(GameSG.main))
 async def main_game_process(callback: CallbackQuery,
                             state: FSMContext,
@@ -323,39 +323,3 @@ async def main_game_process(callback: CallbackQuery,
                 task = [task for task in asyncio.all_tasks() if task.get_name() == f't_{owner}']
                 task[0].cancel()
 
-                    
-        elif callback.data == 'game_exit':
-            logger.info(f'User exited from game. user_id: {user_id}, enemy: {enemy}')
-            deposit = str(user_game[b'deposit'], encoding='utf-8')           
-            lose = FSInputFile(path=f'img/sad{random.randint(1, 5)}.jpg')
-            await bot.delete_message(chat_id=user_id,
-                                     message_id=callback.message.message_id)       
-
-            await bot.send_photo(photo=lose,
-                                 chat_id=user_id,
-                                 caption=i18n.game.youlose(), 
-                                 reply_markup=game_end_keyboard(i18n))
-            # Send notification to enemy
-            win = FSInputFile(path=f'img/happy{random.randint(1, 5)}.jpg')
-            msg_enemy = await bot.send_photo(photo=win,
-                                             chat_id=enemy, 
-                                             caption=i18n.game.youwin(),
-                                             reply_markup=game_end_keyboard(i18n))
-            try:
-                await bot.delete_messages(user_id, [msg for msg in range(msg_enemy.message_id - 1, 
-                                                                         msg_enemy.message_id - 10, 
-                                                                         -1)])  
-            except TelegramBadRequest:
-                await callback.answer()
-
-            await game_result_writer(session,
-                                    int(owner), 
-                                    float(deposit), 
-                                    winner_id=int(enemy),
-                                    loser_id=int(user_id))
-            try:
-                # If game ended before timer is out - stop timer
-                task = [task for task in asyncio.all_tasks() if task.get_name() == f't_{owner}']
-                task[0].cancel()
-            except IndexError:
-                logger.info(f'No timer yet')

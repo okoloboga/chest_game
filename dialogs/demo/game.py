@@ -140,7 +140,7 @@ async def demo_start(callback: CallbackQuery,
 
 # All game in one handler
 @demo_router.callback_query(F.data.in_(['first', 'second', 'third', 
-                                        'game_exit', 'game_end', 'play_again']),
+                                        'game_end', 'play_again']),
                             StateFilter(DemoSG.game))
 async def main_demo_process(callback: CallbackQuery,
                             state: FSMContext,
@@ -256,29 +256,4 @@ async def main_demo_process(callback: CallbackQuery,
                 # Stop timer
                 task = [task for task in asyncio.all_tasks() if task.get_name() == f'dt_{user_id}']
                 task[0].cancel()
-               
-        elif callback.data == 'game_exit':
-            
-            # Count Result
-            if mode != 'demo':
-                result = 'lose'
-                await demo_result_writer(session, deposit, user_id, result)
-            else:
-                result = 'lose'
-            try:
-                lose = FSInputFile(path=f'img/sad{random.randint(1, 5)}.jpg')
-                msg = await bot.send_photo(photo=lose,
-                                           chat_id=user_id,
-                                           caption=i18n.game.youlose(),
-                                           reply_markup=game_end_keyboard(i18n))
-                await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 10, -1)])
-            except TelegramBadRequest as ex:
-                logger.info(f'{ex.message}')
-            try:
-                # If game ended before timer is out - stop timer
-                task = [task for task in asyncio.all_tasks() if task.get_name() == f'bt_{user_id}']
-                task[0].cancel()
-            except IndexError:
-                logger.info(f'No time yet')
-
 
