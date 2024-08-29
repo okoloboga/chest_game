@@ -384,7 +384,7 @@ async def demo_timer(dialog_manager: DialogManager,
         i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
         session = dialog_manager.middleware_data.get('session')
         deposit = float(str(game[b'deposit'], encoding='utf-8'))
-        demo_result_writer = services.db_services.demo_result_writer:w
+        demo_result_writer = services.db_services.demo_result_writer
 
 
         if mode != 'demo':
