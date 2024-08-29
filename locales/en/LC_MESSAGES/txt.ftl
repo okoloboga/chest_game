@@ -73,7 +73,7 @@ referrals = 👋 Invite your friends, earn from their wins and losses,
 
             Number of referrals: { $referrals }
             Your Coefficient: { $coef }
-            You get: { $commission }% from friends' games</b>
+            You get: { $comission }% from friends' games</b>
 
             <b>🌐 1-15 invites:</b>
             10%% income from profits from friends
