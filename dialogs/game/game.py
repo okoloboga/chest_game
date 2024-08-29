@@ -90,8 +90,7 @@ async def game_start(callback: CallbackQuery,
                                            chat_id=user_id,
                                            caption=i18n.game.wait.searcher(deposit=deposit,
                                                                            coef=coef,
-                                                                           prize=prize),
-                                           reply_markup=game_exit_keyboard(i18n))
+                                                                           prize=prize))
             await asyncio.sleep(1)
             try:
                 await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, 
@@ -223,8 +222,7 @@ async def main_game_process(callback: CallbackQuery,
                                      chat_id=user_id,                                          
                                      caption=i18n.game.hidden(deposit=deposit,
                                                               coef=coef,
-                                                              prize=prize),
-                                     reply_markup=game_exit_keyboard(i18n))
+                                                              prize=prize))
                 # Give turn to Searcher
                 select = FSInputFile(path='img/select.jpg')
                 msg_enemy = await bot.send_photo(photo=select,

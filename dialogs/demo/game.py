@@ -80,8 +80,7 @@ async def demo_start(callback: CallbackQuery,
             msg = await callback.message.answer_photo(photo=search,
                                                       caption=i18n.game.wait.searcher(deposit=deposit,
                                                                                    coef=coef,
-                                                                                   prize=prize),
-                                                      reply_markup=game_exit_keyboard(i18n))
+                                                                                   prize=prize))
             # Turn timer for bot
             await asyncio.create_task(bot_thinking(dialog_manager,
                                                    user_id, role,
@@ -113,8 +112,7 @@ async def demo_start(callback: CallbackQuery,
                 msg = await callback.message.answer_photo(photo=search,
                                                           caption=i18n.game.wait.searcher(deposit=deposit,
                                                                                        coef=coef,
-                                                                                       prize=prize),
-                                                          reply_markup=game_exit_keyboard(i18n))
+                                                                                       prize=prize))
                 # Turn timer for bot
                 await asyncio.create_task(bot_thinking(dialog_manager,
                                                        user_id, role,
@@ -188,8 +186,7 @@ async def main_demo_process(callback: CallbackQuery,
                     msg = await callback.message.answer_photo(photo=search,
                                                               caption=i18n.game.hidden(deposit=deposit,
                                                                                        coef=coef,
-                                                                                       prize=prize),
-                                                              reply_markup=game_exit_keyboard(i18n))
+                                                                                       prize=prize))
                     await bot.delete_messages(user_id, [msg for msg in range(msg.message_id - 1, msg.message_id - 10, -1)])
                     
                     # Stop timer
