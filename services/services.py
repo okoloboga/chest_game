@@ -32,19 +32,21 @@ async def coef_counter(user_id: int,
     get_user = services.db_services.get_user
     coef = 1.55
     comission = 0
-    user_data = await get_user(session, user_id)
-    referrals = user_data.referrals
+    
+    if user_id != 0: 
+        user_data = await get_user(session, user_id)
+        referrals = user_data.referrals
 
-    if 1 <= referrals < 15:
-        coef = 1.6
-        comission = 0.1
-    elif 15 <= referrals < 90:
-        coef = 1.75
-        comission = 0.2
-    elif 90 <= referrals:
-        coef = 1.9
-        comission = 0.3
-        
+        if 1 <= referrals < 15:
+            coef = 1.6
+            comission = 0.1
+        elif 15 <= referrals < 90:
+            coef = 1.75
+            comission = 0.2
+        elif 90 <= referrals:
+            coef = 1.9
+            comission = 0.3
+            
     return {'referrals': referrals,
             'coef': coef,
             'comission': comission}

@@ -435,6 +435,7 @@ async def demo_result_writer(session: AsyncSession,
         
         # Prepare vars to write referral parents %
         user_parent_id = user.parent
+        logger.info(f'user_parent_id: {user_parent_id}')
         await session.commit()
     '''
     if result == 'win':
