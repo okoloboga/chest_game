@@ -266,7 +266,7 @@ async def room_to_game(session: async_sessionmaker,
     logger.info(f'room_to_game({user_id}, {owner}), room: {room}')
 
     if len(room) > 0:
-        logger.info(f'room is {room} with id {user_id}')6768830742:AAE-CgkT58fj4OOhAHVqEhX1BeBhLDwysjs
+        logger.info(f'room is {room} with id {user_id}')
         guest = str(room[b'guest'], encoding='utf-8')
 
         # Chosing hidder for first turn
