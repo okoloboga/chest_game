@@ -316,7 +316,7 @@ async def game_result_writer(session: AsyncSession,
         
         await session.commit()
     
-    our_income = deposit * 2 - winner_prize
+    our_income = deposit - winner_prize
 
     # If Winner haven't promocode - parents have 3% from deposit
     if flag is False:
