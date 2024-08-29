@@ -1,4 +1,5 @@
 import logging
+import pprint
 
 from typing import Any, Awaitable, Callable, Dict
 
@@ -27,7 +28,7 @@ class TranslatorRunnerMiddleware(BaseMiddleware):
         
         if user is None:
             return await handler(event, data)
-        logger.info(f'{event}')
+        pprint.pprint(event)
         hub: TranslatorHub = data.get('_translator_hub')
         data['i18n'] = hub.get_translator_by_locale(locale=user.language_code)
 
