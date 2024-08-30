@@ -103,7 +103,7 @@ async def write_off_function(session: AsyncSession,
         pure_income = (await session.execute(pure_income_stmt)).scalar()
         writed_off = (await session.execute(writed_off_stmt)).scalar()
         pure_income.value = str(float(pure_income.value) - write_off)
-        writed_off.value = str(float(write_off.value) + write_off)
+        writed_off.value = str(float(writed_off.value) + write_off)
 
         await session.commit()
 
