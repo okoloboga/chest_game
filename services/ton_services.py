@@ -76,25 +76,20 @@ async def export_ton(user_id: int,
     logger.info(f'central address: {central_wallet.address}')
     comment = f'export_{user_id}'
     non_unbouncable_destination_address = Address(destination_address).to_string(True, True, False)
+    balance = await central_wallet.get_balance()
 
+    logger.info(f'central wallet balance: {balance/1000000000}')
     logger.info(f'Prepared transaction from central_wallet to =>\n{non_unbouncable_destination_address}\n\
             by')
     logger.info(f'With comment: {comment}')
-    
-    await central_wallet.transfer_ton(destination_address=non_unbouncable_destination_address,
-                                      amount=float(amount),
-                                      message=comment
-                                      ) 
-    logger.info(f'TON export complete')
-    
-    # Checking for successful
-    transactions = await central_wallet.get_transactions(limit=10)
-    await asyncio.sleep(5)
-
-    for transaction in transactions:
-        logger.info(f'{transaction.to_dict_user_friendly()}')
-        if transaction.to_dict_user_friendly()['comment'] == comment:
-            return True
+    if float(balance/1000000000) > float(amount):
+        await central_wallet.transfer_ton(destination_address=non_unbouncable_destination_address,
+                                          amount=float(amount),
+                                          message=comment
+                                          ) 
+        logger.info(f'TON export complete')
+        
+        return True
     else:
         return False
 
