@@ -442,30 +442,28 @@ async def demo_result_writer(session: AsyncSession,
         our_income = deposit - user_prize
     elif result == 'lose':
     '''
+
     our_income = deposit
-    parent_coef = float((await coef_counter(user_parent_id, session))['comission']) 
     logger.info(f'Our income from bot: {our_income}')
           
     # If Winner haven't promocode - parents have 3% from deposit
     logger.info(f'User parent: {user_parent_id}')
 
-    user_parent_statement = select(User).where(int(user_parent_id) == User.telegram_id)
+    if user_parent_id != 0:
+        parent_coef = float((await coef_counter(user_parent_id, session))['comission']) 
+        user_parent_statement = select(User).where(int(user_parent_id) == User.telegram_id)
     
-    # Is users parent exists?
-    if int(user_parent_id) == 0:
-        logger.info('User parent is 0')
-    else:
         logger.info(f'User parent is not 0: {user_parent_id}')
         user_parent_comission = parent_coef * our_income
 
-    async with session:
-        user_parent = (await session.execute(user_parent_statement)).scalar()
-        
-        if user_parent is not None:
-            logger.info(f'user_parent is {user_parent.telegram_id}')
-            user_parent.ton = float(user_parent.ton) + user_parent_comission
+        async with session:
+            user_parent = (await session.execute(user_parent_statement)).scalar()
+            
+            if user_parent is not None:
+                logger.info(f'user_parent is {user_parent.telegram_id}')
+                user_parent.ton = float(user_parent.ton) + user_parent_comission
 
-        await session.commit()
+            await session.commit()
 
     # Write parent comission and pure income to Variables Database
     pure_income = float(our_income - user_parent_comission)
