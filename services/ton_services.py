@@ -73,6 +73,7 @@ async def export_ton(user_id: int,
     logger.info('TonCenterClient started')
     
     central_wallet = Wallet(provider=client, mnemonics=config[2].split(), version='v4r2')
+    logger.info(f'central address: {central_wallet.address}')
     comment = f'export_{user_id}'
     non_unbouncable_destination_address = Address(destination_address).to_string(True, True, False)
 
