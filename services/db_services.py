@@ -79,7 +79,7 @@ async def get_user(session: AsyncSession,
 
     logger.info(f'Getting User from Database with id {telegram_id}')
     user = await session.get(
-            User, {'telegram_id': telegram_id}
+            User, {'telegram_id': int(telegram_id)}
             )
     logger.info(f'Getted user {user}')
     return user
