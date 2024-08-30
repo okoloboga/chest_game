@@ -129,6 +129,7 @@ async def admin_panel_info(session: AsyncSession) -> dict:
     total_bets_stmt = (select(Variables).where('total_bets' == Variables.name))
     pure_income_stmt = (select(Variables).where('pure_income' == Variables.name))
     bets_stmt = (select(Variables).where('bets' == Variables.name))
+    writed_off_stmt = select(Variables).where('writed_off' == Variables.name)
     
     async with session:
         users_count = ((await session.execute(users_count_stmt)).scalar())
@@ -138,6 +139,7 @@ async def admin_panel_info(session: AsyncSession) -> dict:
         total_bets = ((await session.execute(total_bets_stmt)).scalar()).value
         pure_income = ((await session.execute(pure_income_stmt)).scalar()).value
         bets = (((await session.execute(bets_stmt)).scalar()).value).split()
+        writed_off = ((await session.execute(writed_off_stmt)).scalar()).value
 
     popular_bet = max(set(bets), key=bets.count)
 
@@ -147,7 +149,8 @@ async def admin_panel_info(session: AsyncSession) -> dict:
               'total_games_bot': total_games_bot,
               'total_bets': total_bets,
               'pure_income': pure_income,
-              'popular_bet': popular_bet}
+              'popular_bet': popular_bet,
+              'writed_off': writed_off}
     
     return result
 
