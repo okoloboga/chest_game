@@ -76,7 +76,7 @@ async def write_off_process(message: Message,
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     pure_income = (await admin_panel_info(session))['pure_income']
 
-    if pure_income >= write_off:
+    if float(pure_income) >= write_off:
         await write_off_function(session, write_off)
         logger.info('Writing off complete')
         msg = await message.answer(text=i18n.write.off.complete())
