@@ -9,7 +9,7 @@ from aiogram.exceptions import TelegramBadRequest
 from base64 import b64decode
 from aiogram_dialog import DialogManager
 from redis import asyncio as aioredis
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fluentogram import TranslatorRunner
 
