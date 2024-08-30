@@ -164,7 +164,7 @@ async def do_export(message: Message,
             await message.answer(text=i18n.tonexport.error())
     else:
         await message.answer(text=i18n.tonexport.notenough(value=result_list[1],
-                                                           user_ton=result_decrement))
+                                                           user_ton=user_balance))
  
 
 # Wrong export data filled
