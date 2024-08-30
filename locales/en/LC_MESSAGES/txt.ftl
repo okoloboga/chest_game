@@ -97,7 +97,7 @@ wrong-promocode = There is no such promo code!
 
 promocode-activated = Promo code activated!!!
 
-                      Your next win will bring you
+                      Your next 3 wins will bring you
                       X2 of your deposit!
 
 promocode-used-yet = You have already used this promo code!

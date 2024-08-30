@@ -427,6 +427,8 @@ async def demo_result_writer(session: AsyncSession,
         user.games = user.games + 1
         user.last_game = str(datetime.datetime.now())
         
+        if user.promo > 0:
+            user.promo = user.promo - 1
         '''
         if result == 'win': 
             user.wins = user.wins + 1
