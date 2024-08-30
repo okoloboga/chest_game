@@ -76,7 +76,7 @@ async def losed_and_deposit(user_id: int,
 
 
 # Chose role of player - cant be in one role more than 3 times
-async def select_role(session: async_sessionmaker,
+async def select_role(session: AsyncSession,
                       user_id: int) -> str:
     
     get_user = services.db_services.get_user
@@ -253,7 +253,7 @@ async def write_as_guest(room: dict,
 
 
 # From Room to Game 1VS1 and get random Hidder
-async def room_to_game(session: async_sessionmaker,
+async def room_to_game(session: AsyncSession,
                        user_id: int,
                        owner: str) -> str:
 
