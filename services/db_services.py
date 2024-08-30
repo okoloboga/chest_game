@@ -81,6 +81,7 @@ async def get_user(session: AsyncSession,
     user = await session.get(
             User, {'telegram_id': telegram_id}
             )
+    logger.info(f'Getted user {user}')
     return user
 
 

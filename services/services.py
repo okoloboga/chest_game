@@ -35,8 +35,7 @@ async def coef_counter(user_id: int,
     
     if user_id != 0: 
         logger.info(f'get coef for user {user_id}')
-        user_data = (await get_user(session, user_id)).scalar()
-        referrals = user_data.referrals
+        referrals = (await get_user(session, user_id)).referrals
 
         if 1 <= referrals < 15:
             coef = 1.6
