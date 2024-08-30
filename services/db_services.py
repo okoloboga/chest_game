@@ -400,8 +400,7 @@ async def demo_result_writer(session: AsyncSession,
     user_parent_comission = 0
 
     logger.info(f'Default game results: winner prize = {user_prize}')
-    logger.info(f'Game result for User {user_id} - {result}')
-    flag = None
+    logger.info(f'Game result for User {user_id} - {result} with deposit {deposit}')
 
     async with session:
         user = (await session.execute(user_statement)).scalar()

@@ -27,26 +27,26 @@ logging.basicConfig(
 
 # Countig value of comission by referrals count
 async def coef_counter(user_id: int,
-                       session: async_sessionmaker) -> dict:
+                       session: AsyncSession) -> dict:
     
-    get_user = services.db_services.get_user
     coef = 1.55
     comission = 0
-    
-    if user_id != 0: 
-        logger.info(f'get coef for user {user_id}')
-        referrals = (await get_user(session, user_id)).referrals
 
-        if 1 <= referrals < 15:
-            coef = 1.6
-            comission = 0.1
-        elif 15 <= referrals < 90:
-            coef = 1.75
-            comission = 0.2
-        elif 90 <= referrals:
-            coef = 1.9
-            comission = 0.3
-            
+    user_stmt = select(User).where(int(user_id) == User.telegram_id)
+    
+    async with session:
+        referrals = ((await session.execute(user_stmt)).scalar()).referrals
+
+    if 1 <= referrals < 15:
+        coef = 1.6
+        comission = 0.1
+    elif 15 <= referrals < 90:
+        coef = 1.75
+        comission = 0.2
+    elif 90 <= referrals:
+        coef = 1.9
+        comission = 0.3
+        
     return {'referrals': referrals,
             'coef': coef,
             'comission': comission}
