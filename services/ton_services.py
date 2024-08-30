@@ -73,10 +73,10 @@ async def export_ton(user_id: int,
     logger.info('TonCenterClient started')
     
     central_wallet = Wallet(provider=client, mnemonics=config[2].split(), version='v4r2')
-    logger.info(f'Central wallet connected {central_wallet}')
+    logger.info(f'Central wallet connected {central_wallet.address}')
     
     # Checking Balance of central wallet
-    balance = await ton_value(central_wallet.address)
+    balance = await central_wallet.get_balance()
     logger.info(f'central_wallet balance is {balance} TON')
 
     if balance > amount:

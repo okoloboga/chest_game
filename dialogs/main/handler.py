@@ -128,7 +128,7 @@ async def import_check(callback: CallbackQuery,
 
 
 # Making export after filter pass
-async def do_export(callback: CallbackQuery,
+async def do_export(message: Message,
                     widget: ManagedTextInput,
                     dialog_manager: DialogManager,
                     result_list: list):
@@ -138,12 +138,14 @@ async def do_export(callback: CallbackQuery,
     logger.info(f'{result_list}')
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     session = dialog_manager.middleware_data.get('session')   
-    
     user_balance = (await get_user(session, user_id)).ton
 
     logger.info(f'Users {user_id} balance is {user_balance}')
 
     if float(user_balance) > float(result_list[1]):
+
+        logger.info(f'Users {user_id} balance is {user_balance}, for export {result_list[1]}')
+
         result = await export_ton(user_id=user_id,
                                   amount=float(result_list[1]),
                                   destination_address=result_list[0])        
@@ -152,17 +154,17 @@ async def do_export(callback: CallbackQuery,
             
             # If users TON is enough...
             if result_decrement:
-                await callback.answer(text=i18n.tonexport.success(value=result_list[1],
-                                                                  address=result_list[0]))
+                await message.answer(text=i18n.tonexport.success(value=result_list[1],
+                                                                 address=result_list[0]))
             else:
-                await callback.answer(text=i18n.tonexport.notenough(value=result_list[1],
-                                                                    user_ton=user_balance))
+                await message.answer(text=i18n.tonexport.notenough(value=result_list[1],
+                                                                   user_ton=user_balance))
         # If no transaction in exports...
         else:
-            await callback.answer(text=i18n.tonexport.error())
+            await message.answer(text=i18n.tonexport.error())
     else:
-        await callback.answer(text=i18n.tonexport.notenough(value=result_list[1],
-                                                            user_ton=result_decrement))
+        await message.answer(text=i18n.tonexport.notenough(value=result_list[1],
+                                                           user_ton=result_decrement))
  
 
 # Wrong export data filled
