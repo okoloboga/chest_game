@@ -117,7 +117,8 @@ async def import_ton_check(user_id: int) -> dict | str:
     client = TonCenterClient(key=config[1], testnet=False)
     logger.info('TonCenterClient started')
     
-    wallet = Wallet(client, config[3], version='v4r2')
+    wallet = Wallet(provider=client, address=config[3], version='v4r2')
+    logger.info(f'Central wallet addres {wallet.address}')
     transaction = await wallet.get_transactions(limit=10)
     
     for t in transaction:
