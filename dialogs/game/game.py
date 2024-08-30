@@ -17,7 +17,7 @@ from ton.client.function_methods import Key
 
 from states import GameSG, LobbySG, MainSG
 from services import (room_to_game, game_result_writer, turn_timer, 
-                      coef_counter, get_user, write_as_guest)
+                      coef_counter, get_user, write_as_guest, promocode_usage)
 from .keyboard import *
 
 game_router = Router()
@@ -69,9 +69,10 @@ async def game_start(callback: CallbackQuery,
         state = dialog_manager.middleware_data.get('state')
         session = dialog_manager.middleware_data.get('session')
         await state.set_state(GameSG.main)
-        coef = (await coef_counter(user_id, session))['coef'] 
+        coef = (await coef_counter(user_id, session))['coef']
         deposit = float(str(user_game[b'deposit'], encoding='utf-8'))
-        prize = coef * deposit
+        promo = await promocode_usage(session, user_id)
+        prize = 2 * deposit if promo else deposit * coef 
         
         # Checking Players balance - cant play, if havent enough TON
         if (await get_user(session, user_id)).ton >= deposit:
@@ -137,7 +138,6 @@ async def main_game_process(callback: CallbackQuery,
 
     r = aioredis.Redis(host='localhost', port=6379)
     user_id = callback.from_user.id
-    chat_id = callback.chat_instance
     user_game_str = await r.get(user_id)
 
     logger.info(f'user_game_str: {user_game_str}')
@@ -212,6 +212,8 @@ async def main_game_process(callback: CallbackQuery,
                  
                 # Writing to Redis database
                 user_game[b'target'] = callback.data
+                promo = await promocode_usage(session, user_id)
+                prize = 2 * deposit if promo else deposit * float(coef) 
 
                 logger.info(f'user_game after hidding: {user_game}')
                 await r.hmset(user_game_str, user_game)

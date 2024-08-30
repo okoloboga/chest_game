@@ -33,6 +33,7 @@ button-chest-third = 📦
 button-send-messages = Newsletters
 button-edit-promocode = Promo codes
 button-ban-player = Ban
+button-write-off = Write off
 
 start-dialog = Want to search for treasure? Subscribe to the channel or you'll be left behind! 🏴‍☠️”
 

@@ -260,6 +260,22 @@ async def increment_promo(session: AsyncSession,
             return 'promo is active'
 
 
+# Get count of promocode works
+async def promocode_usage(session: AsyncSession,
+                          user_id: int) -> bool:
+
+    logger.info(f'Getting count of promocodes of user {user_id}')
+    user_stmt = select(User).where(user_id == User.telegram_id)
+
+    async with session:
+        user = ((await session.execute(user_stmt)).scalar()).promo
+        logger.info(f'Users {user_id} promo count: {user}')
+
+        if user > 0:
+            return True
+        else: 
+            return False
+
 
 # Changing data of Users after game results
 async def game_result_writer(session: AsyncSession,

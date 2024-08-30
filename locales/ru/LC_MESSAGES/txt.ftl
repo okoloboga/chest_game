@@ -46,6 +46,7 @@ button-chest-third = 📦
 button-send-messages = Рассылка
 button-edit-promocode = Промокоды
 button-ban-player = Бан
+button-write-off = Списание
 
 
 
