@@ -449,7 +449,7 @@ async def demo_result_writer(session: AsyncSession,
     # If Winner haven't promocode - parents have 3% from deposit
     logger.info(f'User parent: {user_parent_id}')
 
-    if user_parent_id != 0:
+    if int(user_parent_id) != 0:
         parent_coef = float((await coef_counter(user_parent_id, session))['comission']) 
         user_parent_statement = select(User).where(int(user_parent_id) == User.telegram_id)
     
