@@ -2,6 +2,6 @@ HOW_TO_GET_TON_RU = 'https://spring-kumquat-09e.notion.site/TON-05968e6f6bfa4635
 CHANNEL = 't.me/PIRATESTonGame'
 DOG_CHANNEL = '@PIRATESTonGame'
 TELEGRAPH = 'https://spring-kumquat-09e.notion.site/PIRATES-TON-1-TELEGRAM-886fa40ae8634d20b8049feea0442d49'
-CENTRAL_WALLET = 'UQAw0FiwseLkfKaYmI5Q48RGgLhYJ-OlI1079okXH9Ud2eq2'
+CENTRAL_WALLET = 'UQDFZJNqk1mygPQShryhTWnKmW00Fgp5545gwkNiJdF05mjH'
 # CENTRAL_WALLET = '0QDIkS1d_Lhd7EDttTtcmr9Xzg78uEMDEsYFde-PZCgfoFDe'
 

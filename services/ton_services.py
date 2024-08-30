@@ -34,7 +34,7 @@ def check_address(address_and_value: str) -> list:
     client = TonCenterClient(key=config[1], testnet=False)
     logger.info('TonCenterClient started')
     
-    wallet = Wallet(provider=client, address=result_list[0], version='v5r1')
+    wallet = Wallet(provider=client, address=result_list[0], version='v4r2')
 
     if wallet is not None and result_list[1].isdigit:
         return result_list
@@ -51,7 +51,7 @@ async def ton_value(wallet: str) -> int:
     client = TonCenterClient(key=config[1], testnet=False)
     logger.info('TonCenterClient started')
 
-    wallet = Wallet(provider=client, address=config[3], version='v5r1')
+    wallet = Wallet(provider=client, address=config[3], version='v4r2')
     balance = await wallet.get_balance()
     
     logger.info(f'Wallet {wallet} have {balance / 1000000000}')
@@ -72,7 +72,7 @@ async def export_ton(user_id: int,
     client = TonCenterClient(key=config[1], testnet=False)
     logger.info('TonCenterClient started')
     
-    central_wallet = Wallet(provider=client, mnemonics=config[2].split(), version='v5r1')
+    central_wallet = Wallet(provider=client, mnemonics=config[2].split(), version='v4r2')
     logger.info(f'central address: {central_wallet.address}')
     comment = f'export_{user_id}'
     non_unbouncable_destination_address = Address(destination_address).to_string(True, True, False)
@@ -104,7 +104,7 @@ async def import_ton_check(user_id: int) -> dict | str:
     client = TonCenterClient(key=config[1], testnet=False)
     logger.info('TonCenterClient started')
     
-    wallet = Wallet(provider=client, address=config[3], version='v5r1')
+    wallet = Wallet(provider=client, address=config[3], version='v4r2')
     logger.info(f'Central wallet addres {wallet.address}')
     transaction = await wallet.get_transactions(limit=10)
     
