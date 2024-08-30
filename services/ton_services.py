@@ -19,7 +19,7 @@ def _load_config(path: str | None = None) -> list:
     env = Env()
     env.read_env(path)
     logger.info("Enviroment executed")
-    return [env('BOT_TOKEN'), env('API_TEST'), env('CENTRAL_WALLET_MNEMONICS'), env('CENTRAL_WALLET')]
+    return [env('BOT_TOKEN'), env('API'), env('CENTRAL_WALLET_MNEMONICS'), env('CENTRAL_WALLET')]
 
     
 # Checking for correct export input
@@ -29,9 +29,9 @@ def check_address(address_and_value: str) -> list:
     logger.info(f'User want send {result_list[1]} TON to {result_list[0]}')
     logger.info("Could he do this? Let's se!...")
     
-    # Connecting to TonCenterClient TESTNET
+    # Connecting to TonCenterClient
     config = _load_config()
-    client = TonCenterClient(key=config[1], testnet=True)
+    client = TonCenterClient(key=config[1], testnet=False)
     logger.info('TonCenterClient started')
     
     wallet = Wallet(provider=client, address=result_list[0], version='v4r2')
@@ -46,9 +46,9 @@ async def ton_value(wallet: str) -> int:
 
     logger.info(f'TON value of wallet {wallet}')
 
-    # Connecting to TonCenterClient TESTNET
+    # Connecting to TonCenterClient
     config = _load_config()
-    client = TonCenterClient(key=config[1], testnet=True)
+    client = TonCenterClient(key=config[1], testnet=False)
     logger.info('TonCenterClient started')
 
     wallet = Wallet(provider=client, address=config[3], version='v4r2')
@@ -67,9 +67,9 @@ async def export_ton(user_id: int,
     
     logger.info(f'Exporting {amount} TON to {destination_address}')
     
-    # Connecting to TonCenterClient TESTNET
+    # Connecting to TonCenterClient
     config = _load_config()
-    client = TonCenterClient(key=config[1], testnet=True)
+    client = TonCenterClient(key=config[1], testnet=False)
     logger.info('TonCenterClient started')
     
     central_wallet = Wallet(provider=client, mnemonics=config[2].split(), version='v4r2')
@@ -112,9 +112,9 @@ async def import_ton_check(user_id: int) -> dict | str:
     logger.info(f'Importing by {user_id}')
     result: dict = {} # Put result of successful transaction here
 
-    # Connecting to TonCenterClient TESTNET
+    # Connecting to TonCenterClient
     config = _load_config()
-    client = TonCenterClient(key=config[1], testnet=True)
+    client = TonCenterClient(key=config[1], testnet=False)
     logger.info('TonCenterClient started')
     
     wallet = Wallet(client, config[3], version='v4r2')

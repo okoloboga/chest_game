@@ -121,7 +121,7 @@ tonimport = To top up your wallet, you need to transfer TON to our account,
             So that we know that the payment
             was made by you - write your ID in the comments
             to the transfer:
-            { $id }
+            <code>{ $id }</code>
 
             ⚠️ If you send without a comment - the cryptocurrency will not get to your wallet!
 
