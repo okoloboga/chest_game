@@ -73,37 +73,28 @@ async def export_ton(user_id: int,
     logger.info('TonCenterClient started')
     
     central_wallet = Wallet(provider=client, mnemonics=config[2].split(), version='v4r2')
-    logger.info(f'Central wallet connected {central_wallet.address}')
+    comment = f'export_{user_id}'
+    non_unbouncable_destination_address = Address(destination_address).to_string(True, True, False)
+
+    logger.info(f'Prepared transaction from central_wallet to =>\n{non_unbouncable_destination_address}\n\
+            by')
+    logger.info(f'With comment: {comment}')
     
-    # Checking Balance of central wallet
-    balance = await central_wallet.get_balance()
-    logger.info(f'central_wallet balance is {balance} TON')
+    await central_wallet.transfer_ton(destination_address=non_unbouncable_destination_address,
+                                      amount=float(amount),
+                                      message=comment
+                                      ) 
+    logger.info(f'TON export complete')
+    
+    # Checking for successful
+    transactions = await central_wallet.get_transactions(limit=10)
+    await asyncio.sleep(5)
 
-    if balance > amount:
-        comment = f'export_{user_id}'
-        
-        logger.info(f'Prepared transaction from central_wallet\n \
-                {central_wallet.address}\nto =>\n{destination_address}\n\
-                by')
-        logger.info(f'With comment: {comment}')
-        
-        await central_wallet.transfer_ton(destination_address=destination_address,
-                                          amount=float(amount),
-                                          message=comment
-                                          ) 
-        logger.info(f'TON export complete')
-        
-        # Checking for successful
-        transactions = await central_wallet.get_transactions(limit=10)
-        await asyncio.sleep(5)
-
-        for transaction in transactions:
-            logger.info(f'{transaction.to_dict_user_friendly()}')
-            if transaction.to_dict_user_friendly()['comment'] == comment:
-                return True
-        else:
-            return False
-    else: 
+    for transaction in transactions:
+        logger.info(f'{transaction.to_dict_user_friendly()}')
+        if transaction.to_dict_user_friendly()['comment'] == comment:
+            return True
+    else:
         return False
 
 
