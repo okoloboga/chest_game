@@ -89,15 +89,15 @@ referrals = 👋 Invite your friends, earn from their wins and losses,
 
 enter-promocode = If you have a secret promo code, enter it
 
-                  And on the next game you will receive
+                  And on the next 3 games you will receive
                   a coefficient of X2!
 
-                  wrong-promocode = There is no such promo code!
+wrong-promocode = There is no such promo code!
 
-                  promocode-activated = Promo code activated!!!
+promocode-activated = Promo code activated!!!
 
-                  Your next win will bring you
-                  X2 of your deposit!
+                      Your next win will bring you
+                      X2 of your deposit!
 
 promocode-used-yet = You have already used this promo code!
 
