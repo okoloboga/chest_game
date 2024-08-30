@@ -42,4 +42,5 @@ class AdminSG(StatesGroup):
     edit_promocode = State()
     send_messages = State()
     ban_player = State()
+    write_off = State()
     

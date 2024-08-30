@@ -91,6 +91,25 @@ def ban_player_process(user_for_ban: str) -> str:
     return result
 
 
+async def write_off_function(session: AsyncSession,
+                             write_off: float):
+
+    logger.info(f'Writing off for {write_off}')
+
+    pure_income_stmt = select(Variables).where('pure_income' == Variables.name) 
+    writed_off_stmt = select(Variables).where('writed_off' == Variables.name)
+
+    async with session:
+        pure_income = (await session.execute(pure_income_stmt)).scalar()
+        writed_off = (await session.execute(writed_off_stmt)).scalar()
+        pure_income.value = str(float(pure_income.value) - write_off)
+        writed_off.value = str(float(write_off.value) + write_off)
+
+        await session.commit()
+
+        logger.info(f'Writing off complete from {pure_income.value} - {write_off}; writed off: {writed_off.value}')
+
+
 # Get information for main admin panel
 async def admin_panel_info(session: AsyncSession) -> dict:
 

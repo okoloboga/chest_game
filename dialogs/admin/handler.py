@@ -11,7 +11,8 @@ from fluentogram import TranslatorRunner
 from redis import asyncio as aioredis
 
 from states import AdminSG
-from services import edit_promocode_process, ban_player_process, get_users_id
+from services import (edit_promocode_process, ban_player_process, get_users_id,
+                      admin_panel_info, write_off_function)
 
 
 admin_router = Router()
@@ -54,6 +55,37 @@ async def ban_player(callback: CallbackQuery,
                      dialog_manager: DialogManager):
 
     await dialog_manager.switch_to(AdminSG.ban_player)
+
+
+async def write_off(callback: CallbackQuery,
+                    button: Button,
+                    dialog_manager: DialogManager):
+
+    await dialog_manager.switch_to(AdminSG.write_off)
+
+
+# Processing writing off
+async def write_off_process(message: Message,
+                            widget: ManagedTextInput,
+                            dialog_manager: DialogManager,
+                            write_off: float):
+    
+    user_id = message.from_user.id
+    session = dialog_manager.middleware_data.get('session')
+    bot: Bot = dialog_manager.middleware_data.get('bot')
+    i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
+    pure_income = (await admin_panel_info(session))['pure_income']
+
+    if pure_income >= write_off:
+        await write_off_function(session, write_off)
+        logger.info('Writing off complete')
+        msg = await message.answer(text=i18n.write.off.complete())
+    else:
+        logger.info('Writing off ERROR')
+        msg = await message.answer(text=i18n.write.off.notenough())
+
+    await asyncio.sleep(2)
+    await bot.delete_message(user_id, msg.message_id)
 
 
 # Processing edit promocodes

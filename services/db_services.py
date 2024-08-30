@@ -33,7 +33,8 @@ async def create_variables(engine):
                     Variables(name='total_games_players', value='0'),
                     Variables(name='total_games_bot', value='0'),
                     Variables(name='total_bets', value='0'),
-                    Variables(name='bets', value='')
+                    Variables(name='bets', value=''),
+                    Variables(name='writed_off', value='0')
                 ]
             )
         await session.commit()
@@ -243,7 +244,7 @@ async def increment_promo(session: AsyncSession,
         logger.info(f'User promo status: {user.promo}, users used promo: {used_promo}, promo: {promocode}')
         logger.info(f'Actual promos: {actual_promo}')
 
-        if user.promo != 1: 
+        if user.promo == 0: 
             if promocode not in used_promo: 
                 if promocode in actual_promo:
                     user.promo = 3

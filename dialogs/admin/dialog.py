@@ -17,10 +17,23 @@ admin_dialog = Dialog(
         Row(
             Button(Format('{button_edit_promocode}'), id='b_edit_promocode', on_click=edit_promocode),
             Button(Format('{button_ban_player}'), id='b_ban_player', on_click=ban_player)
-            ),        
+            ),
+        Button(Format('{button_write_off}'), id='b_write_off', on_click=write_off),
         Button(Format('{button_back}'), id='b_back', on_click=back),
         getter=main_admin_getter,
         state=AdminSG.main
+        ),
+    Window(
+        Format('{write_off}'),
+        Button(Format('{button_back}'), id='b_back_admin', on_click=back_admin),
+        TextInput(
+            id='check_write_off',
+            type_factory=lambda x: float(x),
+            on_success=write_off_process,
+            on_error=send_answer
+            ),
+        getter=write_off_getter,
+        state=AdminSG.write_off
         ),
     Window(
         Format('{send_messages}'),

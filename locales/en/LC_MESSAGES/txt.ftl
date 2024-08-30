@@ -327,6 +327,15 @@ ban-player  = Block/unblock a player
               enter -PLAYER_ID
               For example <code>-1234567890</code>
 
+write-off = Pure income: { $pure_income }
+            Total writed off: { $writed_off }
+
+            For writing off - just write number
+
+write-off-complete = Writing off complete!
+
+write-off-notenough = Writing off is bigger than pure income
+
 user-banned = user is banned
 
 user-banned-yet = user is already banned!

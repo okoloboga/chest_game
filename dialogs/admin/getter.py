@@ -39,6 +39,21 @@ async def main_admin_getter(dialog_manager: DialogManager,
             'button_back': i18n.button.back()}
 
 
+# Getting value for write off pure income
+async def write_off_getter(dialog_manager: DialogManager,
+                           i18n: TranslatorRunner,
+                           event_from_user: User,
+                           **kwargs) -> dict:
+
+    session = dialog_manager.middleware_data.get('session')
+    pure_income = (await admin_panel_info(session))['pure_income']
+    writed_off = (await admin_panel_info(session))['writed_off']
+
+    return {'write_off': i18n.write.off(pure_income=pure_income,
+                                        writed_off=writed_off),
+            'button_back': i18n.button.back()}
+
+
 # Getter for Sending Messages
 async def send_messages_getter(dialog_manager: DialogManager,
                                i18n: TranslatorRunner,
