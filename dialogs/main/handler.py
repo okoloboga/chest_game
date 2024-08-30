@@ -133,7 +133,7 @@ async def do_export(message: Message,
                     dialog_manager: DialogManager,
                     result_list: list):
     
-    user_id = callback.from_user.id
+    user_id = message.from_user.id
     logger.info(f'User {user_id} doing export with validated data:')
     logger.info(f'{result_list}')
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
