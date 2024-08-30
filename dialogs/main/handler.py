@@ -88,8 +88,8 @@ async def get_wallet(callback: CallbackQuery,
     user_id = callback.from_user.id
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     bot: Bot = dialog_manager.middleware_data.get('bot')
-    msg = await bot.send_message(chat_id=user_id,
-                                 text=i18n.central.wallet(wallet=CENTRAL_WALLET))
+    await bot.send_message(chat_id=user_id,
+                           text=i18n.central.wallet(wallet=CENTRAL_WALLET))
 
 # Checking for succesfull import
 async def import_check(callback: CallbackQuery,
