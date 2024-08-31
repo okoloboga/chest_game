@@ -29,11 +29,8 @@ async def main_getter(dialog_manager: DialogManager,
                       ) -> dict:
     # Is it after game?
     result = dialog_manager.start_data if dialog_manager.start_data is not None else None
-    logger.info(f'Result is {result} - if it exit from game')
     user_id = event_from_user.id
-    first_name = event_from_user.first_name
-    logger.info(f'User {user_id} in Main Menu')
-    
+    first_name = event_from_user.first_name  
     return {'main_menu': i18n.welcome.dialog(name=first_name),
             'button_play': i18n.button.play(),
             'button_balance': i18n.button.balance(),
@@ -51,7 +48,6 @@ async def referrals_getter(dialog_manager: DialogManager,
                            ) -> dict:
     
     user_id = event_from_user.id
-    logger.info(f'User {user_id} in Referral Menu')
     session = dialog_manager.middleware_data.get('session')
     
     # getting user data from database for referrals count and coefs

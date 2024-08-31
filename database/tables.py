@@ -7,8 +7,6 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 tg_id = Annotated[int, mapped_column(BigInteger, primary_key=True)]
 tr_hash = Annotated[str, mapped_column(String, primary_key=True)]
 name = Annotated[str, mapped_column(String, primary_key=True)]
-required_short_str = Annotated[str, mapped_column(String(15), nullable=False)]
-optional_short_str = Annotated[str, mapped_column(String(15), nullable=True)]
 required_str = Annotated[str, mapped_column(String, nullable=False)]
 required_int = Annotated[int, mapped_column(Integer, nullable=False)]
 required_float = Annotated[float, mapped_column(Float, nullable=False)]
@@ -22,8 +20,8 @@ class User(Base):
     __tablename__ = 'users'
 
     telegram_id: Mapped[tg_id]
-    first_name: Mapped[required_short_str]
-    last_name: Mapped[optional_short_str]
+    first_name: Mapped[required_str]
+    last_name: Mapped[optional_str]
     games: Mapped[required_int]
     last_game: Mapped[required_str]
     last_roles: Mapped[required_str]

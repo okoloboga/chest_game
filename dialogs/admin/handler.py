@@ -4,6 +4,7 @@ import random
 
 from aiogram import Router, Bot
 from aiogram.types import CallbackQuery, Message, callback_query
+from aiogram.exceptions import TelegramForbiddenError
 from aiogram_dialog import DialogManager, StartMode
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.input.text import ManagedTextInput
@@ -69,7 +70,8 @@ async def write_off_process(message: Message,
                             widget: ManagedTextInput,
                             dialog_manager: DialogManager,
                             write_off: float):
-    
+
+    logger.info(f'Writing off {write_off}')   
     user_id = message.from_user.id
     session = dialog_manager.middleware_data.get('session')
     bot: Bot = dialog_manager.middleware_data.get('bot')
@@ -93,6 +95,8 @@ async def complete_edit_promocode(message: Message,
                                   widget: ManagedTextInput,
                                   dialog_manager: DialogManager,
                                   promocode: str):
+
+    logger.info(f'Editing promocode {promocode}')
     user_id = message.from_user.id
     session = dialog_manager.middleware_data.get('session')
     bot: Bot = dialog_manager.middleware_data.get('bot')
@@ -147,16 +151,24 @@ async def complete_send_messages(message: Message,
                                  widget: ManagedTextInput,
                                  dialog_manager: DialogManager,
                                  messages: str):
-
+    
     user_id = message.from_user.id
     session = dialog_manager.middleware_data.get('session')
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     bot: Bot = dialog_manager.middleware_data.get('bot')
     
     result = await get_users_id(session)
+    
+    logger.info(f'Sending message {message} to users {result}')
 
     for id in result:
-        await bot.send_message(id, messages)
+
+        await asyncio.sleep(1)
+        try:
+            await bot.send_message(id, messages)
+        except TelegramForbiddenError:
+            logger.info(f'user {id} blocked bot')
+
     msg = await message.answer(text=i18n.all.messages.sended())
     await asyncio.sleep(2)
     await bot.delete_message(user_id, msg.message_id)

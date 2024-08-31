@@ -32,7 +32,6 @@ async def public_game(callback: CallbackQuery,
                       dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Search for Game')
     dialog_manager.current_context().dialog_data['mode'] = 'public'
 
     await dialog_manager.switch_to(LobbySG.deposit)
@@ -44,7 +43,6 @@ async def private_game(callback: CallbackQuery,
                        dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Create new Game')
     dialog_manager.current_context().dialog_data['mode'] = 'private'
     dialog_manager.current_context().dialog_data['find_create'] = 'create'
 
@@ -57,7 +55,6 @@ async def demo_game(callback: CallbackQuery,
                     dialog_manager: DialogManager):
 
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} go to playe vs Bot in Demo game')
     dialog_manager.current_context().dialog_data['mode'] = 'demo'
     dialog_manager.current_context().dialog_data['deposit'] = 100
 
@@ -146,7 +143,6 @@ async def wrong_input(message: Message,
                       invite_code: str):
     
     user_id = message.from_user.id
-    logger.info(f'User {user_id} entered wrong invite_code')
     i18n: TranslatorRunner = dialog_manager.middleware_data.get('i18n')
     await message.answer(text=i18n.game.notexists())
 
@@ -157,7 +153,6 @@ async def import_from_lobby(callback: CallbackQuery,
                             dialog_manager: DialogManager):
     
     user_id = callback.from_user.id
-    logger.info(f'User {user_id} Want to import TON')
     
     await dialog_manager.start(MainSG.ton_import,
                                mode=StartMode.RESET_STACK)

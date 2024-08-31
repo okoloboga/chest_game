@@ -25,8 +25,6 @@ async def start_getter(dialog_manager: DialogManager,
                        **kwargs
                        ) -> dict:
     user_id = event_from_user.id 
-    logger.info(f'User {user_id} starts dialog')
-
     return {'start_dialog': i18n.start.dialog(),
             'button_subscribe': i18n.button.subscribe(),
             'button_check_subscribe': i18n.button.check.subscribe()}

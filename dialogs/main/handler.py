@@ -29,7 +29,6 @@ async def switch_to_lobby(callback: CallbackQuery,
                           button: Button,
                           dialog_manager: DialogManager):
     
-    logger.info(f'User {callback.from_user.id} go to Lobby')
     await dialog_manager.start(LobbySG.main,
                                data={'user_id': callback.from_user.id})
     
@@ -39,7 +38,6 @@ async def balance(callback: CallbackQuery,
                   button: Button,
                   dialog_manager: DialogManager):
     
-    logger.info(f'User {callback.from_user.id} go to Balance')
     await dialog_manager.switch_to(MainSG.ton_balance)
 
 
@@ -48,7 +46,6 @@ async def promocode(callback: CallbackQuery,
                     button: Button,
                     dialog_manager: DialogManager):
 
-    logger.info(f'User {callback.from_user.id} go to Promocode')
     await dialog_manager.switch_to(MainSG.promocode)
 
 
@@ -57,7 +54,6 @@ async def referrals(callback: CallbackQuery,
                     button: Button,
                     dialog_manager: DialogManager):
     
-    logger.info(f'User {callback.from_user.id} go to Referrals')
     await dialog_manager.switch_to(MainSG.referrals)
 
 
@@ -66,7 +62,6 @@ async def ton_import(callback: CallbackQuery,
                      button: Button,
                      dialog_manager: DialogManager):
     
-    logger.info(f'User {callback.from_user.id} go to TON import')
     await dialog_manager.switch_to(MainSG.ton_import)
 
 
@@ -75,7 +70,6 @@ async def ton_export(callback: CallbackQuery,
                      button: Button,
                      dialog_manager: DialogManager):
     
-    logger.info(f'User {callback.from_user.id} go to TON export')
     await dialog_manager.switch_to(MainSG.ton_export)
 
 

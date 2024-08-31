@@ -29,7 +29,6 @@ async def lobby_getter(dialog_manager: DialogManager,
                        ) -> dict:
     
     user_id = event_from_user.id
-    logger.info(f'User {user_id} in Lobby Menu')
     
     # Get TON value of user
     user_data = await get_user(session,
@@ -53,8 +52,7 @@ async def deposit_getter(dialog_manager: DialogManager,
                          ) -> dict:
     
     user_id = event_from_user.id
-    logger.info(f'User {user_id} in Deposit Type')
-    
+       
     return {'select_deposit': i18n.select.deposit(),
             'button_back': i18n.button.back()}
     
@@ -86,7 +84,6 @@ async def game_confirm_getter(dialog_manager: DialogManager,
                          	  ) -> dict:
     
     deposit = dialog_manager.current_context().dialog_data['deposit']   
-    logger.info(f'Player {event_from_user.id} search for game with {deposit}')
     
     return {'game_confirm': i18n.game.confirm(deposit=deposit),
             'button_game_confirm': i18n.button.confirm(),
@@ -103,7 +100,6 @@ async def not_enough_ton_getter(dialog_manager: DialogManager,
                                 ) -> dict:
     
     user_id = event_from_user.id
-    logger.info(f'User {user_id} has not enough TON for Deposit')
     
     return {'not_enough_ton': i18n.notenough.ton(),
             'button_tonimport': i18n.button.tonimport(),
