@@ -6,6 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 # Annotating types
 tg_id = Annotated[int, mapped_column(BigInteger, primary_key=True)]
 tr_hash = Annotated[str, mapped_column(String, primary_key=True)]
+optional_str = Annotated[str, mapped_column(String, nullable=True)]
 name = Annotated[str, mapped_column(String, primary_key=True)]
 required_str = Annotated[str, mapped_column(String, nullable=False)]
 required_int = Annotated[int, mapped_column(Integer, nullable=False)]
